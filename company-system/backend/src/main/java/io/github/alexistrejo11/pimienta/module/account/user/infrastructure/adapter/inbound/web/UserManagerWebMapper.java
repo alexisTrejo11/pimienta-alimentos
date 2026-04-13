@@ -33,7 +33,11 @@ final class UserManagerWebMapper {
     return new UserResponse(
         user.getId(),
         user.getEmail(),
-        user.getDisplayName(),
+        user.getFirstName(),
+        user.getLastName(),
+        user.getGender(),
+        user.getPhone(),
+        user.getDateOfBirth(),
         user.isBanned(),
         user.getBannedReason(),
         user.getBannedAt(),

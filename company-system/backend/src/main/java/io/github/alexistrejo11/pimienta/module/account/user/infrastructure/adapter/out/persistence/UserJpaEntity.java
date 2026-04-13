@@ -1,5 +1,6 @@
 package io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.out.persistence;
 
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.Gender;
 import io.github.alexistrejo11.pimienta.module.account.user.core.domain.Role;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -13,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -31,8 +33,21 @@ public class UserJpaEntity {
   @Column(name = "password_hash", nullable = false, length = 200)
   private String passwordHash;
 
-  @Column(name = "display_name", length = 200)
-  private String displayName;
+  @Column(name = "first_name", nullable = false, length = 120)
+  private String firstName;
+
+  @Column(name = "last_name", nullable = false, length = 120)
+  private String lastName;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 32)
+  private Gender gender;
+
+  @Column(nullable = false, length = 32)
+  private String phone;
+
+  @Column(name = "date_of_birth", nullable = false)
+  private LocalDate dateOfBirth;
 
   @Column(nullable = false)
   private boolean banned;
@@ -85,12 +100,44 @@ public class UserJpaEntity {
     this.passwordHash = passwordHash;
   }
 
-  public String getDisplayName() {
-    return displayName;
+  public String getFirstName() {
+    return firstName;
   }
 
-  public void setDisplayName(String displayName) {
-    this.displayName = displayName;
+  public void setFirstName(String firstName) {
+    this.firstName = firstName;
+  }
+
+  public String getLastName() {
+    return lastName;
+  }
+
+  public void setLastName(String lastName) {
+    this.lastName = lastName;
+  }
+
+  public Gender getGender() {
+    return gender;
+  }
+
+  public void setGender(Gender gender) {
+    this.gender = gender;
+  }
+
+  public String getPhone() {
+    return phone;
+  }
+
+  public void setPhone(String phone) {
+    this.phone = phone;
+  }
+
+  public LocalDate getDateOfBirth() {
+    return dateOfBirth;
+  }
+
+  public void setDateOfBirth(LocalDate dateOfBirth) {
+    this.dateOfBirth = dateOfBirth;
   }
 
   public boolean isBanned() {

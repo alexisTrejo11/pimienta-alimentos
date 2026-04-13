@@ -16,7 +16,14 @@ final class AuthWebMapper {
   private AuthWebMapper() {}
 
   static RegisterCommand toRegisterCommand(RegisterRequest request) {
-    return new RegisterCommand(request.email(), request.password(), request.displayName());
+    return new RegisterCommand(
+        request.email(),
+        request.password(),
+        request.firstName(),
+        request.lastName(),
+        request.gender(),
+        request.phone(),
+        request.dateOfBirth());
   }
 
   static LoginCommand toLoginCommand(LoginRequest request) {

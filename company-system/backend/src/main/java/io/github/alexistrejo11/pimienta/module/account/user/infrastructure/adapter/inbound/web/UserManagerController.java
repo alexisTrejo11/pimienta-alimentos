@@ -1,11 +1,15 @@
 package io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web;
 
 import io.github.alexistrejo11.pimienta.module.account.user.core.application.UserManagementUseCases;
+import io.github.alexistrejo11.pimienta.module.account.user.core.application.command.AddRolesCommand;
+import io.github.alexistrejo11.pimienta.module.account.user.core.application.command.BanUserCommand;
 import io.github.alexistrejo11.pimienta.module.account.user.core.domain.User;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.UserStatistics;
 import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.dto.AddRolesRequest;
 import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.dto.BanUserRequest;
 import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.dto.UserResponse;
 import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.dto.UserStatisticsResponse;
+import io.github.alexistrejo11.pimienta.shared.web.PagedResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import org.springframework.data.domain.Page;
@@ -23,7 +27,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/users/management")
-@PreAuthorize("hasRole('ADMIN')")
 public class UserManagerController {
 
   private final UserManagementUseCases userManagementUseCases;
@@ -34,14 +37,15 @@ public class UserManagerController {
 
   @GetMapping("/statistics")
   public UserStatisticsResponse getStatistics() {
-    return UserManagerWebMapper.toStatisticsResponse(userManagementUseCases.statistics());
+    UserStatistics statistics = userManagementUseCases.statistics();
+    return UserManagerWebMapper.toStatisticsResponse(statistics);
   }
 
   @GetMapping
-  public Page<UserResponse> listUsers(
+  public PagedResponse<UserResponse> listUsers(
       @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
     Page<User> users = userManagementUseCases.getBy(PageRequest.of(page, size));
-    return users.map(UserManagerWebMapper::toResponse);
+    return PagedResponse.map(users, UserManagerWebMapper::toResponse);
   }
 
   @GetMapping("/{id}")
@@ -59,7 +63,8 @@ public class UserManagerController {
   @PostMapping("/{id}/ban")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void banUser(@PathVariable Long id, @Valid @RequestBody(required = false) BanUserRequest request) {
-    userManagementUseCases.ban(id, UserManagerWebMapper.toBanCommand(request));
+    BanUserCommand command = UserManagerWebMapper.toBanCommand(request);
+    userManagementUseCases.ban(id, command);
   }
 
   @PostMapping("/{id}/unban")
@@ -70,7 +75,8 @@ public class UserManagerController {
 
   @PostMapping("/{id}/roles")
   public UserResponse addRoles(@PathVariable Long id, @Valid @RequestBody AddRolesRequest request) {
-    User user = userManagementUseCases.addRoles(id, UserManagerWebMapper.toAddRolesCommand(request));
-    return UserManagerWebMapper.toResponse(user);
+    AddRolesCommand command = UserManagerWebMapper.toAddRolesCommand(request);
+    User updated = userManagementUseCases.addRoles(id, command);
+    return UserManagerWebMapper.toResponse(updated);
   }
 }

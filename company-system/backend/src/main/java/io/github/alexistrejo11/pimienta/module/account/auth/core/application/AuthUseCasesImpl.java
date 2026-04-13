@@ -42,7 +42,15 @@ public class AuthUseCasesImpl implements AuthUseCases {
       throw new EmailAlreadyExistsException(email);
     }
     String hash = passwordEncoder.encode(command.password());
-    User created = User.register(email, hash, command.displayName());
+    User created =
+        User.register(
+            email,
+            hash,
+            command.firstName(),
+            command.lastName(),
+            command.gender(),
+            command.phone(),
+            command.dateOfBirth());
     User saved = userRepository.save(created);
     return tokenService.issuePair(saved);
   }

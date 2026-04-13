@@ -1,6 +1,7 @@
 package io.github.alexistrejo11.pimienta.module.account.user.core.domain;
 
 import io.github.alexistrejo11.pimienta.shared.BaseDomain;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -11,7 +12,11 @@ public class User extends BaseDomain<Long> {
 
   private String email;
   private String passwordHash;
-  private String displayName;
+  private String firstName;
+  private String lastName;
+  private Gender gender;
+  private String phone;
+  private LocalDate dateOfBirth;
   private boolean banned;
   private String bannedReason;
   private LocalDateTime bannedAt;
@@ -25,8 +30,24 @@ public class User extends BaseDomain<Long> {
     return passwordHash;
   }
 
-  public String getDisplayName() {
-    return displayName;
+  public String getFirstName() {
+    return firstName;
+  }
+
+  public String getLastName() {
+    return lastName;
+  }
+
+  public Gender getGender() {
+    return gender;
+  }
+
+  public String getPhone() {
+    return phone;
+  }
+
+  public LocalDate getDateOfBirth() {
+    return dateOfBirth;
   }
 
   public boolean isBanned() {
@@ -50,20 +71,41 @@ public class User extends BaseDomain<Long> {
   }
 
   /**
-   * New registration: no roles and no permissions until an administrator assigns
-   * roles.
+   * New registration: no roles until an administrator assigns them.
    */
-  public static User register(String email, String passwordHash, String displayName) {
+  public static User register(
+      String email,
+      String passwordHash,
+      String firstName,
+      String lastName,
+      Gender gender,
+      String phone,
+      LocalDate dateOfBirth) {
     Objects.requireNonNull(email, "email");
     Objects.requireNonNull(passwordHash, "passwordHash");
+    Objects.requireNonNull(gender, "gender");
+    Objects.requireNonNull(dateOfBirth, "dateOfBirth");
     if (email.isBlank()) {
       throw new IllegalArgumentException("email must not be blank");
+    }
+    if (firstName == null || firstName.isBlank()) {
+      throw new IllegalArgumentException("firstName must not be blank");
+    }
+    if (lastName == null || lastName.isBlank()) {
+      throw new IllegalArgumentException("lastName must not be blank");
+    }
+    if (phone == null || phone.isBlank()) {
+      throw new IllegalArgumentException("phone must not be blank");
     }
     var now = LocalDateTime.now();
     var u = new User();
     u.email = email.trim().toLowerCase();
     u.passwordHash = passwordHash;
-    u.displayName = displayName != null ? displayName : "";
+    u.firstName = firstName.trim();
+    u.lastName = lastName.trim();
+    u.gender = gender;
+    u.phone = phone.trim();
+    u.dateOfBirth = dateOfBirth;
     u.banned = false;
     u.bannedReason = null;
     u.bannedAt = null;
@@ -80,7 +122,11 @@ public class User extends BaseDomain<Long> {
       Long id,
       String email,
       String passwordHash,
-      String displayName,
+      String firstName,
+      String lastName,
+      Gender gender,
+      String phone,
+      LocalDate dateOfBirth,
       boolean banned,
       String bannedReason,
       LocalDateTime bannedAt,
@@ -93,7 +139,11 @@ public class User extends BaseDomain<Long> {
     u.id = id != null ? id : 0L;
     u.email = email != null ? email : "";
     u.passwordHash = passwordHash != null ? passwordHash : "";
-    u.displayName = displayName != null ? displayName : "";
+    u.firstName = firstName != null ? firstName : "";
+    u.lastName = lastName != null ? lastName : "";
+    u.gender = gender;
+    u.phone = phone != null ? phone : "";
+    u.dateOfBirth = dateOfBirth;
     u.banned = banned;
     u.bannedReason = bannedReason;
     u.bannedAt = bannedAt;

@@ -61,6 +61,9 @@ public class JwtTokenService implements TokenService {
             .expiration(Date.from(now.plus(accessTtl)))
             .claim("typ", "access")
             .claim("email", user.getEmail())
+            .claim("firstName", user.getFirstName())
+            .claim("lastName", user.getLastName())
+            .claim("gender", user.getGender() != null ? user.getGender().name() : null)
             .claim("roles", roleNames)
             .claim("permissions", permissionNames)
             .signWith(key)
@@ -116,6 +119,9 @@ public class JwtTokenService implements TokenService {
       String jti = claims.getId();
       long userId = Long.parseLong(claims.getSubject());
       String email = claims.get("email", String.class);
+      String firstName = claims.get("firstName", String.class);
+      String lastName = claims.get("lastName", String.class);
+      String gender = claims.get("gender", String.class);
       @SuppressWarnings("unchecked")
       List<String> roles = (List<String>) claims.get("roles", List.class);
       @SuppressWarnings("unchecked")
@@ -126,7 +132,8 @@ public class JwtTokenService implements TokenService {
       if (permissions == null) {
         permissions = List.of();
       }
-      return new ParsedAccessToken(userId, email, roles, permissions, jti);
+      return new ParsedAccessToken(
+          userId, email, firstName, lastName, gender, roles, permissions, jti);
     } catch (ExpiredJwtException e) {
       throw invalidAccess("Access token expired.", e);
     } catch (JwtException | IllegalArgumentException e) {

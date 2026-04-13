@@ -16,7 +16,11 @@ final class UserPersistenceMapper {
     }
     e.setEmail(domain.getEmail());
     e.setPasswordHash(domain.getPasswordHash());
-    e.setDisplayName(domain.getDisplayName());
+    e.setFirstName(domain.getFirstName());
+    e.setLastName(domain.getLastName());
+    e.setGender(domain.getGender());
+    e.setPhone(domain.getPhone());
+    e.setDateOfBirth(domain.getDateOfBirth());
     e.setBanned(domain.isBanned());
     e.setBannedReason(domain.getBannedReason());
     e.setBannedAt(domain.getBannedAt());
@@ -37,7 +41,11 @@ final class UserPersistenceMapper {
         e.getId(),
         e.getEmail(),
         e.getPasswordHash(),
-        e.getDisplayName(),
+        e.getFirstName(),
+        e.getLastName(),
+        e.getGender(),
+        e.getPhone(),
+        e.getDateOfBirth(),
         e.isBanned(),
         e.getBannedReason(),
         e.getBannedAt(),
