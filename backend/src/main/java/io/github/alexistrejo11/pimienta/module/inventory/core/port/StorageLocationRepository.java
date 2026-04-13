@@ -1,0 +1,23 @@
+package io.github.alexistrejo11.pimienta.module.inventory.core.port;
+
+import io.github.alexistrejo11.pimienta.module.inventory.core.application.query.StorageLocationSearchCriteria;
+import io.github.alexistrejo11.pimienta.module.inventory.core.domain.StorageLocation;
+import java.util.List;
+import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+public interface StorageLocationRepository {
+
+  Optional<StorageLocation> findById(long id);
+
+  List<StorageLocation> findAllNonDeleted();
+
+  List<StorageLocation> findByParentId(Long parentId);
+
+  Page<StorageLocation> search(StorageLocationSearchCriteria criteria, Pageable pageable);
+
+  long countInventoryRowsByLocationId(long locationId);
+
+  StorageLocation save(StorageLocation location);
+}
