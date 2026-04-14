@@ -1,0 +1,83 @@
+<aside
+  class="fixed left-0 top-0 z-50 flex h-full w-64 flex-col border-r border-stone-200/15 bg-stone-50 px-4 py-6 shadow-xl shadow-stone-900/5 dark:border-stone-800/15 dark:bg-stone-950"
+  aria-label="Workspace"
+>
+  <div class="mb-10 flex items-center gap-3 px-2">
+    <img
+      class="h-10 w-10 rounded-lg object-contain"
+      [src]="logoUrl"
+      width="40"
+      height="40"
+      alt="Pimienta Alimentos"
+    />
+    <div>
+      <p
+        class="font-headline text-xl font-extrabold leading-tight tracking-tighter text-red-700 dark:text-red-500"
+      >
+        Pimienta Alimentos
+      </p>
+      <p
+        class="font-headline text-[10px] font-bold tracking-tight text-stone-500 uppercase"
+      >
+        Precision Kitchen Management
+      </p>
+    </div>
+  </div>
+
+  <nav class="flex flex-grow flex-col space-y-1" aria-label="Secciones">
+    <a
+      routerLink="/app/dashboard"
+      routerLinkActive="bg-red-50 font-semibold text-red-700 border-r-4 border-red-700 dark:bg-red-950/30 dark:text-red-500 dark:border-red-500"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="{{ navLinkInactive }}"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
+      <span class="font-headline font-bold tracking-tight">Dashboard</span>
+    </a>
+    <a
+      routerLink="/app/clients"
+      routerLinkActive="bg-red-50 font-semibold text-red-700 border-r-4 border-red-700 dark:bg-red-950/30 dark:text-red-500 dark:border-red-500"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="{{ navLinkInactive }}"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">groups</span>
+      <span class="font-headline font-bold tracking-tight">Clients</span>
+    </a>
+    <a
+      routerLink="/app/inventory"
+      routerLinkActive="bg-red-50 font-semibold text-red-700 border-r-4 border-red-700 dark:bg-red-950/30 dark:text-red-500 dark:border-red-500"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="{{ navLinkInactive }}"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">inventory_2</span>
+      <span class="font-headline font-bold tracking-tight">Inventory</span>
+    </a>
+    <a
+      routerLink="/app/tasks"
+      routerLinkActive="bg-red-50 font-semibold text-red-700 border-r-4 border-red-700 dark:bg-red-950/30 dark:text-red-500 dark:border-red-500"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="{{ navLinkInactive }}"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">task_alt</span>
+      <span class="font-headline font-bold tracking-tight">Tasks</span>
+    </a>
+  </nav>
+
+  <div class="mt-auto space-y-1 border-t border-stone-200/10 pt-6">
+    <button
+      type="button"
+      class="font-headline mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-bold tracking-tight text-on-primary transition-all hover:bg-primary-container active:scale-[0.98]"
+    >
+      <span class="material-symbols-outlined text-sm" aria-hidden="true">add</span>
+      New Order
+    </button>
+    <a href="#" class="{{ navLinkInactive }}">
+      <span class="material-symbols-outlined" aria-hidden="true">settings</span>
+      <span class="font-headline font-bold tracking-tight">Settings</span>
+    </a>
+    <a href="#" class="{{ navLinkInactive }}">
+      <span class="material-symbols-outlined" aria-hidden="true">help</span>
+      <span class="font-headline font-bold tracking-tight">Support</span>
+    </a>
+  </div>
+</aside>
