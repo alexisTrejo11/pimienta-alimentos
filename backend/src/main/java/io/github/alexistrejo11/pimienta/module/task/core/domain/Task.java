@@ -20,6 +20,8 @@ public class Task extends BaseDomain<Long> {
   private LocalDateTime dueDate;
   private Long headquarterId;
   private Long projectId;
+  /** CRM: tareas ligadas a una oportunidad (varias por oportunidad). */
+  private Long opportunityId;
   private List<ChecklistItem> checklist = new ArrayList<>();
 
   public enum Status {
@@ -72,6 +74,7 @@ public class Task extends BaseDomain<Long> {
     task.dueDate = params.dueDate();
     task.headquarterId = params.headquarterId();
     task.projectId = params.projectId();
+    task.opportunityId = params.opportunityId();
     task.createdById = params.createdById();
     task.status = Status.PENDING;
     task.checklist = new ArrayList<>();
@@ -102,6 +105,7 @@ public class Task extends BaseDomain<Long> {
     task.dueDate = params.dueDate();
     task.headquarterId = params.headquarterId();
     task.projectId = params.projectId();
+    task.opportunityId = params.opportunityId();
     task.checklist = new ArrayList<>();
     if (params.checklist() != null) {
       task.checklist.addAll(params.checklist());
@@ -210,6 +214,10 @@ public class Task extends BaseDomain<Long> {
 
   public Long getProjectId() {
     return projectId;
+  }
+
+  public Long getOpportunityId() {
+    return opportunityId;
   }
 
   public List<ChecklistItem> getChecklist() {

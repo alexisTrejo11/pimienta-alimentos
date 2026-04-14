@@ -14,5 +14,6 @@ public record TaskRequest(
     LocalDateTime dueDate,
     Long headquarterId,
     Long projectId,
+    Long opportunityId,
     Long createdById,
     @Valid List<ChecklistLineRequest> checklist) {}

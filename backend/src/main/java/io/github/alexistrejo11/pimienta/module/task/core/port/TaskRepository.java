@@ -13,4 +13,14 @@ public interface TaskRepository {
   Page<Task> search(TaskSearchCriteria criteria, Pageable pageable);
 
   Task save(Task task);
+
+  /** Tareas no borradas ligadas a una oportunidad CRM. */
+  long countByOpportunityId(long opportunityId);
+
+  /** Excluye COMPLETED y CANCELLED (seguimiento de trabajo pendiente). */
+  long countOpenByOpportunityId(long opportunityId);
+
+  long countByProjectId(long projectId);
+
+  long countOpenByProjectId(long projectId);
 }

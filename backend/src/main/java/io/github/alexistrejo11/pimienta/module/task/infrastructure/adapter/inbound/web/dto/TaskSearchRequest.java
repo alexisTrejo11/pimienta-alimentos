@@ -7,6 +7,7 @@ public class TaskSearchRequest {
 
   private Long headquarterId;
   private Long projectId;
+  private Long opportunityId;
   private Long employeeId;
   private Task.Status status;
   private int page = 0;
@@ -26,6 +27,14 @@ public class TaskSearchRequest {
 
   public void setProjectId(Long projectId) {
     this.projectId = projectId;
+  }
+
+  public Long getOpportunityId() {
+    return opportunityId;
+  }
+
+  public void setOpportunityId(Long opportunityId) {
+    this.opportunityId = opportunityId;
   }
 
   public Long getEmployeeId() {

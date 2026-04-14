@@ -12,4 +12,5 @@ public record TaskListItemResponse(
     LocalDateTime dueDate,
     Long headquarterId,
     Long projectId,
+    Long opportunityId,
     double progressPercent) {}

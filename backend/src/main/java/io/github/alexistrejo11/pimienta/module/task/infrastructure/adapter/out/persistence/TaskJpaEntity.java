@@ -61,6 +61,9 @@ public class TaskJpaEntity {
   @Column(name = "project_id")
   private Long projectId;
 
+  @Column(name = "opportunity_id")
+  private Long opportunityId;
+
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "checklist", columnDefinition = "jsonb")
   private List<ChecklistItemJson> checklist = new ArrayList<>();
@@ -179,6 +182,14 @@ public class TaskJpaEntity {
 
   public void setProjectId(Long projectId) {
     this.projectId = projectId;
+  }
+
+  public Long getOpportunityId() {
+    return opportunityId;
+  }
+
+  public void setOpportunityId(Long opportunityId) {
+    this.opportunityId = opportunityId;
   }
 
   public List<ChecklistItemJson> getChecklist() {

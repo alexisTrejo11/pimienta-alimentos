@@ -18,6 +18,7 @@ public record TaskResponse(
     LocalDateTime dueDate,
     Long headquarterId,
     Long projectId,
+    Long opportunityId,
     List<ChecklistItemResponse> checklist,
     double progressPercent,
     LocalDateTime createdAt,

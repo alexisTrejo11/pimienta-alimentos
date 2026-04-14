@@ -62,6 +62,12 @@
 			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 
+		<!-- Jackson (ObjectMapper, JSON) — explicit so compile scope resolves com.fasterxml.jackson.databind -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-json</artifactId>
+		</dependency>
+
 		<!-- Jakarta Bean Validation (@NotBlank, @Valid, etc.) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

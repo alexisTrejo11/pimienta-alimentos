@@ -1,0 +1,33 @@
+# Profile: docker — use with SPRING_PROFILES_ACTIVE=docker (see docker-compose / Dockerfile).
+# Override any value via standard Spring Boot env vars (see Docker Compose `environment` block).
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/pimienta_alimentos}
+    username: ${SPRING_DATASOURCE_USERNAME:pimienta_dba}
+    password: ${SPRING_DATASOURCE_PASSWORD:pimienta_dba}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+logging:
+  level:
+    org.springframework.web: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB:INFO}
+
+pimienta:
+  security:
+    jwt:
+      secret: ${PIMIENTA_SECURITY_JWT_SECRET:docker-dev-change-me-use-a-real-secret-in-production-at-least-256-bits-for-hs256}
+      access-token-ttl-minutes: ${PIMIENTA_SECURITY_JWT_ACCESS_TOKEN_TTL_MINUTES:15}
+      refresh-token-ttl-days: ${PIMIENTA_SECURITY_JWT_REFRESH_TOKEN_TTL_DAYS:7}

@@ -18,6 +18,7 @@ public record ReconstructTaskParams(
     LocalDateTime dueDate,
     Long headquarterId,
     Long projectId,
+    Long opportunityId,
     List<Task.ChecklistItem> checklist,
     LocalDateTime createdAt,
     LocalDateTime updatedAt,

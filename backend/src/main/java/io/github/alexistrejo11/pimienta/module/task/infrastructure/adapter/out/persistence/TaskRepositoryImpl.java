@@ -3,6 +3,7 @@ package io.github.alexistrejo11.pimienta.module.task.infrastructure.adapter.out.
 import io.github.alexistrejo11.pimienta.module.task.core.application.query.TaskSearchCriteria;
 import io.github.alexistrejo11.pimienta.module.task.core.domain.Task;
 import io.github.alexistrejo11.pimienta.module.task.core.port.TaskRepository;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,5 +35,27 @@ public class TaskRepositoryImpl implements TaskRepository {
     TaskJpaEntity entity = TaskPersistenceMapper.toJpa(task);
     TaskJpaEntity saved = jpaRepository.save(entity);
     return TaskPersistenceMapper.toDomain(saved);
+  }
+
+  @Override
+  public long countByOpportunityId(long opportunityId) {
+    return jpaRepository.countByOpportunityIdAndDeletedAtIsNull(opportunityId);
+  }
+
+  @Override
+  public long countOpenByOpportunityId(long opportunityId) {
+    return jpaRepository.countByOpportunityIdAndDeletedAtIsNullAndStatusNotIn(
+        opportunityId, List.of(Task.Status.COMPLETED, Task.Status.CANCELLED));
+  }
+
+  @Override
+  public long countByProjectId(long projectId) {
+    return jpaRepository.countByProjectIdAndDeletedAtIsNull(projectId);
+  }
+
+  @Override
+  public long countOpenByProjectId(long projectId) {
+    return jpaRepository.countByProjectIdAndDeletedAtIsNullAndStatusNotIn(
+        projectId, List.of(Task.Status.COMPLETED, Task.Status.CANCELLED));
   }
 }

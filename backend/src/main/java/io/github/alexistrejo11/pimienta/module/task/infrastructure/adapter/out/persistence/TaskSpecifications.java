@@ -21,6 +21,9 @@ final class TaskSpecifications {
         if (criteria.projectId() != null) {
           parts.add(cb.equal(root.get("projectId"), criteria.projectId()));
         }
+        if (criteria.opportunityId() != null) {
+          parts.add(cb.equal(root.get("opportunityId"), criteria.opportunityId()));
+        }
         if (criteria.assignedToId() != null) {
           parts.add(cb.equal(root.get("assignedToId"), criteria.assignedToId()));
         }

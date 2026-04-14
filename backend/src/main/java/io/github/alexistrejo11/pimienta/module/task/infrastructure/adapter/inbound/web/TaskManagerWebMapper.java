@@ -13,14 +13,35 @@ import io.github.alexistrejo11.pimienta.module.task.infrastructure.adapter.inbou
 import java.util.ArrayList;
 import java.util.List;
 
-final class TaskManagerWebMapper {
+public final class TaskManagerWebMapper {
 
   private TaskManagerWebMapper() {}
 
-  static TaskSearchCriteria toCriteria(TaskSearchRequest request) {
+  public static CreateTaskParams toCreateParamsForOpportunity(
+      TaskRequest request, Long opportunityId) {
+    List<CreateChecklistLine> lines = new ArrayList<>();
+    if (request.checklist() != null) {
+      for (ChecklistLineRequest line : request.checklist()) {
+        lines.add(new CreateChecklistLine(line.description(), line.displayOrder()));
+      }
+    }
+    return new CreateTaskParams(
+        request.title(),
+        request.description(),
+        request.priority(),
+        request.dueDate(),
+        request.headquarterId(),
+        request.projectId(),
+        opportunityId,
+        request.createdById(),
+        lines);
+  }
+
+  public static TaskSearchCriteria toCriteria(TaskSearchRequest request) {
     return new TaskSearchCriteria(
         request.getHeadquarterId(),
         request.getProjectId(),
+        request.getOpportunityId(),
         request.getEmployeeId(),
         request.getStatus());
   }
@@ -39,11 +60,12 @@ final class TaskManagerWebMapper {
         request.dueDate(),
         request.headquarterId(),
         request.projectId(),
+        request.opportunityId(),
         request.createdById(),
         lines);
   }
 
-  static TaskResponse toResponse(Task task) {
+  public static TaskResponse toResponse(Task task) {
     List<ChecklistItemResponse> checklist = new ArrayList<>();
     for (Task.ChecklistItem item : task.getChecklist()) {
       checklist.add(
@@ -67,13 +89,14 @@ final class TaskManagerWebMapper {
         task.getDueDate(),
         task.getHeadquarterId(),
         task.getProjectId(),
+        task.getOpportunityId(),
         checklist,
         task.getProgressPercentage(),
         task.getCreatedAt(),
         task.getUpdatedAt());
   }
 
-  static TaskListItemResponse toListItem(Task task) {
+  public static TaskListItemResponse toListItem(Task task) {
     return new TaskListItemResponse(
         task.getId(),
         task.getTitle(),
@@ -83,6 +106,7 @@ final class TaskManagerWebMapper {
         task.getDueDate(),
         task.getHeadquarterId(),
         task.getProjectId(),
+        task.getOpportunityId(),
         task.getProgressPercentage());
   }
 }

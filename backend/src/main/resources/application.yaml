@@ -28,6 +28,30 @@ spring:
       org.springframework.web: DEBUG
 
 pimienta:
+  # CORS — edit allowed-origins per environment (SPA dev servers, production web origin).
+  cors:
+    path-pattern: "/**"
+    allowed-origins:
+      - "http://localhost:4200"
+      - "http://localhost:3000"
+      - "http://127.0.0.1:4200"
+      - "http://127.0.0.1:3000"
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+      - OPTIONS
+      - HEAD
+    allowed-headers:
+      - "*"
+    exposed-headers:
+      - Authorization
+      - Content-Type
+      - X-Total-Count
+    allow-credentials: true
+    max-age-seconds: 3600
   security:
     jwt:
       secret: "change-me-use-at-least-256-bits-for-hs256-secret-key-pimienta"

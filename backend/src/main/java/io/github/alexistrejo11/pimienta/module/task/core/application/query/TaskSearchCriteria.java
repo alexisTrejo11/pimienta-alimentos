@@ -2,11 +2,15 @@ package io.github.alexistrejo11.pimienta.module.task.core.application.query;
 
 import io.github.alexistrejo11.pimienta.module.task.core.domain.Task;
 
-/** Filtros opcionales para listar tareas (sede, proyecto, empleado asignado, estado). */
+/** Filtros opcionales para listar tareas (sede, proyecto, oportunidad, empleado, estado). */
 public record TaskSearchCriteria(
-    Long headquarterId, Long projectId, Long assignedToId, Task.Status status) {
+    Long headquarterId,
+    Long projectId,
+    Long opportunityId,
+    Long assignedToId,
+    Task.Status status) {
 
   public static TaskSearchCriteria empty() {
-    return new TaskSearchCriteria(null, null, null, null);
+    return new TaskSearchCriteria(null, null, null, null, null);
   }
 }

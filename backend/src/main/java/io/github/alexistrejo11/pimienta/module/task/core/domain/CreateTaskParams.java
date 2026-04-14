@@ -10,5 +10,6 @@ public record CreateTaskParams(
     LocalDateTime dueDate,
     Long headquarterId,
     Long projectId,
+    Long opportunityId,
     Long createdById,
     List<CreateChecklistLine> checklistLines) {}
