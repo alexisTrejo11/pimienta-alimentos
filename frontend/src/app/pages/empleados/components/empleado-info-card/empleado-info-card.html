@@ -1,0 +1,53 @@
+<!-- Tarjeta: datos personales del empleado -->
+<section class="rounded-xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-950" aria-label="Información personal">
+  <h2 class="font-headline mb-4 text-base font-bold text-on-surface">Información personal</h2>
+
+  <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Nombre completo</dt>
+      <dd class="mt-1 font-semibold text-on-surface">{{ empleado().name }}</dd>
+    </div>
+
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Correo electrónico</dt>
+      <dd class="mt-1 text-on-surface">{{ empleado().email }}</dd>
+    </div>
+
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Teléfono</dt>
+      <dd class="mt-1 text-on-surface">{{ empleado().phone || '—' }}</dd>
+    </div>
+
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Fecha de nacimiento</dt>
+      <dd class="mt-1 text-on-surface">{{ empleado().birthDate || '—' }}</dd>
+    </div>
+
+    <div class="sm:col-span-2">
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Dirección</dt>
+      <dd class="mt-1 text-on-surface">{{ empleado().address || '—' }}</dd>
+    </div>
+
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">RFC</dt>
+      <dd class="mt-1 font-mono text-on-surface">{{ empleado().rfc || '—' }}</dd>
+    </div>
+
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">CURP</dt>
+      <dd class="mt-1 font-mono text-on-surface">{{ empleado().curp || '—' }}</dd>
+    </div>
+
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">NSS (IMSS)</dt>
+      <dd class="mt-1 font-mono text-on-surface">{{ empleado().nss || '—' }}</dd>
+    </div>
+
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">CLABE bancaria</dt>
+      <dd class="mt-1 font-mono text-on-surface">{{ empleado().clabe || '—' }}</dd>
+    </div>
+
+  </dl>
+</section>

@@ -1,0 +1,36 @@
+<div class="flex flex-col gap-6 p-8">
+
+  <app-page-header
+    title="Oportunidades"
+    subtitle="Pipeline de ventas y seguimiento de prospectos"
+  />
+
+  <app-data-state
+    [loading]="loading()"
+    [error]="error()"
+    [empty]="oportunidades().length === 0"
+    emptyMessage="No hay oportunidades registradas."
+    (retry)="cargar()"
+  >
+    <div class="overflow-x-auto rounded-xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950">
+      <table class="w-full text-sm" aria-label="Lista de oportunidades">
+        <thead class="border-b border-stone-100 bg-stone-50 dark:border-stone-800 dark:bg-stone-900">
+          <tr>
+            <th class="px-4 py-3 text-left font-semibold text-on-surface-variant">Título</th>
+            <th class="px-4 py-3 text-left font-semibold text-on-surface-variant">Empresa</th>
+            <th class="px-4 py-3 text-left font-semibold text-on-surface-variant">Estado</th>
+            <th class="px-4 py-3 text-right font-semibold text-on-surface-variant">Valor est.</th>
+            <th class="px-4 py-3 text-left font-semibold text-on-surface-variant">Cierre esperado</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-stone-100 dark:divide-stone-800">
+          @for (op of oportunidades(); track op.id) {
+            <tr app-oportunidad-row [oportunidad]="op"></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </app-data-state>
+
+</div>

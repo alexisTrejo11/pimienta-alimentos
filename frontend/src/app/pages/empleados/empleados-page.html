@@ -1,0 +1,65 @@
+<div class="flex flex-col gap-6 p-8">
+
+  <!-- Encabezado de la sección -->
+  <app-page-header
+    title="Empleados"
+    subtitle="Directorio de colaboradores de la empresa"
+  />
+
+  <!-- Barra de estadísticas: solo visible cuando se cargaron correctamente -->
+  @if (stats(); as s) {
+    <div class="grid grid-cols-3 gap-4">
+
+      <!-- Total -->
+      <div class="rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-950">
+        <p class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Total</p>
+        <p class="font-headline mt-1 text-3xl font-bold tabular-nums text-on-surface">{{ s.total }}</p>
+      </div>
+
+      <!-- Activos -->
+      <div class="rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-900/40 dark:bg-green-950/30">
+        <p class="text-xs font-medium uppercase tracking-wide text-green-700 dark:text-green-400">Activos</p>
+        <p class="font-headline mt-1 text-3xl font-bold tabular-nums text-green-800 dark:text-green-300">{{ s.active }}</p>
+      </div>
+
+      <!-- Inactivos -->
+      <div class="rounded-xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-800 dark:bg-stone-900">
+        <p class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Inactivos</p>
+        <p class="font-headline mt-1 text-3xl font-bold tabular-nums text-on-surface">{{ s.notActive }}</p>
+      </div>
+
+    </div>
+  }
+
+  <!-- Tabla de empleados (maneja loading/error/vacío internamente) -->
+  <app-data-state
+    [loading]="loading()"
+    [error]="error()"
+    [empty]="empleados().length === 0"
+    emptyMessage="No se encontraron empleados registrados."
+    (retry)="cargar()"
+  >
+    <div class="overflow-x-auto rounded-xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950">
+      <table class="w-full text-sm" aria-label="Lista de empleados">
+        <thead class="border-b border-stone-100 bg-stone-50 dark:border-stone-800 dark:bg-stone-900">
+          <tr>
+            <th class="px-4 py-3 text-left font-semibold text-on-surface-variant">#</th>
+            <th class="px-4 py-3 text-left font-semibold text-on-surface-variant">Nombre</th>
+            <th class="px-4 py-3 text-left font-semibold text-on-surface-variant">Departamento</th>
+            <th class="px-4 py-3 text-left font-semibold text-on-surface-variant">Puesto</th>
+            <th class="px-4 py-3 text-left font-semibold text-on-surface-variant">Estado</th>
+            <th class="px-4 py-3 text-left font-semibold text-on-surface-variant">Fecha de ingreso</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-stone-100 dark:divide-stone-800">
+          @for (empleado of empleados(); track empleado.id) {
+            <!-- El selector de atributo [app-empleado-row] se aplica sobre el <tr> -->
+            <tr app-empleado-row [empleado]="empleado"></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </app-data-state>
+
+</div>

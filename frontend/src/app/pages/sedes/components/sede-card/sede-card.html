@@ -1,0 +1,40 @@
+<!-- Tarjeta de sede en el grid de listado -->
+<article
+  class="flex flex-col rounded-xl border bg-white p-5 shadow-sm dark:bg-stone-950"
+  [class]="activa ? 'border-stone-200 dark:border-stone-800' : 'border-stone-300 opacity-60 dark:border-stone-700'"
+>
+  <!-- Encabezado: nombre + badge de estado -->
+  <div class="mb-3 flex items-start justify-between gap-2">
+    <h3 class="font-headline font-bold text-on-surface">{{ sede().name }}</h3>
+
+    @if (activa) {
+      <span class="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">
+        Activa
+      </span>
+    } @else {
+      <span class="shrink-0 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-semibold text-stone-500">
+        Dada de baja
+      </span>
+    }
+  </div>
+
+  <!-- Dirección -->
+  <p class="mb-2 flex items-start gap-1.5 text-sm text-on-surface-variant">
+    <span class="material-symbols-outlined mt-0.5 text-base shrink-0" aria-hidden="true">location_on</span>
+    {{ sede().address }}
+  </p>
+
+  <!-- Descripción recortada -->
+  @if (sede().description) {
+    <p class="mb-4 line-clamp-2 text-sm text-on-surface-variant">{{ sede().description }}</p>
+  }
+
+  <!-- Enlace al detalle -->
+  <a
+    [routerLink]="['/app/sedes', sede().id]"
+    class="mt-auto inline-flex w-fit items-center gap-1 rounded-lg border border-stone-200 px-3 py-1.5 text-xs font-semibold text-on-surface transition hover:bg-stone-100 dark:border-stone-700 dark:hover:bg-stone-800"
+  >
+    Ver detalle
+    <span class="material-symbols-outlined text-sm" aria-hidden="true">chevron_right</span>
+  </a>
+</article>

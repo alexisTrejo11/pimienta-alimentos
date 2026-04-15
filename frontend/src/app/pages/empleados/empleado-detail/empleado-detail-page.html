@@ -1,0 +1,28 @@
+<div class="flex flex-col gap-6 p-8">
+
+  <!-- Encabezado con flecha de regreso a la lista -->
+  <app-page-header
+    [title]="empleado()?.name ?? 'Detalle de empleado'"
+    subtitle="Información completa del colaborador"
+    backLink="/app/empleados"
+    backLabel="Empleados"
+  />
+
+  <!-- Gestión de estados: cargando / error / contenido -->
+  <app-data-state
+    [loading]="loading()"
+    [error]="error()"
+    [empty]="!empleado()"
+    emptyMessage="No se encontró el empleado."
+  >
+    @if (empleado(); as e) {
+      <!-- Las tres tarjetas de información se muestran en columna (una bajo la otra) -->
+      <div class="flex flex-col gap-6">
+        <app-empleado-info-card [empleado]="e" />
+        <app-empleado-empleo-card [empleado]="e" />
+        <app-empleado-nomina-card [empleado]="e" />
+      </div>
+    }
+  </app-data-state>
+
+</div>

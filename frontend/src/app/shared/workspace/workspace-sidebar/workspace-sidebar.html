@@ -1,8 +1,9 @@
 <aside
   class="fixed left-0 top-0 z-50 flex h-full w-64 flex-col border-r border-stone-200/15 bg-stone-50 px-4 py-6 shadow-xl shadow-stone-900/5 dark:border-stone-800/15 dark:bg-stone-950"
-  aria-label="Workspace"
+  aria-label="Panel de navegación"
 >
-  <div class="mb-10 flex items-center gap-3 px-2">
+  <!-- Logo y nombre de la empresa -->
+  <div class="mb-8 flex items-center gap-3 px-2">
     <img
       class="h-10 w-10 rounded-lg object-contain"
       [src]="logoUrl"
@@ -11,73 +12,94 @@
       alt="Pimienta Alimentos"
     />
     <div>
-      <p
-        class="font-headline text-xl font-extrabold leading-tight tracking-tighter text-red-700 dark:text-red-500"
-      >
+      <p class="font-headline text-xl font-extrabold leading-tight tracking-tighter text-red-700 dark:text-red-500">
         Pimienta Alimentos
       </p>
-      <p
-        class="font-headline text-[10px] font-bold tracking-tight text-stone-500 uppercase"
-      >
+      <p class="font-headline text-[10px] font-bold uppercase tracking-tight text-stone-500">
         Precision Kitchen Management
       </p>
     </div>
   </div>
 
-  <nav class="flex flex-grow flex-col space-y-1" aria-label="Secciones">
+  <!-- Navegación principal -->
+  <nav class="flex flex-grow flex-col space-y-1 overflow-y-auto" aria-label="Secciones">
+
+    <!-- Dashboard -->
     <a
       routerLink="/app/dashboard"
       routerLinkActive="bg-red-50 font-semibold text-red-700 border-r-4 border-red-700 dark:bg-red-950/30 dark:text-red-500 dark:border-red-500"
       [routerLinkActiveOptions]="{ exact: true }"
-      class="{{ navLinkInactive }}"
+      [class]="navLinkInactive"
     >
       <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
-      <span class="font-headline font-bold tracking-tight">Dashboard</span>
+      <span class="font-headline font-bold tracking-tight">Resumen</span>
     </a>
-    <a
-      routerLink="/app/clients"
-      routerLinkActive="bg-red-50 font-semibold text-red-700 border-r-4 border-red-700 dark:bg-red-950/30 dark:text-red-500 dark:border-red-500"
-      [routerLinkActiveOptions]="{ exact: true }"
-      class="{{ navLinkInactive }}"
-    >
-      <span class="material-symbols-outlined" aria-hidden="true">groups</span>
-      <span class="font-headline font-bold tracking-tight">Clients</span>
-    </a>
-    <a
-      routerLink="/app/inventory"
-      routerLinkActive="bg-red-50 font-semibold text-red-700 border-r-4 border-red-700 dark:bg-red-950/30 dark:text-red-500 dark:border-red-500"
-      [routerLinkActiveOptions]="{ exact: true }"
-      class="{{ navLinkInactive }}"
-    >
-      <span class="material-symbols-outlined" aria-hidden="true">inventory_2</span>
-      <span class="font-headline font-bold tracking-tight">Inventory</span>
-    </a>
-    <a
-      routerLink="/app/tasks"
-      routerLinkActive="bg-red-50 font-semibold text-red-700 border-r-4 border-red-700 dark:bg-red-950/30 dark:text-red-500 dark:border-red-500"
-      [routerLinkActiveOptions]="{ exact: true }"
-      class="{{ navLinkInactive }}"
-    >
-      <span class="material-symbols-outlined" aria-hidden="true">task_alt</span>
-      <span class="font-headline font-bold tracking-tight">Tasks</span>
-    </a>
+
+    <!-- ── Sección CRM ─────────────────────────────────────── -->
+    <div class="pt-4">
+      <p class="mb-1 px-4 text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-600">
+        CRM
+      </p>
+
+      <a
+        routerLink="/app/crm/oportunidades"
+        routerLinkActive="bg-red-50 font-semibold text-red-700 border-r-4 border-red-700 dark:bg-red-950/30 dark:text-red-500 dark:border-red-500"
+        [class]="navLinkInactive"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">trending_up</span>
+        <span class="font-headline font-bold tracking-tight">Oportunidades</span>
+      </a>
+
+      <a
+        routerLink="/app/crm/proyectos"
+        routerLinkActive="bg-red-50 font-semibold text-red-700 border-r-4 border-red-700 dark:bg-red-950/30 dark:text-red-500 dark:border-red-500"
+        [class]="navLinkInactive"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">folder_open</span>
+        <span class="font-headline font-bold tracking-tight">Proyectos</span>
+      </a>
+    </div>
+
+    <!-- ── Módulos operativos ──────────────────────────────── -->
+    <div class="pt-4">
+      <p class="mb-1 px-4 text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-600">
+        Operaciones
+      </p>
+
+      <a
+        routerLink="/app/empleados"
+        routerLinkActive="bg-red-50 font-semibold text-red-700 border-r-4 border-red-700 dark:bg-red-950/30 dark:text-red-500 dark:border-red-500"
+        [class]="navLinkInactive"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">badge</span>
+        <span class="font-headline font-bold tracking-tight">Empleados</span>
+      </a>
+
+      <a
+        routerLink="/app/tareas"
+        routerLinkActive="bg-red-50 font-semibold text-red-700 border-r-4 border-red-700 dark:bg-red-950/30 dark:text-red-500 dark:border-red-500"
+        [class]="navLinkInactive"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">task_alt</span>
+        <span class="font-headline font-bold tracking-tight">Tareas</span>
+      </a>
+
+      <a
+        routerLink="/app/sedes"
+        routerLinkActive="bg-red-50 font-semibold text-red-700 border-r-4 border-red-700 dark:bg-red-950/30 dark:text-red-500 dark:border-red-500"
+        [class]="navLinkInactive"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">location_on</span>
+        <span class="font-headline font-bold tracking-tight">Sedes</span>
+      </a>
+    </div>
   </nav>
 
+  <!-- Acciones y utilidades al fondo -->
   <div class="mt-auto space-y-1 border-t border-stone-200/10 pt-6">
-    <button
-      type="button"
-      class="font-headline mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-bold tracking-tight text-on-primary transition-all hover:bg-primary-container active:scale-[0.98]"
-    >
-      <span class="material-symbols-outlined text-sm" aria-hidden="true">add</span>
-      New Order
-    </button>
-    <a href="#" class="{{ navLinkInactive }}">
+    <a [class]="navLinkInactive" routerLink="/app/dashboard">
       <span class="material-symbols-outlined" aria-hidden="true">settings</span>
-      <span class="font-headline font-bold tracking-tight">Settings</span>
-    </a>
-    <a href="#" class="{{ navLinkInactive }}">
-      <span class="material-symbols-outlined" aria-hidden="true">help</span>
-      <span class="font-headline font-bold tracking-tight">Support</span>
+      <span class="font-headline font-bold tracking-tight">Configuración</span>
     </a>
   </div>
 </aside>

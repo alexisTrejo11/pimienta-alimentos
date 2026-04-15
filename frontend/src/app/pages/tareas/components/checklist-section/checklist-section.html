@@ -1,0 +1,37 @@
+<!-- Lista de verificación de la tarea (solo lectura) -->
+<section class="rounded-xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-950" aria-label="Lista de verificación">
+  <h2 class="font-headline mb-4 text-base font-bold text-on-surface">
+    Lista de verificación
+    <span class="ml-2 text-sm font-normal text-on-surface-variant">
+      ({{ items().length }} ítems)
+    </span>
+  </h2>
+
+  @if (items().length === 0) {
+    <p class="text-sm text-on-surface-variant">Esta tarea no tiene lista de verificación.</p>
+  } @else {
+    <ol class="flex flex-col gap-2">
+      @for (item of items(); track item.displayOrder) {
+        <li class="flex items-start gap-3">
+          <!-- Ícono de estado del ítem -->
+          @if (item.completed) {
+            <span
+              class="material-symbols-outlined--filled material-symbols-outlined mt-0.5 shrink-0 text-lg text-green-600"
+              aria-label="Completado"
+            >check_circle</span>
+          } @else {
+            <span
+              class="material-symbols-outlined mt-0.5 shrink-0 text-lg text-stone-400"
+              aria-label="Pendiente"
+            >radio_button_unchecked</span>
+          }
+
+          <!-- Texto del ítem con tachado si está completado -->
+          <span [class]="item.completed ? 'line-through text-on-surface-variant' : 'text-on-surface'">
+            {{ item.description }}
+          </span>
+        </li>
+      }
+    </ol>
+  }
+</section>

@@ -1,0 +1,50 @@
+<!-- Tarjeta: datos laborales del empleado -->
+<section class="rounded-xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-950" aria-label="Información laboral">
+  <h2 class="font-headline mb-4 text-base font-bold text-on-surface">Información laboral</h2>
+
+  <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Número de empleado</dt>
+      <dd class="mt-1 font-mono font-semibold text-on-surface">{{ empleado().employeeNumber }}</dd>
+    </div>
+
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Estado actual</dt>
+      <dd class="mt-1">
+        <app-status-badge [status]="empleado().status" kind="employee" />
+      </dd>
+    </div>
+
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Puesto</dt>
+      <dd class="mt-1 text-on-surface">{{ empleado().position || '—' }}</dd>
+    </div>
+
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Departamento</dt>
+      <dd class="mt-1 text-on-surface">{{ empleado().department || '—' }}</dd>
+    </div>
+
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Tipo de contrato</dt>
+      <dd class="mt-1 text-on-surface">{{ contrato }}</dd>
+    </div>
+
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Turno</dt>
+      <dd class="mt-1 text-on-surface">{{ turno }}</dd>
+    </div>
+
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Fecha de ingreso</dt>
+      <dd class="mt-1 text-on-surface">{{ empleado().hireDate || '—' }}</dd>
+    </div>
+
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Fecha de baja</dt>
+      <dd class="mt-1 text-on-surface">{{ empleado().terminationDate ?? '—' }}</dd>
+    </div>
+
+  </dl>
+</section>
