@@ -4,8 +4,8 @@ import io.github.alexistrejo11.pimienta.module.employees.core.application.query.
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.Employee;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.EmployeeSummary;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.EmployeeStatistics;
-import io.github.alexistrejo11.pimienta.module.employees.core.domain.HireEmployeeParams;
-import io.github.alexistrejo11.pimienta.module.employees.core.domain.UpdateEmployeeParams;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.dto.HireEmployeeParams;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.dto.UpdateEmployeeParams;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

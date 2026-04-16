@@ -26,6 +26,8 @@ logging:
     org.springframework.web: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB:INFO}
 
 pimienta:
+  rate-limiting:
+    enabled: ${PIMIENTA_RATE_LIMITING_ENABLED:true}
   security:
     jwt:
       secret: ${PIMIENTA_SECURITY_JWT_SECRET:docker-dev-change-me-use-a-real-secret-in-production-at-least-256-bits-for-hs256}

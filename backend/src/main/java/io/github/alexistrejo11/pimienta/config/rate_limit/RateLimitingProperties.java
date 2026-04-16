@@ -5,7 +5,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties(prefix = "bank.rate-limiting")
+@ConfigurationProperties(prefix = "pimienta.rate-limiting")
 public class RateLimitingProperties {
 
   private boolean enabled = false;
@@ -51,7 +51,9 @@ public class RateLimitingProperties {
     }
     return switch (profile) {
       case STANDARD -> new TokenBucketSpec(48, 0.8);
+      case READ_HEAVY -> new TokenBucketSpec(120, 3.0);
       case STRICT -> new TokenBucketSpec(12, 0.2);
+      case AUTH_SESSION -> new TokenBucketSpec(60, 1.5);
       case SENSITIVE_OPERATIONS -> new TokenBucketSpec(6, 0.1);
     };
   }

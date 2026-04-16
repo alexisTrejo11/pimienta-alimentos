@@ -3,6 +3,8 @@ package io.github.alexistrejo11.pimienta.module.task.core.application;
 import io.github.alexistrejo11.pimienta.module.task.core.application.query.TaskSearchCriteria;
 import io.github.alexistrejo11.pimienta.module.task.core.domain.CreateTaskParams;
 import io.github.alexistrejo11.pimienta.module.task.core.domain.Task;
+import io.github.alexistrejo11.pimienta.module.task.core.domain.exception.TaskChecklistItemNotFoundException;
+import io.github.alexistrejo11.pimienta.module.task.core.domain.exception.TaskNotFoundException;
 import io.github.alexistrejo11.pimienta.module.task.core.port.TaskRepository;
 import java.time.LocalDateTime;
 import org.springframework.data.domain.Page;

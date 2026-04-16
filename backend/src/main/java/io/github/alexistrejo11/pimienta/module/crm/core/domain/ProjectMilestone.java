@@ -70,17 +70,14 @@ public class ProjectMilestone extends BaseDomain<Long> {
   // FACTORY METHOD
   // ─────────────────────────────────────────────
 
-  public static ProjectMilestone create(
-      Long projectId, String name, String description,
-      LocalDate plannedDate, BigDecimal billingAmount, int sortOrder) {
-
+  public static ProjectMilestone create(ProjectMilestoneCreateParams params) {
     var milestone = new ProjectMilestone();
-    milestone.projectId = projectId;
-    milestone.name = name;
-    milestone.description = description;
-    milestone.plannedDate = plannedDate;
-    milestone.billingAmount = billingAmount;
-    milestone.sortOrder = sortOrder;
+    milestone.projectId = params.projectId();
+    milestone.name = params.name();
+    milestone.description = params.description();
+    milestone.plannedDate = params.plannedDate();
+    milestone.billingAmount = params.billingAmount();
+    milestone.sortOrder = params.sortOrder();
     return milestone;
   }
 

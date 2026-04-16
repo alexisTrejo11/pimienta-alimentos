@@ -1,9 +1,15 @@
 package io.github.alexistrejo11.pimienta.module.crm.core.application;
 
+import io.github.alexistrejo11.pimienta.module.crm.core.application.command.CreateProjectParams;
+import io.github.alexistrejo11.pimienta.module.crm.core.application.command.UpdateProjectParams;
 import io.github.alexistrejo11.pimienta.module.crm.core.application.query.ProjectSearchCriteria;
 import io.github.alexistrejo11.pimienta.module.crm.core.domain.Project;
-import io.github.alexistrejo11.pimienta.module.crm.core.port.ProjectMilestoneRepository;
-import io.github.alexistrejo11.pimienta.module.crm.core.port.ProjectRepository;
+import io.github.alexistrejo11.pimienta.module.crm.core.domain.ProjectCreateParams;
+import io.github.alexistrejo11.pimienta.module.crm.core.application.summary.ProjectSummary;
+import io.github.alexistrejo11.pimienta.module.crm.core.domain.exception.ProjectNotFoundException;
+import io.github.alexistrejo11.pimienta.module.crm.core.port.input.ProjectUseCases;
+import io.github.alexistrejo11.pimienta.module.crm.core.port.output.ProjectMilestoneRepository;
+import io.github.alexistrejo11.pimienta.module.crm.core.port.output.ProjectRepository;
 import io.github.alexistrejo11.pimienta.module.task.core.port.TaskRepository;
 import io.github.alexistrejo11.pimienta.shared.exception.ConflictException;
 import io.github.alexistrejo11.pimienta.shared.exception.ErrorCode;
@@ -49,22 +55,22 @@ public class ProjectUseCasesImpl implements ProjectUseCases {
           Map.of("projectCode", code),
           "Duplicate projectCode: " + code);
     }
-    Project project =
-        Project.create(
-            code,
-            params.projectName(),
-            params.description(),
-            params.clientId(),
-            params.originOpportunityId(),
-            params.type(),
-            params.priority(),
-            params.projectManagerId(),
-            params.assignedSalesmanId(),
-            params.plannedStartDate(),
-            params.plannedEndDate(),
-            params.contractedValue(),
-            params.estimatedCost());
-    return projectRepository.save(project);
+    ProjectCreateParams createParams = ProjectCreateParams.builder()
+        .projectCode(code)
+        .projectName(params.projectName())
+        .description(params.description())
+        .clientId(params.clientId())
+        .originOpportunityId(params.originOpportunityId())
+        .type(params.type())
+        .priority(params.priority())
+        .projectManagerId(params.projectManagerId())
+        .assignedSalesmanId(params.assignedSalesmanId())
+        .plannedStartDate(params.plannedStartDate())
+        .plannedEndDate(params.plannedEndDate())
+        .contractedValue(params.contractedValue())
+        .estimatedCost(params.estimatedCost())
+        .build();
+    return projectRepository.save(Project.create(createParams));
   }
 
   @Override

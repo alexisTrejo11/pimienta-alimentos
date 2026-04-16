@@ -23,4 +23,21 @@ public interface TaskRepository {
   long countByProjectId(long projectId);
 
   long countOpenByProjectId(long projectId);
+
+  /**
+   * Tareas personales (sin proyecto ni oportunidad), no borradas y aún abiertas (no COMPLETED ni
+   * CANCELLED).
+   */
+  long countOpenPersonalTasks();
+
+  /** Tareas personales en estado PENDING. */
+  long countPendingPersonalTasks();
+
+  /**
+   * Tareas de trabajo (ligadas a proyecto u oportunidad), abiertas (no COMPLETED ni CANCELLED).
+   */
+  long countOpenWorkTasks();
+
+  /** Tareas de trabajo en estado PENDING. */
+  long countPendingWorkTasks();
 }

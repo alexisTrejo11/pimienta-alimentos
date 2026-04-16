@@ -1,5 +1,9 @@
 package io.github.alexistrejo11.pimienta.module.employees.core.domain;
 
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.dto.HireEmployeeParams;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.dto.ReconstructEmployeeParams;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.dto.UpdateEmployeeParams;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.enums.*;
 import io.github.alexistrejo11.pimienta.shared.BaseDomain;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -59,11 +63,12 @@ public class Employee extends BaseDomain<Long> {
             params.employeeNumber());
     employee.employment =
         Employment.hired(
-            params.position(),
-            params.department(),
-            params.contractType(),
-            params.workShift(),
-            now.toLocalDate());
+            new EmploymentHiredParams(
+                params.position(),
+                params.department(),
+                params.contractType(),
+                params.workShift(),
+                now.toLocalDate()));
     employee.compensation = Compensation.baseline(params.salaryPerWeek());
     employee.benefits = BenefitsProfile.legalDefaults();
     employee.createdAt = now;

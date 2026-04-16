@@ -1,6 +1,6 @@
 package io.github.alexistrejo11.pimienta.module.employees.core.application.query;
 
-import io.github.alexistrejo11.pimienta.module.employees.core.domain.EmployeeStatus;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.enums.EmployeeStatus;
 
 /**
  * Filters for listing employees; all fields are optional — omitted means no constraint on that

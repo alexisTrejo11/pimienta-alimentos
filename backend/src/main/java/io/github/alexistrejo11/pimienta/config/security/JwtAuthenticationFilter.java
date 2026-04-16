@@ -1,6 +1,7 @@
 package io.github.alexistrejo11.pimienta.config.security;
 
-import io.github.alexistrejo11.pimienta.module.account.auth.core.port.TokenService;
+import io.github.alexistrejo11.pimienta.module.account.auth.core.domain.entity.ParsedAccessToken;
+import io.github.alexistrejo11.pimienta.module.account.auth.core.port.input.TokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,7 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       return;
     }
     try {
-      var parsed = tokenService.parseAccessToken(token);
+      ParsedAccessToken parsed = tokenService.parseAccessToken(token);
       var authorities = new ArrayList<SimpleGrantedAuthority>();
       for (String r : parsed.roles()) {
         authorities.add(new SimpleGrantedAuthority("ROLE_" + r));
@@ -47,11 +48,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       for (String p : parsed.permissions()) {
         authorities.add(new SimpleGrantedAuthority(p));
       }
-      var auth =
-          new UsernamePasswordAuthenticationToken(
-              parsed.email(), null, authorities);
-      auth.setDetails(
-          new WebAuthenticationDetailsSource().buildDetails(request));
+      JwtAuthenticationContext principal = new JwtAuthenticationContext(parsed);
+      UsernamePasswordAuthenticationToken auth =
+          new UsernamePasswordAuthenticationToken(principal, null, authorities);
+      auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
       SecurityContextHolder.getContext().setAuthentication(auth);
     } catch (RuntimeException ignored) {
       SecurityContextHolder.clearContext();

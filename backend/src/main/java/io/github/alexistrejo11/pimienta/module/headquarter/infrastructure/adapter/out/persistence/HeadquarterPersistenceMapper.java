@@ -1,6 +1,7 @@
 package io.github.alexistrejo11.pimienta.module.headquarter.infrastructure.adapter.out.persistence;
 
 import io.github.alexistrejo11.pimienta.module.headquarter.core.domain.Headquarter;
+import io.github.alexistrejo11.pimienta.module.headquarter.core.domain.HeadquarterReconstructParams;
 import io.github.alexistrejo11.pimienta.module.headquarter.infrastructure.adapter.out.persistence.jpa.HeadquarterJpaEntity;
 import java.util.Objects;
 import org.springframework.stereotype.Component;
@@ -19,14 +20,16 @@ public final class HeadquarterPersistenceMapper {
       return null;
     }
     return Headquarter.reconstruct(
-        entity.getId(),
-        text(entity.getName()),
-        text(entity.getAddress()),
-        text(entity.getDescription()),
-        entity.getCreatedAt(),
-        entity.getUpdatedAt(),
-        entity.getDeletedAt(),
-        entity.getVersion() != null ? entity.getVersion() : 0L);
+        HeadquarterReconstructParams.builder()
+            .id(entity.getId())
+            .name(text(entity.getName()))
+            .address(text(entity.getAddress()))
+            .description(text(entity.getDescription()))
+            .createdAt(entity.getCreatedAt())
+            .updatedAt(entity.getUpdatedAt())
+            .deletedAt(entity.getDeletedAt())
+            .version(entity.getVersion() != null ? entity.getVersion() : 0L)
+            .build());
   }
 
   public HeadquarterJpaEntity toEntity(Headquarter headquarter) {

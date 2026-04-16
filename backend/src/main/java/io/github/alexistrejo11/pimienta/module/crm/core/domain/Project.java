@@ -120,29 +120,22 @@ public class Project extends BaseDomain<Long> {
   // FACTORY METHOD
   // ─────────────────────────────────────────────
 
-  public static Project create(
-      String projectCode, String projectName, String description,
-      Long clientId, Long originOpportunityId,
-      ProjectType type, ProjectPriority priority,
-      Long projectManagerId, Long assignedSalesmanId,
-      LocalDate plannedStartDate, LocalDate plannedEndDate,
-      BigDecimal contractedValue, BigDecimal estimatedCost) {
-
+  public static Project create(ProjectCreateParams params) {
     var now = LocalDateTime.now();
     var project = new Project();
-    project.projectCode = projectCode;
-    project.projectName = projectName;
-    project.description = description;
-    project.clientId = clientId;
-    project.originOpportunityId = originOpportunityId;
-    project.type = type;
-    project.priority = priority;
-    project.projectManagerId = projectManagerId;
-    project.assignedSalesmanId = assignedSalesmanId;
-    project.plannedStartDate = plannedStartDate;
-    project.plannedEndDate = plannedEndDate;
-    project.contractedValue = contractedValue;
-    project.estimatedCost = estimatedCost;
+    project.projectCode = params.projectCode();
+    project.projectName = params.projectName();
+    project.description = params.description();
+    project.clientId = params.clientId();
+    project.originOpportunityId = params.originOpportunityId();
+    project.type = params.type();
+    project.priority = params.priority();
+    project.projectManagerId = params.projectManagerId();
+    project.assignedSalesmanId = params.assignedSalesmanId();
+    project.plannedStartDate = params.plannedStartDate();
+    project.plannedEndDate = params.plannedEndDate();
+    project.contractedValue = params.contractedValue();
+    project.estimatedCost = params.estimatedCost();
     project.actualCost = BigDecimal.ZERO;
     project.status = ProjectStatus.PLANNING;
     project.progressPercent = 0;

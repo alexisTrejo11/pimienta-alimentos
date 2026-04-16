@@ -1,5 +1,9 @@
 package io.github.alexistrejo11.pimienta.module.employees.core.domain;
 
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.enums.ContractType;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.enums.EmployeeStatus;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.enums.WorkShift;
+
 import java.time.LocalDate;
 
 /**
@@ -22,18 +26,13 @@ public record Employment(
     status = status != null ? status : EmployeeStatus.ACTIVE;
   }
 
-  public static Employment hired(
-      String position,
-      String department,
-      ContractType contractType,
-      WorkShift workShift,
-      LocalDate hireDate) {
+  public static Employment hired(EmploymentHiredParams params) {
     return new Employment(
-        position,
-        department,
-        contractType,
-        workShift,
-        hireDate,
+        params.position(),
+        params.department(),
+        params.contractType(),
+        params.workShift(),
+        params.hireDate(),
         null,
         EmployeeStatus.ACTIVE);
   }

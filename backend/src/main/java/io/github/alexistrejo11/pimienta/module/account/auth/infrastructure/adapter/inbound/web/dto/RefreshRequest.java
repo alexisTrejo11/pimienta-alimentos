@@ -2,4 +2,5 @@ package io.github.alexistrejo11.pimienta.module.account.auth.infrastructure.adap
 
 import jakarta.validation.constraints.NotBlank;
 
-public record RefreshRequest(@NotBlank String refreshToken) {}
+public record RefreshRequest(@NotBlank String refreshToken) {
+}

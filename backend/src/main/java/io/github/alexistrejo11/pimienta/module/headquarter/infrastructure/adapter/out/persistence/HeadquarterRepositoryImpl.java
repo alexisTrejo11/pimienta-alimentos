@@ -66,6 +66,11 @@ public class HeadquarterRepositoryImpl implements HeadquarterRepository {
   }
 
   @Override
+  public long countActive() {
+    return jpaRepository.countByDeletedAtIsNull();
+  }
+
+  @Override
   public HeadquarterStatistics statistics() {
     long total = jpaRepository.count();
     long softDeleted = jpaRepository.countByDeletedAtIsNotNull();

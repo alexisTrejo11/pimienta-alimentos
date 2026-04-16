@@ -5,7 +5,8 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 
 /**
- * Base application exception. {@code getMessage()} is safe for API clients. {@link #logDetails()} is
+ * Base application exception. {@code getMessage()} is safe for API clients.
+ * {@link #logDetails()} is
  * for logging only and must never be returned in HTTP responses.
  */
 public class PimientaException extends RuntimeException {

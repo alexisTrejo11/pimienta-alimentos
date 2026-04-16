@@ -34,19 +34,21 @@ public class RedisTokenBucketRateLimiter {
     try {
       long now = System.currentTimeMillis();
       @SuppressWarnings("unchecked")
-      List<Long> raw = redis.execute(
-          SCRIPT,
-          Collections.singletonList(redisKey),
-          List.of(
+      // Must pass ARGV as varargs (Object...), not a single List — otherwise Spring serializes
+      // the whole List as one script argument and StringRedisSerializer throws ClassCastException.
+      List<Long> raw =
+          redis.execute(
+              SCRIPT,
+              Collections.singletonList(redisKey),
               Integer.toString(capacity),
               Double.toString(refillPerSecond),
-              Long.toString(now)));
+              Long.toString(now));
       if (raw == null || raw.size() < 3) {
         return failOrAllow(capacity, "rate_limit_empty_script_result");
       }
-      long allowed = raw.get(0);
-      long remaining = raw.get(1);
-      long retryAfter = raw.get(2);
+      long allowed = toLong(raw.get(0));
+      long remaining = toLong(raw.get(1));
+      long retryAfter = toLong(raw.get(2));
       if (allowed == 1L) {
         return RateLimitDecision.allowed(remaining);
       }
@@ -55,6 +57,13 @@ public class RedisTokenBucketRateLimiter {
       log.warn("rate_limit_redis_error key={}", redisKey, e);
       return failOrAllow(capacity, "rate_limit_redis_exception");
     }
+  }
+
+  private static long toLong(Object o) {
+    if (o instanceof Number n) {
+      return n.longValue();
+    }
+    return Long.parseLong(o.toString());
   }
 
   private RateLimitDecision failOrAllow(int capacity, String reason) {

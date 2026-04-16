@@ -2,9 +2,12 @@ package io.github.alexistrejo11.pimienta.module.account.user.core.application;
 
 import io.github.alexistrejo11.pimienta.module.account.user.core.application.command.AddRolesCommand;
 import io.github.alexistrejo11.pimienta.module.account.user.core.application.command.BanUserCommand;
-import io.github.alexistrejo11.pimienta.module.account.user.core.domain.User;
-import io.github.alexistrejo11.pimienta.module.account.user.core.domain.UserStatistics;
-import io.github.alexistrejo11.pimienta.module.account.user.core.port.UserRepository;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.entities.User;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.entities.UserStatistics;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.exceptions.UserNotFoundException;
+import io.github.alexistrejo11.pimienta.module.account.user.core.port.input.UserManagementUseCases;
+import io.github.alexistrejo11.pimienta.module.account.user.core.port.output.UserRepository;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -42,25 +45,29 @@ public class UserManagementUseCasesImpl implements UserManagementUseCases {
 
   @Override
   public void ban(Long userId, BanUserCommand command) {
-    User user =
-        userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+    User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
     user.ban(command.reason());
     userRepository.save(user);
   }
 
   @Override
   public void unban(Long userId) {
-    User user =
-        userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+    User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
     user.unban();
     userRepository.save(user);
   }
 
   @Override
   public User addRoles(Long userId, AddRolesCommand command) {
-    User user =
-        userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+    User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
     user.addRoles(command.roles());
     return userRepository.save(user);
+  }
+
+  @Override
+  public void approve(Long userId) {
+    User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+    user.activate();
+    userRepository.save(user);
   }
 }

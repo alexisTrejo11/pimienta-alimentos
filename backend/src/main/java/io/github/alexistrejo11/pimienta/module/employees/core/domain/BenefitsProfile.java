@@ -1,5 +1,8 @@
 package io.github.alexistrejo11.pimienta.module.employees.core.domain;
 
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.enums.ImssSalaryType;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.enums.ImssWorkerType;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 

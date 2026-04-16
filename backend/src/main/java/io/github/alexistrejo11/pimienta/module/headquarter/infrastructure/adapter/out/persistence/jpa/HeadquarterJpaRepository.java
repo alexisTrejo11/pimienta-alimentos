@@ -7,5 +7,7 @@ public interface HeadquarterJpaRepository extends JpaRepository<HeadquarterJpaEn
 
   Optional<HeadquarterJpaEntity> findByNameAndDeletedAtIsNull(String name);
 
+  long countByDeletedAtIsNull();
+
   long countByDeletedAtIsNotNull();
 }

@@ -1,8 +1,14 @@
 package io.github.alexistrejo11.pimienta.module.crm.core.application;
 
+import io.github.alexistrejo11.pimienta.module.crm.core.application.command.CreateProjectMilestoneParams;
+import io.github.alexistrejo11.pimienta.module.crm.core.application.command.UpdateProjectMilestoneParams;
 import io.github.alexistrejo11.pimienta.module.crm.core.domain.ProjectMilestone;
-import io.github.alexistrejo11.pimienta.module.crm.core.port.ProjectMilestoneRepository;
-import io.github.alexistrejo11.pimienta.module.crm.core.port.ProjectRepository;
+import io.github.alexistrejo11.pimienta.module.crm.core.domain.ProjectMilestoneCreateParams;
+import io.github.alexistrejo11.pimienta.module.crm.core.domain.exception.ProjectMilestoneNotFoundException;
+import io.github.alexistrejo11.pimienta.module.crm.core.domain.exception.ProjectNotFoundException;
+import io.github.alexistrejo11.pimienta.module.crm.core.port.input.ProjectMilestoneUseCases;
+import io.github.alexistrejo11.pimienta.module.crm.core.port.output.ProjectMilestoneRepository;
+import io.github.alexistrejo11.pimienta.module.crm.core.port.output.ProjectRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -36,15 +42,15 @@ public class ProjectMilestoneUseCasesImpl implements ProjectMilestoneUseCases {
   @Override
   public ProjectMilestone create(Long projectId, CreateProjectMilestoneParams params) {
     ensureProjectExists(projectId);
-    ProjectMilestone m =
-        ProjectMilestone.create(
-            projectId,
-            params.name(),
-            params.description(),
-            params.plannedDate(),
-            params.billingAmount(),
-            params.sortOrder());
-    return milestoneRepository.save(m);
+    ProjectMilestoneCreateParams createParams = ProjectMilestoneCreateParams.builder()
+        .projectId(projectId)
+        .name(params.name())
+        .description(params.description())
+        .plannedDate(params.plannedDate())
+        .billingAmount(params.billingAmount())
+        .sortOrder(params.sortOrder())
+        .build();
+    return milestoneRepository.save(ProjectMilestone.create(createParams));
   }
 
   @Override

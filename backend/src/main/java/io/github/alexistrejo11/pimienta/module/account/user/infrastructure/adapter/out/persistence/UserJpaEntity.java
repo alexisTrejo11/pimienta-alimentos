@@ -1,7 +1,8 @@
 package io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.out.persistence;
 
-import io.github.alexistrejo11.pimienta.module.account.user.core.domain.Gender;
-import io.github.alexistrejo11.pimienta.module.account.user.core.domain.Role;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.enums.AccountStatus;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.enums.Gender;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.enums.Role;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -49,8 +50,9 @@ public class UserJpaEntity {
   @Column(name = "date_of_birth", nullable = false)
   private LocalDate dateOfBirth;
 
-  @Column(nullable = false)
-  private boolean banned;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "account_status", nullable = false, length = 32)
+  private AccountStatus accountStatus;
 
   @Column(name = "banned_reason", length = 500)
   private String bannedReason;
@@ -140,12 +142,12 @@ public class UserJpaEntity {
     this.dateOfBirth = dateOfBirth;
   }
 
-  public boolean isBanned() {
-    return banned;
+  public AccountStatus getAccountStatus() {
+    return accountStatus;
   }
 
-  public void setBanned(boolean banned) {
-    this.banned = banned;
+  public void setAccountStatus(AccountStatus accountStatus) {
+    this.accountStatus = accountStatus;
   }
 
   public String getBannedReason() {

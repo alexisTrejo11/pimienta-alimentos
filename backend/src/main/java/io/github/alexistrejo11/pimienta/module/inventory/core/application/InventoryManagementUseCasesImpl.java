@@ -8,6 +8,10 @@ import io.github.alexistrejo11.pimienta.module.inventory.core.domain.StorageLoca
 import io.github.alexistrejo11.pimienta.module.inventory.core.port.InventoryRepository;
 import io.github.alexistrejo11.pimienta.module.inventory.core.port.ItemRepository;
 import io.github.alexistrejo11.pimienta.module.inventory.core.port.StorageLocationRepository;
+import io.github.alexistrejo11.pimienta.module.inventory.core.domain.exception.InventoryAlreadyExistsException;
+import io.github.alexistrejo11.pimienta.module.inventory.core.domain.exception.InventoryNotFoundException;
+import io.github.alexistrejo11.pimienta.module.inventory.core.domain.exception.ItemNotFoundException;
+import io.github.alexistrejo11.pimienta.module.inventory.core.domain.exception.StorageLocationNotFoundException;
 import io.github.alexistrejo11.pimienta.shared.exception.BusinessValidationException;
 import java.util.List;
 import java.util.Map;

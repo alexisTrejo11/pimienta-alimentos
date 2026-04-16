@@ -58,4 +58,36 @@ public class TaskRepositoryImpl implements TaskRepository {
     return jpaRepository.countByProjectIdAndDeletedAtIsNullAndStatusNotIn(
         projectId, List.of(Task.Status.COMPLETED, Task.Status.CANCELLED));
   }
+
+  @Override
+  public long countOpenPersonalTasks() {
+    return count(
+        Specification.where(TaskSpecifications.personalNotDeleted())
+            .and(TaskSpecifications.statusOpen()));
+  }
+
+  @Override
+  public long countPendingPersonalTasks() {
+    return count(
+        Specification.where(TaskSpecifications.personalNotDeleted())
+            .and(TaskSpecifications.statusPending()));
+  }
+
+  @Override
+  public long countOpenWorkTasks() {
+    return count(
+        Specification.where(TaskSpecifications.workNotDeleted())
+            .and(TaskSpecifications.statusOpen()));
+  }
+
+  @Override
+  public long countPendingWorkTasks() {
+    return count(
+        Specification.where(TaskSpecifications.workNotDeleted())
+            .and(TaskSpecifications.statusPending()));
+  }
+
+  private long count(Specification<TaskJpaEntity> spec) {
+    return jpaRepository.count(spec);
+  }
 }

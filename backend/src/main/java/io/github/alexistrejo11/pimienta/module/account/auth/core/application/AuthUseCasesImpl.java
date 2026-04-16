@@ -4,13 +4,16 @@ import io.github.alexistrejo11.pimienta.module.account.auth.core.application.com
 import io.github.alexistrejo11.pimienta.module.account.auth.core.application.command.LogoutCommand;
 import io.github.alexistrejo11.pimienta.module.account.auth.core.application.command.RefreshSessionCommand;
 import io.github.alexistrejo11.pimienta.module.account.auth.core.application.command.RegisterCommand;
-import io.github.alexistrejo11.pimienta.module.account.auth.core.domain.IssuedTokens;
-import io.github.alexistrejo11.pimienta.module.account.auth.core.port.RefreshTokenStore;
-import io.github.alexistrejo11.pimienta.module.account.auth.core.port.TokenService;
-import io.github.alexistrejo11.pimienta.module.account.user.core.application.EmailAlreadyExistsException;
-import io.github.alexistrejo11.pimienta.module.account.user.core.application.UserNotFoundException;
-import io.github.alexistrejo11.pimienta.module.account.user.core.domain.User;
-import io.github.alexistrejo11.pimienta.module.account.user.core.port.UserRepository;
+import io.github.alexistrejo11.pimienta.module.account.auth.core.domain.entity.IssuedTokens;
+import io.github.alexistrejo11.pimienta.module.account.auth.core.port.input.AuthUseCases;
+import io.github.alexistrejo11.pimienta.module.account.auth.core.port.input.RefreshTokenStore;
+import io.github.alexistrejo11.pimienta.module.account.auth.core.port.input.TokenService;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.entities.User;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.entities.UserRegisterParams;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.exceptions.AccountPendingApprovalException;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.exceptions.EmailAlreadyExistsException;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.exceptions.UserNotFoundException;
+import io.github.alexistrejo11.pimienta.module.account.user.core.port.output.UserRepository;
 import io.github.alexistrejo11.pimienta.shared.exception.AuthenticationException;
 import java.util.Map;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,37 +39,37 @@ public class AuthUseCasesImpl implements AuthUseCases {
   }
 
   @Override
-  public IssuedTokens register(RegisterCommand command) {
+  public void register(RegisterCommand command) {
     String email = command.email().trim().toLowerCase();
     if (userRepository.findByEmail(email).isPresent()) {
       throw new EmailAlreadyExistsException(email);
     }
     String hash = passwordEncoder.encode(command.password());
-    User created =
-        User.register(
-            email,
-            hash,
-            command.firstName(),
-            command.lastName(),
-            command.gender(),
-            command.phone(),
-            command.dateOfBirth());
-    User saved = userRepository.save(created);
-    return tokenService.issuePair(saved);
+    UserRegisterParams params = UserRegisterParams.builder()
+        .email(email)
+        .passwordHash(hash)
+        .firstName(command.firstName())
+        .lastName(command.lastName())
+        .gender(command.gender())
+        .phone(command.phone())
+        .dateOfBirth(command.dateOfBirth())
+        .build();
+    userRepository.save(User.register(params));
   }
 
   @Override
   public IssuedTokens login(LoginCommand command) {
     String email = command.email().trim().toLowerCase();
-    User user =
-        userRepository
-            .findByEmail(email)
-            .orElseThrow(
-                () ->
-                    new AuthenticationException(
-                        "Invalid email or password.",
-                        Map.of("email", email),
-                        "Login failed: user not found " + email));
+    User user = userRepository
+        .findByEmail(email)
+        .orElseThrow(
+            () -> new AuthenticationException(
+                "Invalid email or password.",
+                Map.of("email", email),
+                "Login failed: user not found " + email));
+    if (user.isPendingApproval()) {
+      throw new AccountPendingApprovalException(user.getId());
+    }
     if (user.isBanned()) {
       throw new AuthenticationException(
           "This account has been suspended.",
@@ -85,10 +88,9 @@ public class AuthUseCasesImpl implements AuthUseCases {
   @Override
   public IssuedTokens refresh(RefreshSessionCommand command) {
     var validated = tokenService.validateRefreshToken(command.refreshToken());
-    User user =
-        userRepository
-            .findById(validated.userId())
-            .orElseThrow(() -> new UserNotFoundException(validated.userId()));
+    User user = userRepository
+        .findById(validated.userId())
+        .orElseThrow(() -> new UserNotFoundException(validated.userId()));
     if (user.isBanned()) {
       refreshTokenStore.remove(validated.jti());
       throw new AuthenticationException(

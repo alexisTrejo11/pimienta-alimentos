@@ -10,6 +10,8 @@ import io.github.alexistrejo11.pimienta.module.task.infrastructure.adapter.inbou
 import io.github.alexistrejo11.pimienta.module.task.infrastructure.adapter.inbound.web.dto.TaskRequest;
 import io.github.alexistrejo11.pimienta.module.task.infrastructure.adapter.inbound.web.dto.TaskResponse;
 import io.github.alexistrejo11.pimienta.module.task.infrastructure.adapter.inbound.web.dto.TaskSearchRequest;
+import io.github.alexistrejo11.pimienta.shared.ratelimit.RateLimit;
+import io.github.alexistrejo11.pimienta.shared.ratelimit.RateLimitProfile;
 import io.github.alexistrejo11.pimienta.shared.web.PagedResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -29,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/tasks")
+@RateLimit(profile = RateLimitProfile.STANDARD)
 public class TaskManagerController {
 
   private final TaskManagementUseCases taskManagementUseCases;
@@ -39,6 +42,7 @@ public class TaskManagerController {
 
   /** Búsqueda global con filtros opcionales (sede, proyecto, empleado, estado). */
   @GetMapping
+  @RateLimit(profile = RateLimitProfile.READ_HEAVY)
   public PagedResponse<TaskListItemResponse> searchTasks(@ModelAttribute TaskSearchRequest filter) {
     TaskSearchCriteria criteria = TaskManagerWebMapper.toCriteria(filter);
     Page<Task> page =
@@ -81,6 +85,7 @@ public class TaskManagerController {
   }
 
   @DeleteMapping("/{id}")
+  @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
   public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
     taskManagementUseCases.delete(id);
     return ResponseEntity.noContent().build();

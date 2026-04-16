@@ -2,10 +2,11 @@ package io.github.alexistrejo11.pimienta.module.employees.core.application;
 
 import io.github.alexistrejo11.pimienta.module.employees.core.application.query.EmployeeSearchCriteria;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.Employee;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.exception.EmployeeNotFoundException;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.EmployeeSummary;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.EmployeeStatistics;
-import io.github.alexistrejo11.pimienta.module.employees.core.domain.HireEmployeeParams;
-import io.github.alexistrejo11.pimienta.module.employees.core.domain.UpdateEmployeeParams;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.dto.HireEmployeeParams;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.dto.UpdateEmployeeParams;
 import io.github.alexistrejo11.pimienta.module.employees.core.port.EmployeeManagementUseCases;
 import io.github.alexistrejo11.pimienta.module.employees.core.port.EmployeeRepository;
 import org.springframework.data.domain.Page;

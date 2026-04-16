@@ -8,24 +8,27 @@ import io.github.alexistrejo11.pimienta.module.headquarter.core.domain.Headquart
 import io.github.alexistrejo11.pimienta.module.headquarter.infrastructure.adapter.inbound.web.dto.HeadQuarterRequest;
 import io.github.alexistrejo11.pimienta.module.headquarter.infrastructure.adapter.inbound.web.dto.HeadQuarterResponse;
 import io.github.alexistrejo11.pimienta.module.headquarter.infrastructure.adapter.inbound.web.dto.HeadquarterStatisticsResponse;
+import io.github.alexistrejo11.pimienta.shared.ratelimit.RateLimit;
+import io.github.alexistrejo11.pimienta.shared.ratelimit.RateLimitProfile;
+import io.github.alexistrejo11.pimienta.shared.web.PageableRequest;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/headquarters")
+@RateLimit(profile = RateLimitProfile.STANDARD)
 public class HeadQuarterController {
 
   private final HeadquarterUseCases headquarterUseCases;
@@ -35,16 +38,16 @@ public class HeadQuarterController {
   }
 
   @GetMapping("/statistics")
+  @RateLimit(profile = RateLimitProfile.READ_HEAVY)
   public HeadquarterStatisticsResponse getHeadquarterStatistics() {
     HeadquarterStatistics statistics = headquarterUseCases.statistics();
     return HeadQuarterWebMapper.toResponse(statistics);
   }
 
   @GetMapping
-  public Page<HeadQuarterResponse> getAllHeadquarters(
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "20") int size) {
-    Page<Headquarter> headquarters = headquarterUseCases.getBy(PageRequest.of(page, size));
+  @RateLimit(profile = RateLimitProfile.READ_HEAVY)
+  public Page<HeadQuarterResponse> getAllHeadquarters(@ModelAttribute PageableRequest pageable) {
+    Page<Headquarter> headquarters = headquarterUseCases.getBy(pageable.toPageable());
     return headquarters.map(HeadQuarterWebMapper::toResponse);
   }
 
@@ -78,6 +81,7 @@ public class HeadQuarterController {
   }
 
   @DeleteMapping("/{id}")
+  @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
   public ResponseEntity<Void> softDeleteHeadquarter(@PathVariable Long id) {
     headquarterUseCases.delete(id);
     return ResponseEntity.noContent().build();

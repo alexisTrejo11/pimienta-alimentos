@@ -1,17 +1,16 @@
 package io.github.alexistrejo11.pimienta.module.task.infrastructure.adapter.inbound.web.dto;
 
 import io.github.alexistrejo11.pimienta.module.task.core.domain.Task;
+import io.github.alexistrejo11.pimienta.shared.web.PageableRequest;
 
 /** Query parameters for global task search (Spring binds {@code ?headquarterId=} and related keys). */
-public class TaskSearchRequest {
+public class TaskSearchRequest extends PageableRequest {
 
   private Long headquarterId;
   private Long projectId;
   private Long opportunityId;
   private Long employeeId;
   private Task.Status status;
-  private int page = 0;
-  private int size = 20;
 
   public Long getHeadquarterId() {
     return headquarterId;
@@ -53,19 +52,4 @@ public class TaskSearchRequest {
     this.status = status;
   }
 
-  public int getPage() {
-    return page;
-  }
-
-  public void setPage(int page) {
-    this.page = page;
-  }
-
-  public int getSize() {
-    return size;
-  }
-
-  public void setSize(int size) {
-    this.size = size;
-  }
 }

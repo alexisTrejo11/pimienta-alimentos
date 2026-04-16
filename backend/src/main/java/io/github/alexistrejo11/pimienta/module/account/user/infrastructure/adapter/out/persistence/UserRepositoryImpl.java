@@ -1,8 +1,10 @@
 package io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.out.persistence;
 
-import io.github.alexistrejo11.pimienta.module.account.user.core.domain.User;
-import io.github.alexistrejo11.pimienta.module.account.user.core.domain.UserStatistics;
-import io.github.alexistrejo11.pimienta.module.account.user.core.port.UserRepository;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.entities.User;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.entities.UserStatistics;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.enums.AccountStatus;
+import io.github.alexistrejo11.pimienta.module.account.user.core.port.output.UserRepository;
+
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,8 +47,8 @@ public class UserRepositoryImpl implements UserRepository {
   @Override
   public UserStatistics statistics() {
     long total = jpaRepository.count();
-    long banned = jpaRepository.countByBannedTrue();
-    long active = total - banned;
+    long banned = jpaRepository.countByAccountStatus(AccountStatus.BANNED);
+    long active = jpaRepository.countByAccountStatus(AccountStatus.ACTIVE);
     return new UserStatistics(total, active, banned);
   }
 }

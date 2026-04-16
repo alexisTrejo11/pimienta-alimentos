@@ -1,10 +1,18 @@
 package io.github.alexistrejo11.pimienta.module.crm.core.application;
 
+import io.github.alexistrejo11.pimienta.module.crm.core.application.command.CreateOpportunityParams;
+import io.github.alexistrejo11.pimienta.module.crm.core.application.command.UpdateOpportunityParams;
+import io.github.alexistrejo11.pimienta.module.crm.core.application.command.WinOpportunityParams;
 import io.github.alexistrejo11.pimienta.module.crm.core.application.query.OpportunitySearchCriteria;
 import io.github.alexistrejo11.pimienta.module.crm.core.domain.Opportunity;
+import io.github.alexistrejo11.pimienta.module.crm.core.application.summary.OpportunitySummary;
+import io.github.alexistrejo11.pimienta.module.crm.core.domain.OpportunityOpenParams;
 import io.github.alexistrejo11.pimienta.module.crm.core.domain.Project;
-import io.github.alexistrejo11.pimienta.module.crm.core.port.OpportunityRepository;
-import io.github.alexistrejo11.pimienta.module.crm.core.port.ProjectRepository;
+import io.github.alexistrejo11.pimienta.module.crm.core.domain.ProjectCreateParams;
+import io.github.alexistrejo11.pimienta.module.crm.core.domain.exception.OpportunityNotFoundException;
+import io.github.alexistrejo11.pimienta.module.crm.core.port.input.OpportunityUseCases;
+import io.github.alexistrejo11.pimienta.module.crm.core.port.output.OpportunityRepository;
+import io.github.alexistrejo11.pimienta.module.crm.core.port.output.ProjectRepository;
 import io.github.alexistrejo11.pimienta.module.task.core.port.TaskRepository;
 import io.github.alexistrejo11.pimienta.shared.exception.ConflictException;
 import io.github.alexistrejo11.pimienta.shared.exception.ErrorCode;
@@ -45,22 +53,22 @@ public class OpportunityUseCasesImpl implements OpportunityUseCases {
 
   @Override
   public Opportunity create(CreateOpportunityParams params) {
-    Opportunity created =
-        Opportunity.open(
-            params.title(),
-            params.description(),
-            params.contactName(),
-            params.contactEmail(),
-            params.contactPhone(),
-            params.companyName(),
-            params.companyLocation(),
-            params.industry(),
-            params.estimatedValue(),
-            params.probabilityPercent(),
-            params.source(),
-            params.expectedCloseDate(),
-            params.assignedSalesmanId());
-    return opportunityRepository.save(created);
+    OpportunityOpenParams openParams = OpportunityOpenParams.builder()
+        .title(params.title())
+        .description(params.description())
+        .contactName(params.contactName())
+        .contactEmail(params.contactEmail())
+        .contactPhone(params.contactPhone())
+        .companyName(params.companyName())
+        .companyLocation(params.companyLocation())
+        .industry(params.industry())
+        .estimatedValue(params.estimatedValue())
+        .probabilityPercent(params.probabilityPercent())
+        .source(params.source())
+        .expectedCloseDate(params.expectedCloseDate())
+        .assignedSalesmanId(params.assignedSalesmanId())
+        .build();
+    return opportunityRepository.save(Opportunity.open(openParams));
   }
 
   @Override
@@ -156,22 +164,22 @@ public class OpportunityUseCasesImpl implements OpportunityUseCases {
           Map.of("projectCode", code),
           "Duplicate projectCode on win: " + code);
     }
-    Project project =
-        Project.create(
-            code,
-            params.projectName(),
-            params.description(),
-            params.clientId(),
-            o.getId(),
-            params.type(),
-            params.priority(),
-            params.projectManagerId(),
-            params.assignedSalesmanId(),
-            params.plannedStartDate(),
-            params.plannedEndDate(),
-            params.contractedValue(),
-            params.estimatedCost());
-    Project savedProject = projectRepository.save(project);
+    ProjectCreateParams createParams = ProjectCreateParams.builder()
+        .projectCode(code)
+        .projectName(params.projectName())
+        .description(params.description())
+        .clientId(params.clientId())
+        .originOpportunityId(o.getId())
+        .type(params.type())
+        .priority(params.priority())
+        .projectManagerId(params.projectManagerId())
+        .assignedSalesmanId(params.assignedSalesmanId())
+        .plannedStartDate(params.plannedStartDate())
+        .plannedEndDate(params.plannedEndDate())
+        .contractedValue(params.contractedValue())
+        .estimatedCost(params.estimatedCost())
+        .build();
+    Project savedProject = projectRepository.save(Project.create(createParams));
     o.win();
     o.setConvertedProjectId(savedProject.getId());
     return opportunityRepository.save(o);

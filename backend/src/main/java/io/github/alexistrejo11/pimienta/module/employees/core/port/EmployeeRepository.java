@@ -16,6 +16,8 @@ public interface EmployeeRepository {
 
   Employee save(Employee employee);
 
+  long countActive();
+
   EmployeeStatistics statistics();
 
   EmployeeSummary summarize();

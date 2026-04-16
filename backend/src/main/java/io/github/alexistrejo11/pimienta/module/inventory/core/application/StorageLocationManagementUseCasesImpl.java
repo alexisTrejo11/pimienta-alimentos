@@ -3,6 +3,8 @@ package io.github.alexistrejo11.pimienta.module.inventory.core.application;
 import io.github.alexistrejo11.pimienta.module.inventory.core.application.query.StorageLocationSearchCriteria;
 import io.github.alexistrejo11.pimienta.module.inventory.core.domain.StorageLocation;
 import io.github.alexistrejo11.pimienta.module.inventory.core.port.StorageLocationRepository;
+import io.github.alexistrejo11.pimienta.module.inventory.core.domain.exception.StorageLocationNotFoundException;
+import io.github.alexistrejo11.pimienta.module.inventory.core.domain.exception.StorageLocationNotEmptyException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

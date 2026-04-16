@@ -28,6 +28,9 @@ spring:
       org.springframework.web: DEBUG
 
 pimienta:
+  # Redis-backed token bucket: global filter on /api/** + @RateLimit on controllers.
+  rate-limiting:
+    enabled: true
   # CORS — edit allowed-origins per environment (SPA dev servers, production web origin).
   cors:
     path-pattern: "/**"
@@ -50,6 +53,11 @@ pimienta:
       - Authorization
       - Content-Type
       - X-Total-Count
+      - X-RateLimit-Limit
+      - X-RateLimit-Remaining
+      - X-RateLimit-Limit-Endpoint
+      - X-RateLimit-Remaining-Endpoint
+      - Retry-After
     allow-credentials: true
     max-age-seconds: 3600
   security:

@@ -3,6 +3,8 @@ package io.github.alexistrejo11.pimienta.module.inventory.core.application;
 import io.github.alexistrejo11.pimienta.module.inventory.core.application.query.ItemSearchCriteria;
 import io.github.alexistrejo11.pimienta.module.inventory.core.domain.Item;
 import io.github.alexistrejo11.pimienta.module.inventory.core.port.ItemRepository;
+import io.github.alexistrejo11.pimienta.module.inventory.core.domain.exception.ItemNotFoundException;
+import io.github.alexistrejo11.pimienta.module.inventory.core.domain.exception.ItemSkuConflictException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;

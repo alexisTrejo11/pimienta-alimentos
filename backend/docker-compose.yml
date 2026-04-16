@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-pimienta_dba}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pimienta_dba}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT:-5431}:5432" # Default port for Postgres is 5432, but we are using 5431 to avoid conflicts with localhost.
     volumes:
       - pimienta_pg_data:/var/lib/postgresql/data
     healthcheck:

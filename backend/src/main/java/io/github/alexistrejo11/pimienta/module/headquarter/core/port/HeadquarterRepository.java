@@ -17,5 +17,7 @@ public interface HeadquarterRepository {
 
   Headquarter save(Headquarter headquarter);
 
+  long countActive();
+
   HeadquarterStatistics statistics();
 }

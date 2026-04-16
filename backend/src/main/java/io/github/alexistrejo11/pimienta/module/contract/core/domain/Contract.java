@@ -1,16 +1,13 @@
 package io.github.alexistrejo11.pimienta.module.contract.core.domain;
 
+import io.github.alexistrejo11.pimienta.shared.BaseDomain;
+
 import java.time.LocalDateTime;
 
-public class Contract {
-  private Long id;
+public class Contract extends BaseDomain<Long> {
   private String name;
   private String description;
   private ContractType type;
-  private LocalDateTime createdAt;
-  private LocalDateTime updatedAt;
-  private LocalDateTime deletedAt;
-  private Long version;
 
   public enum ContractType {
     EMPLOYEE,

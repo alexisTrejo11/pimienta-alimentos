@@ -1,14 +1,14 @@
 package io.github.alexistrejo11.pimienta.module.account.auth.infrastructure.security;
 
 import io.github.alexistrejo11.pimienta.config.security.JwtProperties;
-import io.github.alexistrejo11.pimienta.module.account.auth.core.domain.IssuedTokens;
-import io.github.alexistrejo11.pimienta.module.account.auth.core.domain.ParsedAccessToken;
-import io.github.alexistrejo11.pimienta.module.account.auth.core.domain.RefreshTokenValidation;
-import io.github.alexistrejo11.pimienta.module.account.auth.core.port.RefreshTokenStore;
-import io.github.alexistrejo11.pimienta.module.account.auth.core.port.TokenService;
-import io.github.alexistrejo11.pimienta.module.account.user.core.domain.Permission;
-import io.github.alexistrejo11.pimienta.module.account.user.core.domain.Role;
-import io.github.alexistrejo11.pimienta.module.account.user.core.domain.User;
+import io.github.alexistrejo11.pimienta.module.account.auth.core.domain.entity.IssuedTokens;
+import io.github.alexistrejo11.pimienta.module.account.auth.core.domain.entity.ParsedAccessToken;
+import io.github.alexistrejo11.pimienta.module.account.auth.core.domain.entity.RefreshTokenValidation;
+import io.github.alexistrejo11.pimienta.module.account.auth.core.port.input.RefreshTokenStore;
+import io.github.alexistrejo11.pimienta.module.account.auth.core.port.input.TokenService;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.enums.Permission;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.entities.User;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.enums.Role;
 import io.github.alexistrejo11.pimienta.shared.exception.AuthenticationException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -53,31 +53,29 @@ public class JwtTokenService implements TokenService {
 
     refreshTokenStore.remember(refreshJti, user.getId(), refreshTtl);
 
-    String access =
-        Jwts.builder()
-            .id(accessJti)
-            .subject(String.valueOf(user.getId()))
-            .issuedAt(Date.from(now))
-            .expiration(Date.from(now.plus(accessTtl)))
-            .claim("typ", "access")
-            .claim("email", user.getEmail())
-            .claim("firstName", user.getFirstName())
-            .claim("lastName", user.getLastName())
-            .claim("gender", user.getGender() != null ? user.getGender().name() : null)
-            .claim("roles", roleNames)
-            .claim("permissions", permissionNames)
-            .signWith(key)
-            .compact();
+    String access = Jwts.builder()
+        .id(accessJti)
+        .subject(String.valueOf(user.getId()))
+        .issuedAt(Date.from(now))
+        .expiration(Date.from(now.plus(accessTtl)))
+        .claim("typ", "access")
+        .claim("email", user.getEmail())
+        .claim("firstName", user.getFirstName())
+        .claim("lastName", user.getLastName())
+        .claim("gender", user.getGender() != null ? user.getGender().name() : null)
+        .claim("roles", roleNames)
+        .claim("permissions", permissionNames)
+        .signWith(key)
+        .compact();
 
-    String refresh =
-        Jwts.builder()
-            .id(refreshJti)
-            .subject(String.valueOf(user.getId()))
-            .issuedAt(Date.from(now))
-            .expiration(Date.from(now.plus(refreshTtl)))
-            .claim("typ", "refresh")
-            .signWith(key)
-            .compact();
+    String refresh = Jwts.builder()
+        .id(refreshJti)
+        .subject(String.valueOf(user.getId()))
+        .issuedAt(Date.from(now))
+        .expiration(Date.from(now.plus(refreshTtl)))
+        .claim("typ", "refresh")
+        .signWith(key)
+        .compact();
 
     return new IssuedTokens(access, refresh, accessTtl.getSeconds());
   }
@@ -94,10 +92,9 @@ public class JwtTokenService implements TokenService {
         throw invalidRefresh("Missing token id.");
       }
       long sub = Long.parseLong(claims.getSubject());
-      Long stored =
-          refreshTokenStore
-              .findUserId(jti)
-              .orElseThrow(() -> invalidRefresh("Refresh token revoked or unknown."));
+      Long stored = refreshTokenStore
+          .findUserId(jti)
+          .orElseThrow(() -> invalidRefresh("Refresh token revoked or unknown."));
       if (!stored.equals(sub)) {
         throw invalidRefresh("Refresh token mismatch.");
       }

@@ -1,6 +1,6 @@
 package io.github.alexistrejo11.pimienta.module.account.auth.infrastructure.adapter.inbound.web.dto;
 
-import io.github.alexistrejo11.pimienta.module.account.user.core.domain.Gender;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.enums.Gender;
 import io.github.alexistrejo11.pimienta.shared.validation.MinimumAge;
 import io.github.alexistrejo11.pimienta.shared.validation.PasswordStrength;
 import jakarta.validation.constraints.Email;
@@ -16,11 +16,7 @@ public record RegisterRequest(
     @NotBlank @Size(max = 120) String lastName,
     @NotNull Gender gender,
     @NotBlank @Email String email,
-    @NotBlank
-        @Size(min = 8, max = 32)
-        @Pattern(
-            regexp = "^[+]?[0-9\\s().-]{8,31}$",
-            message = "Phone must be 8–32 characters and contain digits.")
-        String phone,
+    @NotBlank @Size(min = 8, max = 32) @Pattern(regexp = "^[+]?[0-9\\s().-]{8,31}$", message = "Phone must be 8–32 characters and contain digits.") String phone,
     @NotBlank @PasswordStrength String password,
-    @NotNull @Past @MinimumAge(13) LocalDate dateOfBirth) {}
+    @NotNull @Past @MinimumAge(13) LocalDate dateOfBirth) {
+}

@@ -1,16 +1,20 @@
 package io.github.alexistrejo11.pimienta.module.account.auth.infrastructure.adapter.inbound.web;
 
-import io.github.alexistrejo11.pimienta.module.account.auth.core.application.AuthUseCases;
 import io.github.alexistrejo11.pimienta.module.account.auth.core.application.command.LoginCommand;
 import io.github.alexistrejo11.pimienta.module.account.auth.core.application.command.LogoutCommand;
 import io.github.alexistrejo11.pimienta.module.account.auth.core.application.command.RefreshSessionCommand;
 import io.github.alexistrejo11.pimienta.module.account.auth.core.application.command.RegisterCommand;
-import io.github.alexistrejo11.pimienta.module.account.auth.core.domain.IssuedTokens;
+import io.github.alexistrejo11.pimienta.module.account.auth.core.domain.entity.IssuedTokens;
+import io.github.alexistrejo11.pimienta.module.account.auth.core.port.input.AuthUseCases;
 import io.github.alexistrejo11.pimienta.module.account.auth.infrastructure.adapter.inbound.web.dto.LoginRequest;
 import io.github.alexistrejo11.pimienta.module.account.auth.infrastructure.adapter.inbound.web.dto.LogoutRequest;
 import io.github.alexistrejo11.pimienta.module.account.auth.infrastructure.adapter.inbound.web.dto.RefreshRequest;
 import io.github.alexistrejo11.pimienta.module.account.auth.infrastructure.adapter.inbound.web.dto.RegisterRequest;
+import io.github.alexistrejo11.pimienta.module.account.auth.infrastructure.adapter.inbound.web.dto.RegisterResponse;
 import io.github.alexistrejo11.pimienta.module.account.auth.infrastructure.adapter.inbound.web.dto.TokenResponse;
+import io.github.alexistrejo11.pimienta.module.account.auth.infrastructure.adapter.inbound.web.mapper.AuthWebMapper;
+import io.github.alexistrejo11.pimienta.shared.ratelimit.RateLimit;
+import io.github.alexistrejo11.pimienta.shared.ratelimit.RateLimitProfile;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,13 +35,17 @@ public class AuthController {
 
   @PostMapping("/register")
   @ResponseStatus(HttpStatus.CREATED)
-  public TokenResponse register(@Valid @RequestBody RegisterRequest request) {
+  @RateLimit(profile = RateLimitProfile.STRICT)
+  public RegisterResponse register(@Valid @RequestBody RegisterRequest request) {
     RegisterCommand command = AuthWebMapper.toRegisterCommand(request);
-    IssuedTokens issued = authUseCases.register(command);
-    return AuthWebMapper.toResponse(issued);
+    authUseCases.register(command);
+    return new RegisterResponse(
+        "Registration successful. Your account is pending approval by an administrator.",
+        "PENDING_APPROVAL");
   }
 
   @PostMapping("/login")
+  @RateLimit(profile = RateLimitProfile.STRICT)
   public TokenResponse login(@Valid @RequestBody LoginRequest request) {
     LoginCommand command = AuthWebMapper.toLoginCommand(request);
     IssuedTokens issued = authUseCases.login(command);
@@ -45,6 +53,7 @@ public class AuthController {
   }
 
   @PostMapping("/refresh")
+  @RateLimit(profile = RateLimitProfile.AUTH_SESSION)
   public TokenResponse refresh(@Valid @RequestBody RefreshRequest request) {
     RefreshSessionCommand command = AuthWebMapper.toRefreshCommand(request);
     IssuedTokens issued = authUseCases.refresh(command);
@@ -53,6 +62,7 @@ public class AuthController {
 
   @PostMapping("/logout")
   @ResponseStatus(HttpStatus.NO_CONTENT)
+  @RateLimit(profile = RateLimitProfile.AUTH_SESSION)
   public void logout(@RequestBody(required = false) LogoutRequest request) {
     LogoutCommand command = AuthWebMapper.toLogoutCommand(request);
     authUseCases.logout(command);

@@ -108,29 +108,22 @@ public class Opportunity extends BaseDomain<Long> {
   // FACTORY METHODS
   // ─────────────────────────────────────────────
 
-  public static Opportunity open(
-      String title, String description,
-      String contactName, String contactEmail, String contactPhone,
-      String companyName, String companyLocation, String industry,
-      BigDecimal estimatedValue, int probabilityPercent,
-      OpportunitySource source, LocalDate expectedCloseDate,
-      Long assignedSalesmanId) {
-
+  public static Opportunity open(OpportunityOpenParams params) {
     var now = LocalDateTime.now();
     var opp = new Opportunity();
-    opp.title = title;
-    opp.description = description;
-    opp.contactName = contactName;
-    opp.contactEmail = contactEmail;
-    opp.contactPhone = contactPhone;
-    opp.companyName = companyName;
-    opp.companyLocation = companyLocation;
-    opp.industry = industry;
-    opp.estimatedValue = estimatedValue;
-    opp.probabilityPercent = probabilityPercent;
-    opp.source = source;
-    opp.expectedCloseDate = expectedCloseDate;
-    opp.assignedSalesmanId = assignedSalesmanId;
+    opp.title = params.title();
+    opp.description = params.description();
+    opp.contactName = params.contactName();
+    opp.contactEmail = params.contactEmail();
+    opp.contactPhone = params.contactPhone();
+    opp.companyName = params.companyName();
+    opp.companyLocation = params.companyLocation();
+    opp.industry = params.industry();
+    opp.estimatedValue = params.estimatedValue();
+    opp.probabilityPercent = params.probabilityPercent();
+    opp.source = params.source();
+    opp.expectedCloseDate = params.expectedCloseDate();
+    opp.assignedSalesmanId = params.assignedSalesmanId();
     opp.status = OpportunityStatus.NEW;
     opp.createdAt = now;
     opp.updatedAt = now;

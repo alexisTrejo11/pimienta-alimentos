@@ -2,16 +2,28 @@ package io.github.alexistrejo11.pimienta.shared.ratelimit;
 
 /**
  * Named rate-limit presets; numeric limits are configured in
- * {@code bank.rate-limiting.profiles.*}.
+ * {@code pimienta.rate-limiting.profiles.*}.
  */
 public enum RateLimitProfile {
 
-  /** Default API traffic. */
+  /** Default API traffic (single-resource reads and routine writes). */
   STANDARD,
 
-  /** Auth and high-abuse endpoints (tighter burst + steady rate). */
+  /**
+   * List/search, statistics, and other read-heavy GETs (higher sustained throughput
+   * per IP than {@link #STANDARD}).
+   */
+  READ_HEAVY,
+
+  /** Credential and account-enumeration sensitive (login, registration). */
   STRICT,
 
-  /** Financial mutations (transfers, loan payments, etc.). */
+  /**
+   * Session lifecycle (refresh, logout): stricter than {@link #STANDARD}, looser than
+   * {@link #STRICT} so legitimate clients are not starved.
+   */
+  AUTH_SESSION,
+
+  /** Destructive or high-impact mutations (deletes, bans, approvals, terminal pipeline steps). */
   SENSITIVE_OPERATIONS
 }

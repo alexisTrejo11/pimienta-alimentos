@@ -1,13 +1,16 @@
 package io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.out.persistence;
 
-import io.github.alexistrejo11.pimienta.module.account.user.core.domain.Role;
-import io.github.alexistrejo11.pimienta.module.account.user.core.domain.User;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.entities.User;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.entities.UserReconstructParams;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.enums.Role;
+
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 
 final class UserPersistenceMapper {
 
-  private UserPersistenceMapper() {}
+  private UserPersistenceMapper() {
+  }
 
   static UserJpaEntity toJpa(User domain) {
     var e = new UserJpaEntity();
@@ -21,7 +24,7 @@ final class UserPersistenceMapper {
     e.setGender(domain.getGender());
     e.setPhone(domain.getPhone());
     e.setDateOfBirth(domain.getDateOfBirth());
-    e.setBanned(domain.isBanned());
+    e.setAccountStatus(domain.getAccountStatus());
     e.setBannedReason(domain.getBannedReason());
     e.setBannedAt(domain.getBannedAt());
     e.setRoles(new LinkedHashSet<>(domain.getRoles()));
@@ -37,22 +40,24 @@ final class UserPersistenceMapper {
     if (e.getRoles() != null) {
       roles.addAll(e.getRoles());
     }
-    return User.reconstruct(
-        e.getId(),
-        e.getEmail(),
-        e.getPasswordHash(),
-        e.getFirstName(),
-        e.getLastName(),
-        e.getGender(),
-        e.getPhone(),
-        e.getDateOfBirth(),
-        e.isBanned(),
-        e.getBannedReason(),
-        e.getBannedAt(),
-        roles,
-        e.getCreatedAt(),
-        e.getUpdatedAt(),
-        e.getDeletedAt(),
-        e.getVersion());
+    UserReconstructParams params = UserReconstructParams.builder()
+        .id(e.getId())
+        .email(e.getEmail())
+        .passwordHash(e.getPasswordHash())
+        .firstName(e.getFirstName())
+        .lastName(e.getLastName())
+        .gender(e.getGender())
+        .phone(e.getPhone())
+        .dateOfBirth(e.getDateOfBirth())
+        .accountStatus(e.getAccountStatus())
+        .bannedReason(e.getBannedReason())
+        .bannedAt(e.getBannedAt())
+        .roles(roles)
+        .createdAt(e.getCreatedAt())
+        .updatedAt(e.getUpdatedAt())
+        .deletedAt(e.getDeletedAt())
+        .version(e.getVersion())
+        .build();
+    return User.reconstruct(params);
   }
 }

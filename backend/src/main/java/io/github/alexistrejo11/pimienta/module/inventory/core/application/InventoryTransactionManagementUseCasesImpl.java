@@ -28,6 +28,11 @@ import io.github.alexistrejo11.pimienta.module.inventory.core.port.InventoryRepo
 import io.github.alexistrejo11.pimienta.module.inventory.core.port.InventoryTransactionRepository;
 import io.github.alexistrejo11.pimienta.module.inventory.core.port.ItemRepository;
 import io.github.alexistrejo11.pimienta.module.inventory.core.port.StorageLocationRepository;
+import io.github.alexistrejo11.pimienta.module.inventory.core.domain.exception.InventoryNotFoundException;
+import io.github.alexistrejo11.pimienta.module.inventory.core.domain.exception.InventoryTransactionNotFoundException;
+import io.github.alexistrejo11.pimienta.module.inventory.core.domain.exception.InventoryTransactionInvalidStateException;
+import io.github.alexistrejo11.pimienta.module.inventory.core.domain.exception.ItemNotFoundException;
+import io.github.alexistrejo11.pimienta.module.inventory.core.domain.exception.StorageLocationNotFoundException;
 import java.math.BigDecimal;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.data.domain.Page;

@@ -3,7 +3,10 @@ package io.github.alexistrejo11.pimienta.module.headquarter.core.application;
 import io.github.alexistrejo11.pimienta.module.headquarter.core.application.command.CreateHeadquarterCommand;
 import io.github.alexistrejo11.pimienta.module.headquarter.core.application.command.UpdateHeadquarterCommand;
 import io.github.alexistrejo11.pimienta.module.headquarter.core.domain.Headquarter;
+import io.github.alexistrejo11.pimienta.module.headquarter.core.domain.HeadquarterCreateParams;
+import io.github.alexistrejo11.pimienta.module.headquarter.core.domain.HeadquarterReviseParams;
 import io.github.alexistrejo11.pimienta.module.headquarter.core.domain.HeadquarterStatistics;
+import io.github.alexistrejo11.pimienta.module.headquarter.core.domain.exception.HeadquarterNotFoundException;
 import io.github.alexistrejo11.pimienta.module.headquarter.core.port.HeadquarterRepository;
 
 import org.springframework.data.domain.Page;
@@ -41,7 +44,8 @@ public class HeadquarterUseCasesImpl implements HeadquarterUseCases {
   @Override
   public Headquarter create(CreateHeadquarterCommand command) {
     return headquarterRepository.save(
-        Headquarter.create(command.name(), command.address(), command.description()));
+        Headquarter.create(
+            new HeadquarterCreateParams(command.name(), command.address(), command.description())));
   }
 
   @Override
@@ -51,7 +55,8 @@ public class HeadquarterUseCasesImpl implements HeadquarterUseCases {
             .findById(id)
             .map(
                 existing -> Headquarter.revise(
-                    existing, command.name(), command.address(), command.description()))
+                    existing,
+                    new HeadquarterReviseParams(command.name(), command.address(), command.description())))
             .orElseThrow(() -> new HeadquarterNotFoundException(id)));
   }
 
