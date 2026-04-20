@@ -1,11 +1,19 @@
 package io.github.alexistrejo11.pimienta.module.payroll.adapter.inbound.web;
 
-import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.dto.response.EmployeeListItemResponse;
-import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.mapper.EmployeeManagerWebMapper;
-import io.github.alexistrejo11.pimienta.module.employees.core.application.query.EmployeeSearchCriteria;
-import io.github.alexistrejo11.pimienta.module.employees.core.domain.Employee;
-import io.github.alexistrejo11.pimienta.module.employees.core.port.input.EmployeeManagementUseCases;
 import io.github.alexistrejo11.pimienta.module.payroll.adapter.inbound.web.doc.DocPayroll;
+import io.github.alexistrejo11.pimienta.module.payroll.adapter.inbound.web.doc.DocPayrollCreatePeriod;
+import io.github.alexistrejo11.pimienta.module.payroll.adapter.inbound.web.doc.DocPayrollCreateRecord;
+import io.github.alexistrejo11.pimienta.module.payroll.adapter.inbound.web.doc.DocPayrollExport;
+import io.github.alexistrejo11.pimienta.module.payroll.adapter.inbound.web.doc.DocPayrollImport;
+import io.github.alexistrejo11.pimienta.module.payroll.adapter.inbound.web.doc.DocPayrollListDebts;
+import io.github.alexistrejo11.pimienta.module.payroll.adapter.inbound.web.doc.DocPayrollListPayments;
+import io.github.alexistrejo11.pimienta.module.payroll.adapter.inbound.web.doc.DocPayrollListPeriods;
+import io.github.alexistrejo11.pimienta.module.payroll.adapter.inbound.web.doc.DocPayrollListRecords;
+import io.github.alexistrejo11.pimienta.module.payroll.adapter.inbound.web.doc.DocPayrollRegisterAdjustment;
+import io.github.alexistrejo11.pimienta.module.payroll.adapter.inbound.web.doc.DocPayrollRegisterPayment;
+import io.github.alexistrejo11.pimienta.module.payroll.adapter.inbound.web.doc.DocPayrollSummary;
+import io.github.alexistrejo11.pimienta.module.payroll.adapter.inbound.web.dto.request.PayrollBulkScopeRequest;
+import io.github.alexistrejo11.pimienta.module.payroll.adapter.inbound.web.dto.request.PayrollRecordSearchRequest;
 import io.github.alexistrejo11.pimienta.module.payroll.adapter.inbound.web.dto.request.RegisterPayrollAdjustmentRequest;
 import io.github.alexistrejo11.pimienta.module.payroll.adapter.inbound.web.dto.request.RegisterPayrollPeriodRequest;
 import io.github.alexistrejo11.pimienta.module.payroll.adapter.inbound.web.dto.request.RegisterPayrollPaymentRequest;
@@ -72,6 +80,7 @@ public class PayrollManagerController {
 
   @GetMapping("/payments")
   @RateLimit(profile = RateLimitProfile.READ_HEAVY)
+  @DocPayrollListPayments
   public PagedResponse<PayrollPaymentResponse> listPayrollPayments(
       @RequestParam(required = false) Long employeeId, @ModelAttribute PageableRequest pageable) {
     Page<PayrollPayment> page = payrollManagementUseCases.listPaymentsByEmployee(employeeId, pageable.toPageable());
@@ -80,13 +89,17 @@ public class PayrollManagerController {
 
   @GetMapping("/periods")
   @RateLimit(profile = RateLimitProfile.READ_HEAVY)
-  public PagedResponse<PayrollPeriodResponse> listPayrollPeriods(@ModelAttribute PageableRequest pageable) {
+  @DocPayrollListPeriods
+  public PagedResponse<PayrollPeriodResponse> listPayrollPeriods(
+      @ModelAttribute PageableRequest pageable) {
     Page<PayrollPeriod> page = payrollManagementUseCases.listPeriods(pageable.toPageable());
     return PagedResponse.map(page, PayrollManagerWebMapper::toPeriodResponse);
   }
 
   @PostMapping("/periods")
   @ResponseStatus(HttpStatus.CREATED)
+  @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocPayrollCreatePeriod
   public PayrollPeriodResponse registerPeriod(@Valid @RequestBody RegisterPayrollPeriodRequest request) {
     RegisterPayrollPeriodCommand command = PayrollManagerWebMapper.toCommand(request);
     PayrollPeriod created = payrollManagementUseCases.registerPeriod(command);
@@ -95,25 +108,26 @@ public class PayrollManagerController {
 
   @GetMapping("/records")
   @RateLimit(profile = RateLimitProfile.READ_HEAVY)
-  public PagedResponse<PayrollRecordResponse> listPayrollRecords(
-      @RequestParam(required = false) Long employeeId,
-      @RequestParam(required = false) Long periodId,
-      @ModelAttribute PageableRequest pageable) {
-    Page<PayrollRecord> page = payrollManagementUseCases.listRecords(employeeId, periodId, pageable.toPageable());
+  @DocPayrollListRecords
+  public PagedResponse<PayrollRecordResponse> listPayrollRecords(@ModelAttribute PayrollRecordSearchRequest request) {
+    Page<PayrollRecord> page =
+        payrollManagementUseCases.listRecords(
+            request.getEmployeeId(), request.getPeriodId(), request.toPageable());
     return PagedResponse.map(page, PayrollManagerWebMapper::toRecordResponse);
   }
 
   @GetMapping("/export")
   @RateLimit(profile = RateLimitProfile.READ_HEAVY)
-  public ResponseEntity<byte[]> exportPayrollRecords(
-      @RequestParam(required = false) Long employeeId,
-      @RequestParam(required = false) Long periodId,
-      @RequestParam(required = false) LocalDate from,
-      @RequestParam(required = false) LocalDate to,
-      @ModelAttribute PageableRequest pageable)
+  @DocPayrollExport
+  public ResponseEntity<byte[]> exportPayrollRecords(@ModelAttribute PayrollBulkScopeRequest request)
       throws IOException {
-    PayrollBulkScopeQuery scope = new PayrollBulkScopeQuery(employeeId, periodId, from, to);
-    byte[] bytes = payrollBulkSyncUseCases.exportPayrollRecords(scope, pageable.toPageable());
+    PayrollBulkScopeQuery scope =
+        new PayrollBulkScopeQuery(
+            request.getEmployeeId(),
+            request.getPeriodId(),
+            request.getFrom(),
+            request.getTo());
+    byte[] bytes = payrollBulkSyncUseCases.exportPayrollRecords(scope, request.toPageable());
     return ResponseEntity.ok()
         .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=payroll_reporte.xlsx")
         .contentType(
@@ -124,22 +138,27 @@ public class PayrollManagerController {
 
   @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocPayrollImport
   public SpreadsheetBulkImportResult importPayrollRecords(
       @RequestParam("file") MultipartFile file,
-      @RequestParam(required = false) Long employeeId,
-      @RequestParam(required = false) Long periodId,
-      @RequestParam(required = false) LocalDate from,
-      @RequestParam(required = false) LocalDate to)
+      @ModelAttribute PayrollBulkScopeRequest request)
       throws IOException {
     if (file.isEmpty()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Archivo vacío");
     }
-    PayrollBulkScopeQuery scope = new PayrollBulkScopeQuery(employeeId, periodId, from, to);
+    PayrollBulkScopeQuery scope =
+        new PayrollBulkScopeQuery(
+            request.getEmployeeId(),
+            request.getPeriodId(),
+            request.getFrom(),
+            request.getTo());
     return payrollBulkSyncUseCases.importPayrollRecords(file.getInputStream(), file.getOriginalFilename(), scope);
   }
 
   @PostMapping("/records")
   @ResponseStatus(HttpStatus.CREATED)
+  @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocPayrollCreateRecord
   public PayrollRecordResponse registerPayrollRecord(@Valid @RequestBody RegisterPayrollRecordRequest request) {
     RegisterPayrollRecordCommand command = PayrollManagerWebMapper.toCommand(request);
     PayrollRecord created = payrollManagementUseCases.registerRecord(command);
@@ -148,6 +167,7 @@ public class PayrollManagerController {
 
   @GetMapping("/summary")
   @RateLimit(profile = RateLimitProfile.READ_HEAVY)
+  @DocPayrollSummary
   public PayrollSummaryResponse getPayrollSummary(
       @RequestParam(required = false) LocalDate from, @RequestParam(required = false) LocalDate to) {
     PayrollSummary summary = payrollManagementUseCases.summary(new PayrollSummaryQuery(from, to));
@@ -156,13 +176,17 @@ public class PayrollManagerController {
 
   @GetMapping("/debts")
   @RateLimit(profile = RateLimitProfile.READ_HEAVY)
-  public PagedResponse<PayrollDebtResponse> listDebts(@ModelAttribute PageableRequest pageable) {
+  @DocPayrollListDebts
+  public PagedResponse<PayrollDebtResponse> listDebts(
+      @ModelAttribute PageableRequest pageable) {
     Page<PayrollDebt> page = payrollManagementUseCases.listDebts(pageable.toPageable());
     return PagedResponse.map(page, PayrollManagerWebMapper::toDebtResponse);
   }
 
   @PostMapping("/payments")
   @ResponseStatus(HttpStatus.CREATED)
+  @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocPayrollRegisterPayment
   public PayrollPaymentResponse registerPayrollPayment(
       @Valid @RequestBody RegisterPayrollPaymentRequest request) {
     RegisterPayrollPaymentCommand command = PayrollManagerWebMapper.toCommand(request);
@@ -172,6 +196,8 @@ public class PayrollManagerController {
 
   @PostMapping("/records/{recordId}/adjustments")
   @ResponseStatus(HttpStatus.CREATED)
+  @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocPayrollRegisterAdjustment
   public PayrollPaymentResponse registerAdjustment(
       @PathVariable Long recordId, @Valid @RequestBody RegisterPayrollAdjustmentRequest request) {
     RegisterPayrollAdjustmentCommand command = PayrollManagerWebMapper.toCommand(recordId, request);
