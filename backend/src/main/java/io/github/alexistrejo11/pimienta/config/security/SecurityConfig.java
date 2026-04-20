@@ -18,6 +18,21 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 public class SecurityConfig {
 
+  private static final String[] SWAGGER_PUBLIC_PATHS = {
+    "/swagger-ui/**",
+    "/swagger-ui.html",
+    "/v3/api-docs/**",
+    "/v3/api-docs.yaml"
+  };
+
+  private static final String[] ACTUATOR_PUBLIC_PATHS = {
+    "/actuator/**"
+  };
+
+  private static final String[] AUTH_PUBLIC_PATHS = {
+    "/api/v1/auth/**"
+  };
+
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
@@ -32,16 +47,14 @@ public class SecurityConfig {
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
             auth ->
-                auth.requestMatchers("/api/v1/auth/**")
+                auth.requestMatchers(SWAGGER_PUBLIC_PATHS)
                     .permitAll()
-                    .requestMatchers("/api/v1/headquarters/**")
+                    .requestMatchers(ACTUATOR_PUBLIC_PATHS)
                     .permitAll()
-                    .requestMatchers("/api/v1/users/me", "/api/v1/users/me/**")
-                    .authenticated()
-                    .requestMatchers("/api/v1/users/management/**")
-                    .authenticated()
+                    .requestMatchers(AUTH_PUBLIC_PATHS)
+                    .permitAll()
                     .anyRequest()
-                    .permitAll())
+                    .authenticated())
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
     return http.build();
   }
