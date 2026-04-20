@@ -1,5 +1,16 @@
 package io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web;
 
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectMilestoneBilled;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectMilestoneCancel;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectMilestoneComplete;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectMilestoneCreate;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectMilestoneDelayed;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectMilestoneDelete;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectMilestoneGetById;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectMilestoneList;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectMilestoneStart;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectMilestoneUpdate;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectMilestones;
 import io.github.alexistrejo11.pimienta.module.crm.core.port.input.ProjectMilestoneUseCases;
 import io.github.alexistrejo11.pimienta.module.crm.core.domain.ProjectMilestone;
 import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.dto.CreateProjectMilestoneRequest;
@@ -28,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/projects/{projectId}/milestones")
 @RateLimit(profile = RateLimitProfile.STANDARD)
+@DocProjectMilestones
 public class ProjectMilestoneController {
 
   private final ProjectMilestoneUseCases projectMilestoneUseCases;
@@ -38,6 +50,7 @@ public class ProjectMilestoneController {
 
   @GetMapping
   @RateLimit(profile = RateLimitProfile.READ_HEAVY)
+  @DocProjectMilestoneList
   public PagedResponse<ProjectMilestoneResponse> listMilestones(
       @PathVariable Long projectId,
       @ModelAttribute PageableRequest pageable) {
@@ -47,6 +60,8 @@ public class ProjectMilestoneController {
   }
 
   @GetMapping("/{milestoneId}")
+  @RateLimit(profile = RateLimitProfile.READ_HEAVY)
+  @DocProjectMilestoneGetById
   public ProjectMilestoneResponse getMilestone(
       @PathVariable Long projectId, @PathVariable Long milestoneId) {
     ProjectMilestone m = projectMilestoneUseCases.getById(projectId, milestoneId);
@@ -54,7 +69,9 @@ public class ProjectMilestoneController {
   }
 
   @PostMapping
+  @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
   @ResponseStatus(HttpStatus.CREATED)
+  @DocProjectMilestoneCreate
   public ProjectMilestoneResponse createMilestone(
       @PathVariable Long projectId, @Valid @RequestBody CreateProjectMilestoneRequest request) {
     ProjectMilestone created =
@@ -63,6 +80,8 @@ public class ProjectMilestoneController {
   }
 
   @PatchMapping("/{milestoneId}")
+  @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocProjectMilestoneUpdate
   public ProjectMilestoneResponse updateMilestone(
       @PathVariable Long projectId,
       @PathVariable Long milestoneId,
@@ -75,6 +94,7 @@ public class ProjectMilestoneController {
 
   @DeleteMapping("/{milestoneId}")
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocProjectMilestoneDelete
   public ResponseEntity<Void> deleteMilestone(
       @PathVariable Long projectId, @PathVariable Long milestoneId) {
     projectMilestoneUseCases.delete(projectId, milestoneId);
@@ -82,6 +102,8 @@ public class ProjectMilestoneController {
   }
 
   @PostMapping("/{milestoneId}/start")
+  @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocProjectMilestoneStart
   public ProjectMilestoneResponse startMilestone(
       @PathVariable Long projectId, @PathVariable Long milestoneId) {
     ProjectMilestone m = projectMilestoneUseCases.start(projectId, milestoneId);
@@ -89,6 +111,8 @@ public class ProjectMilestoneController {
   }
 
   @PostMapping("/{milestoneId}/complete")
+  @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocProjectMilestoneComplete
   public ProjectMilestoneResponse completeMilestone(
       @PathVariable Long projectId, @PathVariable Long milestoneId) {
     ProjectMilestone m = projectMilestoneUseCases.complete(projectId, milestoneId);
@@ -96,6 +120,8 @@ public class ProjectMilestoneController {
   }
 
   @PostMapping("/{milestoneId}/delayed")
+  @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocProjectMilestoneDelayed
   public ProjectMilestoneResponse markDelayed(
       @PathVariable Long projectId, @PathVariable Long milestoneId) {
     ProjectMilestone m = projectMilestoneUseCases.markDelayed(projectId, milestoneId);
@@ -104,6 +130,7 @@ public class ProjectMilestoneController {
 
   @PostMapping("/{milestoneId}/cancel")
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocProjectMilestoneCancel
   public ProjectMilestoneResponse cancelMilestone(
       @PathVariable Long projectId, @PathVariable Long milestoneId) {
     ProjectMilestone m = projectMilestoneUseCases.cancel(projectId, milestoneId);
@@ -111,6 +138,8 @@ public class ProjectMilestoneController {
   }
 
   @PostMapping("/{milestoneId}/billed")
+  @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocProjectMilestoneBilled
   public ProjectMilestoneResponse markBilled(
       @PathVariable Long projectId, @PathVariable Long milestoneId) {
     ProjectMilestone m = projectMilestoneUseCases.markBilled(projectId, milestoneId);

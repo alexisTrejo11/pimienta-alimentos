@@ -5,6 +5,10 @@ import io.github.alexistrejo11.pimienta.module.account.auth.core.domain.entity.U
 import io.github.alexistrejo11.pimienta.module.account.auth.core.port.input.ProfileUseCases;
 import io.github.alexistrejo11.pimienta.module.account.user.core.application.command.UpdateProfileCommand;
 import io.github.alexistrejo11.pimienta.module.account.user.core.domain.entities.User;
+import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.doc.DocUserProfile;
+import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.doc.DocUserProfileDashboard;
+import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.doc.DocUserProfileGetMe;
+import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.doc.DocUserProfilePatchMe;
 import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.dto.UpdateProfileRequest;
 import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.dto.UserDashboardResponse;
 import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.dto.UserResponse;
@@ -23,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/users")
 @RateLimit(profile = RateLimitProfile.STANDARD)
+@DocUserProfile
 public class UserController {
 
   private final ProfileUseCases profileUseCases;
@@ -33,12 +38,15 @@ public class UserController {
 
   @GetMapping("/me")
   @RateLimit(profile = RateLimitProfile.READ_HEAVY)
+  @DocUserProfileGetMe
   public UserResponse getProfile(@AuthenticationPrincipal JwtAuthenticationContext principal) {
     User user = profileUseCases.getProfile(principal.userId());
     return UserManagerWebMapper.toResponse(user);
   }
 
   @PatchMapping("/me")
+  @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocUserProfilePatchMe
   public UserResponse updateProfile(
       @AuthenticationPrincipal JwtAuthenticationContext principal,
       @Valid @RequestBody UpdateProfileRequest request) {
@@ -50,6 +58,7 @@ public class UserController {
 
   @GetMapping("/me/dashboard")
   @RateLimit(profile = RateLimitProfile.READ_HEAVY)
+  @DocUserProfileDashboard
   public UserDashboardResponse getDashboard(
       @AuthenticationPrincipal JwtAuthenticationContext principal) {
     UserManagerDashboard dashboard = profileUseCases.getDashboard(principal.userId());

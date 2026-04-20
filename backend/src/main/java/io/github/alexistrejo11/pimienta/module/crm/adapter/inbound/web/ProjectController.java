@@ -1,5 +1,18 @@
 package io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web;
 
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectActivate;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectArchive;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectCancel;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectComplete;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectCreate;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectDelete;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectGetById;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectGetSummary;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectHold;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectListTasks;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectSearch;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjectUpdate;
+import io.github.alexistrejo11.pimienta.module.crm.adapter.inbound.web.doc.DocProjects;
 import io.github.alexistrejo11.pimienta.module.crm.core.port.input.ProjectUseCases;
 import io.github.alexistrejo11.pimienta.module.crm.core.application.query.ProjectSearchCriteria;
 import io.github.alexistrejo11.pimienta.module.crm.core.domain.Project;
@@ -38,6 +51,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/projects")
 @RateLimit(profile = RateLimitProfile.STANDARD)
+@DocProjects
 public class ProjectController {
 
   private final ProjectUseCases projectUseCases;
@@ -51,6 +65,7 @@ public class ProjectController {
 
   @GetMapping
   @RateLimit(profile = RateLimitProfile.READ_HEAVY)
+  @DocProjectSearch
   public PagedResponse<ProjectResponse> searchProjects(@ModelAttribute ProjectSearchRequest filter) {
     ProjectSearchCriteria criteria = ProjectWebMapper.toCriteria(filter);
     Page<Project> page =
@@ -59,18 +74,23 @@ public class ProjectController {
   }
 
   @GetMapping("/{id}")
+  @RateLimit(profile = RateLimitProfile.READ_HEAVY)
+  @DocProjectGetById
   public ProjectResponse getProject(@PathVariable Long id) {
     Project project = projectUseCases.getById(id);
     return ProjectWebMapper.toResponse(project);
   }
 
   @GetMapping("/{id}/summary")
+  @RateLimit(profile = RateLimitProfile.READ_HEAVY)
+  @DocProjectGetSummary
   public ProjectSummaryResponse getProjectSummary(@PathVariable Long id) {
     return ProjectWebMapper.toSummaryResponse(projectUseCases.getSummary(id));
   }
 
   @GetMapping("/{id}/tasks")
   @RateLimit(profile = RateLimitProfile.READ_HEAVY)
+  @DocProjectListTasks
   public PagedResponse<TaskListItemResponse> listProjectTasks(
       @PathVariable Long id, @ModelAttribute TaskSearchRequest filter) {
     projectUseCases.getById(id);
@@ -83,13 +103,17 @@ public class ProjectController {
   }
 
   @PostMapping
+  @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
   @ResponseStatus(HttpStatus.CREATED)
+  @DocProjectCreate
   public ProjectResponse createProject(@Valid @RequestBody CreateProjectRequest request) {
     Project created = projectUseCases.create(ProjectWebMapper.toCreateParams(request));
     return ProjectWebMapper.toResponse(created);
   }
 
   @PatchMapping("/{id}")
+  @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocProjectUpdate
   public ProjectResponse updateProject(
       @PathVariable Long id, @Valid @RequestBody UpdateProjectRequest request) {
     Project updated = projectUseCases.update(id, ProjectWebMapper.toUpdateParams(request));
@@ -98,18 +122,23 @@ public class ProjectController {
 
   @DeleteMapping("/{id}")
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocProjectDelete
   public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
     projectUseCases.delete(id);
     return ResponseEntity.noContent().build();
   }
 
   @PostMapping("/{id}/activate")
+  @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocProjectActivate
   public ProjectResponse activate(@PathVariable Long id) {
     Project p = projectUseCases.activate(id);
     return ProjectWebMapper.toResponse(p);
   }
 
   @PostMapping("/{id}/hold")
+  @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocProjectHold
   public ProjectResponse putOnHold(
       @PathVariable Long id, @Valid @RequestBody ReasonRequest request) {
     Project p = projectUseCases.putOnHold(id, request.reason());
@@ -117,6 +146,8 @@ public class ProjectController {
   }
 
   @PostMapping("/{id}/complete")
+  @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocProjectComplete
   public ProjectResponse complete(@PathVariable Long id) {
     Project p = projectUseCases.complete(id);
     return ProjectWebMapper.toResponse(p);
@@ -124,6 +155,7 @@ public class ProjectController {
 
   @PostMapping("/{id}/cancel")
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocProjectCancel
   public ProjectResponse cancel(
       @PathVariable Long id, @Valid @RequestBody ReasonRequest request) {
     Project p = projectUseCases.cancel(id, request.reason());
@@ -132,6 +164,7 @@ public class ProjectController {
 
   @PostMapping("/{id}/archive")
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocProjectArchive
   public ProjectResponse archive(@PathVariable Long id) {
     Project p = projectUseCases.archive(id);
     return ProjectWebMapper.toResponse(p);

@@ -5,6 +5,15 @@ import io.github.alexistrejo11.pimienta.module.account.user.core.application.com
 import io.github.alexistrejo11.pimienta.module.account.user.core.domain.entities.User;
 import io.github.alexistrejo11.pimienta.module.account.user.core.domain.entities.UserStatistics;
 import io.github.alexistrejo11.pimienta.module.account.user.core.port.input.UserManagementUseCases;
+import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.doc.DocUserManagement;
+import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.doc.DocUserManagementAddRoles;
+import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.doc.DocUserManagementApproveUser;
+import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.doc.DocUserManagementBanUser;
+import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.doc.DocUserManagementGetUserByEmail;
+import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.doc.DocUserManagementGetUserById;
+import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.doc.DocUserManagementListUsers;
+import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.doc.DocUserManagementStatistics;
+import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.doc.DocUserManagementUnbanUser;
 import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.dto.AddRolesRequest;
 import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.dto.BanUserRequest;
 import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.inbound.web.dto.UserResponse;
@@ -31,6 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/users/management")
 @RateLimit(profile = RateLimitProfile.STANDARD)
+@DocUserManagement
 public class UserManagerController {
 
   private final UserManagementUseCases userManagementUseCases;
@@ -42,6 +52,7 @@ public class UserManagerController {
   // TODO: Add support for filtering to customize the statistics response.
   @GetMapping("/statistics")
   @RateLimit(profile = RateLimitProfile.READ_HEAVY)
+  @DocUserManagementStatistics
   public UserStatisticsResponse getStatistics() {
     UserStatistics statistics = userManagementUseCases.statistics();
     return UserManagerWebMapper.toStatisticsResponse(statistics);
@@ -49,6 +60,7 @@ public class UserManagerController {
 
   @GetMapping
   @RateLimit(profile = RateLimitProfile.READ_HEAVY)
+  @DocUserManagementListUsers
   public PagedResponse<UserResponse> listUsers(@ModelAttribute PageableRequest pageRequest) {
     var pageable = pageRequest.toPageable();
     Page<User> users = userManagementUseCases.getBy(pageable);
@@ -58,12 +70,16 @@ public class UserManagerController {
   }
 
   @GetMapping("/{id}")
+  @RateLimit(profile = RateLimitProfile.READ_HEAVY)
+  @DocUserManagementGetUserById
   public UserResponse getUserById(@PathVariable Long id) {
     User user = userManagementUseCases.getById(id);
     return UserManagerWebMapper.toResponse(user);
   }
 
   @GetMapping("/by-email")
+  @RateLimit(profile = RateLimitProfile.READ_HEAVY)
+  @DocUserManagementGetUserByEmail
   public UserResponse getUserByEmail(@RequestParam @Email String email) {
     var emailNormalized = email.trim().toLowerCase();
     User user = userManagementUseCases.getByEmail(emailNormalized);
@@ -74,7 +90,9 @@ public class UserManagerController {
   @PostMapping("/{id}/ban")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
-  public void banUser(@PathVariable Long id, @Valid @RequestBody(required = false) BanUserRequest request) {
+  @DocUserManagementBanUser
+  public void banUser(
+      @PathVariable Long id, @Valid @RequestBody(required = false) BanUserRequest request) {
     BanUserCommand command = UserManagerWebMapper.toBanCommand(request);
     userManagementUseCases.ban(id, command);
   }
@@ -82,12 +100,14 @@ public class UserManagerController {
   @PostMapping("/{id}/unban")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocUserManagementUnbanUser
   public void unbanUser(@PathVariable Long id) {
     userManagementUseCases.unban(id);
   }
 
   @PostMapping("/{id}/roles")
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocUserManagementAddRoles
   public UserResponse addRoles(@PathVariable Long id, @Valid @RequestBody AddRolesRequest request) {
     AddRolesCommand command = UserManagerWebMapper.toAddRolesCommand(request);
     User updated = userManagementUseCases.addRoles(id, command);
@@ -97,6 +117,7 @@ public class UserManagerController {
   @PostMapping("/{id}/approve")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocUserManagementApproveUser
   public void approveUser(@PathVariable Long id) {
     userManagementUseCases.approve(id);
   }
