@@ -3,7 +3,13 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { API_BASE_URL } from '../config/api.config';
-import type { LoginRequest, RegisterRequest, TokenResponse } from '../model/account/auth.dto';
+import type {
+  LoginRequest,
+  RefreshRequest,
+  RegisterRequest,
+  RegisterResponse,
+  TokenResponse,
+} from '../model/account/auth.dto';
 
 /**
  * Authentication API calls against `/api/v1/auth`.
@@ -28,14 +34,10 @@ export class AuthService {
   private readonly authUrl = `${API_BASE_URL}/auth`;
 
   /**
-   * Registers a new user and returns issued tokens.
-   *
-   * The returned Observable emits **once** with the JSON body, then completes.
-   * On failure it emits an error (typically {@link import('@angular/common/http').HttpErrorResponse})
-   * with our {@link ApiErrorResponse} JSON in `error` when the backend handled it.
+   * Registers a new user (`201`). Response is {@link RegisterResponse} — no tokens until an admin approves the account.
    */
-  register(request: RegisterRequest): Observable<TokenResponse> {
-    return this.http.post<TokenResponse>(`${this.authUrl}/register`, request);
+  register(request: RegisterRequest): Observable<RegisterResponse> {
+    return this.http.post<RegisterResponse>(`${this.authUrl}/register`, request);
   }
 
   /**
@@ -44,5 +46,13 @@ export class AuthService {
    */
   login(request: LoginRequest): Observable<TokenResponse> {
     return this.http.post<TokenResponse>(`${this.authUrl}/login`, request);
+  }
+
+  /**
+   * Rota el refresh token y devuelve nuevos tokens (`POST /api/v1/auth/refresh`).
+   * El interceptor global también refresca ante 401/403; este método sirve para flujos explícitos.
+   */
+  refresh(request: RefreshRequest): Observable<TokenResponse> {
+    return this.http.post<TokenResponse>(`${this.authUrl}/refresh`, request);
   }
 }

@@ -28,10 +28,10 @@ export class TareaRowComponent {
 
   get prioridadColor(): string {
     const map: Record<string, string> = {
-      LOW: 'text-stone-500',
-      MEDIUM: 'text-blue-600',
+      LOW: 'text-on-surface-variant',
+      MEDIUM: 'text-on-surface',
       HIGH: 'text-orange-600',
-      URGENT: 'text-red-700 font-bold',
+      URGENT: 'text-primary font-bold',
     };
     return map[this.tarea().priority] ?? '';
   }

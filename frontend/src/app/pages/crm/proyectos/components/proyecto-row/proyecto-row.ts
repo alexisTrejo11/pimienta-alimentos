@@ -32,10 +32,10 @@ export class ProyectoRowComponent {
 
   get prioridadColor(): string {
     const map: Record<string, string> = {
-      LOW: 'text-stone-500',
-      MEDIUM: 'text-blue-600',
+      LOW: 'text-on-surface-variant',
+      MEDIUM: 'text-on-surface',
       HIGH: 'text-orange-600',
-      CRITICAL: 'text-red-700 font-bold',
+      CRITICAL: 'text-primary font-bold',
     };
     return map[this.proyecto().priority] ?? '';
   }

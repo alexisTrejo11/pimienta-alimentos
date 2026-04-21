@@ -2,20 +2,20 @@
 
 @theme {
   --color-primary: #af101a;
-  --color-primary-container: #d32f2f;
+  --color-primary-container: #e57373;
   --color-on-primary: #ffffff;
   --color-on-background: #1a1c1c;
   --color-on-surface: #1a1c1c;
-  --color-on-surface-variant: #5b403d;
-  --color-background: #f9f9f9;
-  --color-surface: #f9f9f9;
+  --color-on-surface-variant: #5f6367;
+  --color-background: #f7f6f4;
+  --color-surface: #f3f2ef;
   --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f3f3f3;
-  --color-surface-container: #eeeeee;
-  --color-surface-container-high: #e8e8e8;
-  --color-surface-container-highest: #e2e2e2;
-  --color-outline-variant: #e4beba;
-  --color-secondary: #546067;
+  --color-surface-container-low: #f0efec;
+  --color-surface-container: #ebe9e5;
+  --color-surface-container-high: #e4e2dd;
+  --color-surface-container-highest: #dbd8d2;
+  --color-outline-variant: #8e918f;
+  --color-secondary: #6f7478;
   --color-error: #ba1a1a;
   --color-primary-fixed: #ffdad6;
   --color-on-primary-fixed: #410003;
@@ -28,6 +28,7 @@
   html {
     scroll-behavior: smooth;
     scroll-padding-top: 5.5rem;
+    color-scheme: light;
   }
 
   body {
@@ -62,6 +63,14 @@
     max-width: 100%;
     height: auto;
     display: block;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
   }
 
   ::selection {

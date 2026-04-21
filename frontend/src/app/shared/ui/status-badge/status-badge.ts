@@ -121,51 +121,51 @@ function colorFor(kind: StatusBadgeKind, status: string): string {
   }
 }
 
-const DEFAULT_COLOR = 'bg-stone-100 text-stone-700';
+const DEFAULT_COLOR = 'bg-surface-container text-on-surface';
 
 const EMPLOYEE_COLORS: Record<string, string> = {
-  ACTIVE: 'bg-green-100 text-green-800',
-  SICK: 'bg-yellow-100 text-yellow-800',
-  ON_VACATION: 'bg-blue-100 text-blue-800',
-  ON_LEAVE: 'bg-purple-100 text-purple-800',
+  ACTIVE: 'bg-emerald-100 text-emerald-800',
+  SICK: 'bg-amber-100 text-amber-800',
+  ON_VACATION: 'bg-surface-container-high text-on-surface',
+  ON_LEAVE: 'bg-violet-100 text-violet-800',
   TERMINATED: 'bg-red-100 text-red-800',
   FIRED: 'bg-red-100 text-red-800',
-  RESIGNED: 'bg-stone-100 text-stone-700',
+  RESIGNED: 'bg-surface-container-high text-on-surface-variant',
 };
 
 const TASK_COLORS: Record<string, string> = {
-  PENDING: 'bg-stone-100 text-stone-700',
-  IN_PROGRESS: 'bg-blue-100 text-blue-800',
-  COMPLETED: 'bg-green-100 text-green-800',
-  CANCELLED: 'bg-stone-100 text-stone-500',
+  PENDING: 'bg-surface-container text-on-surface-variant',
+  IN_PROGRESS: 'bg-secondary/20 text-on-surface',
+  COMPLETED: 'bg-emerald-100 text-emerald-800',
+  CANCELLED: 'bg-surface-container-high text-on-surface-variant',
   DELAYED: 'bg-orange-100 text-orange-800',
-  ON_HOLD: 'bg-yellow-100 text-yellow-800',
+  ON_HOLD: 'bg-amber-100 text-amber-800',
   FAILED: 'bg-red-100 text-red-800',
 };
 
 const OPPORTUNITY_COLORS: Record<string, string> = {
-  NEW: 'bg-blue-100 text-blue-800',
+  NEW: 'bg-surface-container-high text-on-surface',
   DISCOVERY: 'bg-purple-100 text-purple-800',
   PROPOSAL: 'bg-yellow-100 text-yellow-800',
   NEGOTIATION: 'bg-orange-100 text-orange-800',
   WON: 'bg-green-100 text-green-800',
   LOST: 'bg-red-100 text-red-800',
-  ABANDONED: 'bg-stone-100 text-stone-500',
+  ABANDONED: 'bg-surface-container-high text-on-surface-variant',
 };
 
 const PROJECT_COLORS: Record<string, string> = {
-  PLANNING: 'bg-blue-100 text-blue-800',
+  PLANNING: 'bg-surface-container-high text-on-surface',
   ACTIVE: 'bg-green-100 text-green-800',
-  ON_HOLD: 'bg-yellow-100 text-yellow-800',
+  ON_HOLD: 'bg-amber-100 text-amber-800',
   COMPLETED: 'bg-emerald-100 text-emerald-800',
   CANCELLED: 'bg-red-100 text-red-800',
-  ARCHIVED: 'bg-stone-100 text-stone-500',
+  ARCHIVED: 'bg-surface-container-high text-on-surface-variant',
 };
 
 const MILESTONE_COLORS: Record<string, string> = {
-  PENDING: 'bg-stone-100 text-stone-700',
-  IN_PROGRESS: 'bg-blue-100 text-blue-800',
+  PENDING: 'bg-surface-container text-on-surface-variant',
+  IN_PROGRESS: 'bg-secondary/20 text-on-surface',
   COMPLETED: 'bg-green-100 text-green-800',
   DELAYED: 'bg-orange-100 text-orange-800',
-  CANCELLED: 'bg-stone-100 text-stone-500',
+  CANCELLED: 'bg-surface-container-high text-on-surface-variant',
 };
