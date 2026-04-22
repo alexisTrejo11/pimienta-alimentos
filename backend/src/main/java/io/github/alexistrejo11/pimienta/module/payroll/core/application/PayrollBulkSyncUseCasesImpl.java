@@ -17,6 +17,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +27,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class PayrollBulkSyncUseCasesImpl implements PayrollBulkSyncUseCases {
+
+  private static final Logger log = LoggerFactory.getLogger(PayrollBulkSyncUseCasesImpl.class);
 
   private static final int PAGE_SIZE = 500;
 
@@ -44,17 +48,28 @@ public class PayrollBulkSyncUseCasesImpl implements PayrollBulkSyncUseCases {
   @Override
   public byte[] exportPayrollRecords(PayrollBulkScopeQuery scope, Pageable pageable) throws IOException {
     PayrollBulkScopeQuery effective = scope != null ? scope : new PayrollBulkScopeQuery(null, null, null, null);
+
+    log.debug(
+        "export payroll records start employeeId={} periodId={} workedFrom={} workedTo={}",
+        effective.employeeId(),
+        effective.periodId(),
+        effective.workedFrom(),
+        effective.workedTo());
+
     List<PayrollExportRow> rows = new ArrayList<>();
-    Sort sort = pageable != null && pageable.getSort().isSorted()
-        ? pageable.getSort()
-        : Sort.by(Sort.Direction.ASC, "id");
+    Sort sort =
+        pageable != null && pageable.getSort().isSorted()
+            ? pageable.getSort()
+            : Sort.by(Sort.Direction.ASC, "id");
     int page = 0;
+
     for (;;) {
       Page<PayrollRecord> records =
           payrollRepository.findRecords(
               effective.employeeId(),
               effective.periodId(),
               PageRequest.of(page, PAGE_SIZE, sort));
+
       for (PayrollRecord record : records.getContent()) {
         if (!inScope(record.getWorkedDaysStart(), record.getWorkedDaysEnd(), effective)) {
           continue;
@@ -77,7 +92,11 @@ public class PayrollBulkSyncUseCasesImpl implements PayrollBulkSyncUseCases {
       }
       page++;
     }
-    return spreadsheetGenerator.generate(rows);
+
+    byte[] bytes = spreadsheetGenerator.generate(rows);
+
+    log.debug("export payroll records complete rowCount={} bytesLen={}", rows.size(), bytes.length);
+    return bytes;
   }
 
   @Override
@@ -85,7 +104,16 @@ public class PayrollBulkSyncUseCasesImpl implements PayrollBulkSyncUseCases {
       InputStream file, String originalFilename, PayrollBulkScopeQuery scope)
       throws IOException {
     PayrollBulkScopeQuery effective = scope != null ? scope : new PayrollBulkScopeQuery(null, null, null, null);
+
+    log.info(
+        "import payroll records start originalFilename={} filenameLen={} scopeEmployeeId={} scopePeriodId={}",
+        originalFilename != null ? originalFilename : "null",
+        originalFilename != null ? originalFilename.length() : 0,
+        effective.employeeId(),
+        effective.periodId());
+
     List<PayrollImportRow> parsedRows = spreadsheetParser.parse(file, originalFilename);
+
     int updated = 0;
     int created = 0;
     int skipped = 0;
@@ -134,7 +162,18 @@ public class PayrollBulkSyncUseCasesImpl implements PayrollBulkSyncUseCases {
                 ex.getMessage() != null ? ex.getMessage() : "Error al procesar fila"));
       }
     }
-    return new SpreadsheetBulkImportResult(updated, created, skipped, List.copyOf(errors));
+
+    SpreadsheetBulkImportResult result =
+        new SpreadsheetBulkImportResult(updated, created, skipped, List.copyOf(errors));
+
+    log.info(
+        "import payroll records complete rowCount={} updated={} created={} skipped={} errorCount={}",
+        parsedRows.size(),
+        updated,
+        created,
+        skipped,
+        errors.size());
+    return result;
   }
 
   private static PayrollRecord merge(PayrollRecord existing, PayrollImportRow row) {

@@ -35,6 +35,8 @@ import io.github.alexistrejo11.pimienta.module.inventory.core.domain.exception.I
 import io.github.alexistrejo11.pimienta.module.inventory.core.domain.exception.StorageLocationNotFoundException;
 import java.math.BigDecimal;
 import java.util.concurrent.ThreadLocalRandom;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -42,6 +44,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class InventoryTransactionManagementUseCasesImpl implements InventoryTransactionManagementUseCases {
+
+  private static final Logger log = LoggerFactory.getLogger(InventoryTransactionManagementUseCasesImpl.class);
 
   private final InventoryTransactionRepository transactionRepository;
   private final InventoryMovementRepository movementRepository;
@@ -66,14 +70,35 @@ public class InventoryTransactionManagementUseCasesImpl implements InventoryTran
   public Page<InventoryTransaction> search(InventoryTransactionSearchCriteria criteria, Pageable pageable) {
     InventoryTransactionSearchCriteria effective =
         criteria != null ? criteria : InventoryTransactionSearchCriteria.empty();
-    return transactionRepository.search(effective, pageable);
+
+    log.debug(
+        "search inventory transactions query start page={} size={} type={} status={} initiatedById={}",
+        pageable != null ? pageable.getPageNumber() : null,
+        pageable != null ? pageable.getPageSize() : null,
+        effective.type(),
+        effective.status(),
+        effective.initiatedById());
+
+    Page<InventoryTransaction> page = transactionRepository.search(effective, pageable);
+
+    log.debug(
+        "search inventory transactions query complete totalElements={} numberOfElements={}",
+        page.getTotalElements(),
+        page.getNumberOfElements());
+    return page;
   }
 
   @Override
   public InventoryTransaction getById(Long id) {
-    return transactionRepository
-        .findById(id)
-        .orElseThrow(() -> new InventoryTransactionNotFoundException(id));
+    log.debug("get inventory transaction by id query start transactionId={}", id);
+
+    InventoryTransaction tx =
+        transactionRepository
+            .findById(id)
+            .orElseThrow(() -> new InventoryTransactionNotFoundException(id));
+
+    log.debug("get inventory transaction by id query complete transactionId={}", tx.getId());
+    return tx;
   }
 
   private String newTransactionNumber() {
@@ -120,6 +145,13 @@ public class InventoryTransactionManagementUseCasesImpl implements InventoryTran
   @Override
   @Transactional
   public InventoryTransaction purchase(PurchaseTransactionCommand command) {
+    log.info(
+        "inventory transaction purchase start lineCount={} initiatedById={} externalRefLen={} notesLen={}",
+        command.lines().size(),
+        command.initiatedById(),
+        command.externalReference() == null ? 0 : command.externalReference().length(),
+        command.notes() == null ? 0 : command.notes().length());
+
     InventoryTransaction tx =
         InventoryTransaction.open(
             newTransactionNumber(),
@@ -128,6 +160,7 @@ public class InventoryTransactionManagementUseCasesImpl implements InventoryTran
             command.notes(),
             command.initiatedById());
     tx = transactionRepository.save(tx);
+
     for (PurchaseLine line : command.lines()) {
       assertLocationWritable(line.locationId());
       Inventory inv = getOrCreateInventory(line.itemId(), line.locationId());
@@ -147,12 +180,25 @@ public class InventoryTransactionManagementUseCasesImpl implements InventoryTran
       m.setTransactionId(tx.getId());
       movementRepository.save(m);
     }
-    return finishCompleted(tx);
+
+    InventoryTransaction completed = finishCompleted(tx);
+    log.info(
+        "inventory transaction purchase complete transactionId={} transactionNumber={}",
+        completed.getId(),
+        completed.getTransactionNumber());
+    return completed;
   }
 
   @Override
   @Transactional
   public InventoryTransaction sale(SaleTransactionCommand command) {
+    log.info(
+        "inventory transaction sale start lineCount={} initiatedById={} externalRefLen={} notesLen={}",
+        command.lines().size(),
+        command.initiatedById(),
+        command.externalReference() == null ? 0 : command.externalReference().length(),
+        command.notes() == null ? 0 : command.notes().length());
+
     InventoryTransaction tx =
         InventoryTransaction.open(
             newTransactionNumber(),
@@ -161,6 +207,7 @@ public class InventoryTransactionManagementUseCasesImpl implements InventoryTran
             command.notes(),
             command.initiatedById());
     tx = transactionRepository.save(tx);
+
     for (SaleLine line : command.lines()) {
       assertLocationWritable(line.locationId());
       Inventory inv = getOrCreateInventory(line.itemId(), line.locationId());
@@ -180,12 +227,25 @@ public class InventoryTransactionManagementUseCasesImpl implements InventoryTran
       m.setTransactionId(tx.getId());
       movementRepository.save(m);
     }
-    return finishCompleted(tx);
+
+    InventoryTransaction completed = finishCompleted(tx);
+    log.info(
+        "inventory transaction sale complete transactionId={} transactionNumber={}",
+        completed.getId(),
+        completed.getTransactionNumber());
+    return completed;
   }
 
   @Override
   @Transactional
   public InventoryTransaction transfer(TransferTransactionCommand command) {
+    log.info(
+        "inventory transaction transfer start lineCount={} initiatedById={} externalRefLen={} notesLen={}",
+        command.lines().size(),
+        command.initiatedById(),
+        command.externalReference() == null ? 0 : command.externalReference().length(),
+        command.notes() == null ? 0 : command.notes().length());
+
     InventoryTransaction tx =
         InventoryTransaction.open(
             newTransactionNumber(),
@@ -194,6 +254,7 @@ public class InventoryTransactionManagementUseCasesImpl implements InventoryTran
             command.notes(),
             command.initiatedById());
     tx = transactionRepository.save(tx);
+
     for (TransferLine line : command.lines()) {
       assertLocationWritable(line.fromLocationId());
       assertLocationWritable(line.toLocationId());
@@ -230,12 +291,25 @@ public class InventoryTransactionManagementUseCasesImpl implements InventoryTran
       in.setTransactionId(tx.getId());
       movementRepository.save(in);
     }
-    return finishCompleted(tx);
+
+    InventoryTransaction completed = finishCompleted(tx);
+    log.info(
+        "inventory transaction transfer complete transactionId={} transactionNumber={}",
+        completed.getId(),
+        completed.getTransactionNumber());
+    return completed;
   }
 
   @Override
   @Transactional
   public InventoryTransaction adjustment(AdjustmentTransactionCommand command) {
+    log.info(
+        "inventory transaction adjustment start lineCount={} initiatedById={} externalRefLen={} notesLen={}",
+        command.lines().size(),
+        command.initiatedById(),
+        command.externalReference() == null ? 0 : command.externalReference().length(),
+        command.notes() == null ? 0 : command.notes().length());
+
     InventoryTransaction tx =
         InventoryTransaction.open(
             newTransactionNumber(),
@@ -244,6 +318,7 @@ public class InventoryTransactionManagementUseCasesImpl implements InventoryTran
             command.notes(),
             command.initiatedById());
     tx = transactionRepository.save(tx);
+
     for (AdjustmentLine line : command.lines()) {
       assertLocationWritable(line.locationId());
       Inventory inv = getOrCreateInventory(line.itemId(), line.locationId());
@@ -282,12 +357,25 @@ public class InventoryTransactionManagementUseCasesImpl implements InventoryTran
         movementRepository.save(m);
       }
     }
-    return finishCompleted(tx);
+
+    InventoryTransaction completed = finishCompleted(tx);
+    log.info(
+        "inventory transaction adjustment complete transactionId={} transactionNumber={}",
+        completed.getId(),
+        completed.getTransactionNumber());
+    return completed;
   }
 
   @Override
   @Transactional
   public InventoryTransaction returnFromClient(ReturnClientCommand command) {
+    log.info(
+        "inventory transaction returnFromClient start lineCount={} initiatedById={} externalRefLen={} notesLen={}",
+        command.lines().size(),
+        command.initiatedById(),
+        command.externalReference() == null ? 0 : command.externalReference().length(),
+        command.notes() == null ? 0 : command.notes().length());
+
     InventoryTransaction tx =
         InventoryTransaction.open(
             newTransactionNumber(),
@@ -296,6 +384,7 @@ public class InventoryTransactionManagementUseCasesImpl implements InventoryTran
             command.notes(),
             command.initiatedById());
     tx = transactionRepository.save(tx);
+
     for (ReturnClientLine line : command.lines()) {
       assertLocationWritable(line.locationId());
       Inventory inv = getOrCreateInventory(line.itemId(), line.locationId());
@@ -315,12 +404,25 @@ public class InventoryTransactionManagementUseCasesImpl implements InventoryTran
       m.setTransactionId(tx.getId());
       movementRepository.save(m);
     }
-    return finishCompleted(tx);
+
+    InventoryTransaction completed = finishCompleted(tx);
+    log.info(
+        "inventory transaction returnFromClient complete transactionId={} transactionNumber={}",
+        completed.getId(),
+        completed.getTransactionNumber());
+    return completed;
   }
 
   @Override
   @Transactional
   public InventoryTransaction returnToSupplier(ReturnSupplierCommand command) {
+    log.info(
+        "inventory transaction returnToSupplier start lineCount={} initiatedById={} externalRefLen={} notesLen={}",
+        command.lines().size(),
+        command.initiatedById(),
+        command.externalReference() == null ? 0 : command.externalReference().length(),
+        command.notes() == null ? 0 : command.notes().length());
+
     InventoryTransaction tx =
         InventoryTransaction.open(
             newTransactionNumber(),
@@ -329,6 +431,7 @@ public class InventoryTransactionManagementUseCasesImpl implements InventoryTran
             command.notes(),
             command.initiatedById());
     tx = transactionRepository.save(tx);
+
     for (ReturnSupplierLine line : command.lines()) {
       assertLocationWritable(line.locationId());
       Inventory inv = getOrCreateInventory(line.itemId(), line.locationId());
@@ -348,12 +451,25 @@ public class InventoryTransactionManagementUseCasesImpl implements InventoryTran
       m.setTransactionId(tx.getId());
       movementRepository.save(m);
     }
-    return finishCompleted(tx);
+
+    InventoryTransaction completed = finishCompleted(tx);
+    log.info(
+        "inventory transaction returnToSupplier complete transactionId={} transactionNumber={}",
+        completed.getId(),
+        completed.getTransactionNumber());
+    return completed;
   }
 
   @Override
   @Transactional
   public InventoryTransaction scrap(ScrapCommand command) {
+    log.info(
+        "inventory transaction scrap start lineCount={} initiatedById={} externalRefLen={} notesLen={}",
+        command.lines().size(),
+        command.initiatedById(),
+        command.externalReference() == null ? 0 : command.externalReference().length(),
+        command.notes() == null ? 0 : command.notes().length());
+
     InventoryTransaction tx =
         InventoryTransaction.open(
             newTransactionNumber(),
@@ -362,6 +478,7 @@ public class InventoryTransactionManagementUseCasesImpl implements InventoryTran
             command.notes(),
             command.initiatedById());
     tx = transactionRepository.save(tx);
+
     for (ScrapLine line : command.lines()) {
       assertLocationWritable(line.locationId());
       Inventory inv = getOrCreateInventory(line.itemId(), line.locationId());
@@ -381,16 +498,30 @@ public class InventoryTransactionManagementUseCasesImpl implements InventoryTran
       m.setTransactionId(tx.getId());
       movementRepository.save(m);
     }
-    return finishCompleted(tx);
+
+    InventoryTransaction completed = finishCompleted(tx);
+    log.info(
+        "inventory transaction scrap complete transactionId={} transactionNumber={}",
+        completed.getId(),
+        completed.getTransactionNumber());
+    return completed;
   }
 
   @Override
   @Transactional
   public InventoryTransaction physicalAdjustment(PhysicalAdjustmentCommand command) {
+    log.info(
+        "inventory transaction physicalAdjustment start inventoryId={} newQuantity={} performedById={} reasonLen={}",
+        command.inventoryId(),
+        command.newQuantity(),
+        command.performedById(),
+        command.reason() == null ? 0 : command.reason().length());
+
     Inventory inv =
         inventoryRepository
             .findById(command.inventoryId())
             .orElseThrow(() -> new InventoryNotFoundException(command.inventoryId()));
+
     InventoryTransaction tx =
         InventoryTransaction.open(
             newTransactionNumber(),
@@ -399,6 +530,7 @@ public class InventoryTransactionManagementUseCasesImpl implements InventoryTran
             command.reason(),
             command.performedById());
     tx = transactionRepository.save(tx);
+
     int before = inv.getAvailableQuantity();
     inv.adjust(command.newQuantity());
     inventoryRepository.save(inv);
@@ -433,38 +565,72 @@ public class InventoryTransactionManagementUseCasesImpl implements InventoryTran
       m.setTransactionId(tx.getId());
       movementRepository.save(m);
     }
-    return finishCompleted(tx);
+
+    InventoryTransaction completed = finishCompleted(tx);
+    log.info(
+        "inventory transaction physicalAdjustment complete transactionId={} transactionNumber={}",
+        completed.getId(),
+        completed.getTransactionNumber());
+    return completed;
   }
 
   @Override
   @Transactional
   public InventoryTransaction submit(Long id) {
+    log.info("inventory transaction submit start transactionId={}", id);
+
     InventoryTransaction tx = getById(id);
     tx.submit();
-    return transactionRepository.save(tx);
+
+    InventoryTransaction saved = transactionRepository.save(tx);
+    log.info(
+        "inventory transaction submit complete transactionId={} transactionNumber={}",
+        saved.getId(),
+        saved.getTransactionNumber());
+    return saved;
   }
 
   @Override
   @Transactional
   public InventoryTransaction approve(Long id, Long approvedById) {
+    log.info("inventory transaction approve start transactionId={} approvedById={}", id, approvedById);
+
     InventoryTransaction tx = getById(id);
     tx.approve(approvedById);
-    return transactionRepository.save(tx);
+
+    InventoryTransaction saved = transactionRepository.save(tx);
+    log.info(
+        "inventory transaction approve complete transactionId={} transactionNumber={}",
+        saved.getId(),
+        saved.getTransactionNumber());
+    return saved;
   }
 
   @Override
   @Transactional
   public InventoryTransaction complete(Long id) {
+    log.info("inventory transaction markCompleted start transactionId={}", id);
+
     InventoryTransaction tx = getById(id);
     tx.complete();
-    return transactionRepository.save(tx);
+
+    InventoryTransaction saved = transactionRepository.save(tx);
+    log.info(
+        "inventory transaction markCompleted complete transactionId={} transactionNumber={}",
+        saved.getId(),
+        saved.getTransactionNumber());
+    return saved;
   }
 
   @Override
   @Transactional
   public void cancel(Long id) {
+    log.info("inventory transaction cancel start transactionId={}", id);
+
     InventoryTransaction tx = getById(id);
     tx.cancel();
+
     transactionRepository.save(tx);
+    log.info("inventory transaction cancel complete transactionId={}", id);
   }
 }
