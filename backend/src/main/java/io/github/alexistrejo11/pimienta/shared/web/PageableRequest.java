@@ -1,5 +1,6 @@
 package io.github.alexistrejo11.pimienta.shared.web;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.data.domain.PageRequest;
@@ -16,13 +17,25 @@ import org.springframework.data.domain.Pageable;
  *   public PagedResponse&lt;FooResponse&gt; list(&#64;ModelAttribute PageableRequest pageable) { ... }
  * </pre>
  */
+@Schema(description = "Parámetros de paginación estándar (`page`, `size`).")
 public class PageableRequest {
 
   @Min(0)
+  @Schema(
+      description = "Índice de página basado en cero.",
+      example = "0",
+      defaultValue = "0",
+      minimum = "0")
   private int page = 0;
 
   @Min(1)
   @Max(100)
+  @Schema(
+      description = "Tamaño de página (máximo 100).",
+      example = "20",
+      defaultValue = "20",
+      minimum = "1",
+      maximum = "100")
   private int size = 20;
 
   public int getPage() {

@@ -1,7 +1,7 @@
 package io.github.alexistrejo11.pimienta.module.inventory.infrastructure.adapter.inbound.web;
 
-import io.github.alexistrejo11.pimienta.module.inventory.core.application.ItemManagementUseCases;
 import io.github.alexistrejo11.pimienta.module.inventory.core.domain.Item;
+import io.github.alexistrejo11.pimienta.module.inventory.core.port.input.ItemManagementUseCases;
 import io.github.alexistrejo11.pimienta.module.inventory.infrastructure.adapter.inbound.web.dto.request.ItemCreateRequest;
 import io.github.alexistrejo11.pimienta.module.inventory.infrastructure.adapter.inbound.web.dto.request.ItemSearchRequest;
 import io.github.alexistrejo11.pimienta.module.inventory.infrastructure.adapter.inbound.web.dto.request.ItemUpdateRequest;

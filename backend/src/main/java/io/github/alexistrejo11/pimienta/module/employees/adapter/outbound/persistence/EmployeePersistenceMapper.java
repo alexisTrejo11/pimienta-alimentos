@@ -1,99 +1,155 @@
 package io.github.alexistrejo11.pimienta.module.employees.adapter.outbound.persistence;
 
+import io.github.alexistrejo11.pimienta.module.employees.adapter.outbound.persistence.model.EmployeeBenefitsEmbeddable;
+import io.github.alexistrejo11.pimienta.module.employees.adapter.outbound.persistence.model.EmployeeCompensationEmbeddable;
+import io.github.alexistrejo11.pimienta.module.employees.adapter.outbound.persistence.model.EmployeeEmploymentEmbeddable;
 import io.github.alexistrejo11.pimienta.module.employees.adapter.outbound.persistence.model.EmployeeJpaEntity;
-import io.github.alexistrejo11.pimienta.module.employees.core.domain.BenefitsProfile;
-import io.github.alexistrejo11.pimienta.module.employees.core.domain.Compensation;
+import io.github.alexistrejo11.pimienta.module.employees.adapter.outbound.persistence.model.EmployeeOfficialIdsEmbeddable;
+import io.github.alexistrejo11.pimienta.module.employees.adapter.outbound.persistence.model.EmployeePersonalEmbeddable;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.Employee;
-import io.github.alexistrejo11.pimienta.module.employees.core.domain.Employment;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.OfficialIdentifiers;
-import io.github.alexistrejo11.pimienta.module.employees.core.domain.PersonalProfile;
-import io.github.alexistrejo11.pimienta.module.employees.core.domain.dto.ReconstructEmployeeParams;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.valueobject.BenefitsProfile;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.valueobject.Compensation;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.valueobject.Employment;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.valueobject.PersonalProfile;
+
+import java.math.BigDecimal;
 
 public class EmployeePersistenceMapper {
 
-  private EmployeePersistenceMapper() {}
+  private EmployeePersistenceMapper() {
+  }
 
   public static EmployeeJpaEntity toJpa(Employee domain) {
     EmployeeJpaEntity e = new EmployeeJpaEntity();
     if (domain.getId() != null && domain.getId() > 0) {
       e.setId(domain.getId());
     }
-    e.setFullName(domain.getName());
-    e.setEmail(domain.getEmail());
-    e.setPhone(domain.getPhone());
-    e.setAddress(domain.getAddress());
-    e.setBirthDate(domain.getBirthDate());
-    e.setNationality(domain.getNationality());
-    e.setCurp(domain.getCurp());
-    e.setRfc(domain.getRfc());
-    e.setNss(domain.getNss());
-    e.setClabe(domain.getClabe());
-    e.setEmployeeNumber(domain.getEmployeeNumber());
-    e.setPosition(domain.getPosition());
-    e.setDepartment(domain.getDepartment());
-    e.setContractType(domain.getContractType());
-    e.setWorkShift(domain.getWorkShift());
-    e.setHireDate(domain.getHireDate());
-    e.setTerminationDate(domain.getTerminationDate());
+
+    EmployeePersonalEmbeddable p = e.getPersonal();
+    p.setFullName(domain.getPersonal().name());
+    p.setEmail(domain.getPersonal().email());
+    p.setPhone(domain.getPersonal().phone());
+    p.setAddress(domain.getPersonal().address());
+    p.setBirthDate(domain.getPersonal().birthDate());
+    p.setNationality(domain.getPersonal().nationality());
+
+    EmployeeOfficialIdsEmbeddable o = e.getOfficialIds();
+    o.setCurp(domain.getOfficialIds().curp());
+    o.setRfc(domain.getOfficialIds().rfc());
+    o.setNss(domain.getOfficialIds().nss());
+    o.setClabe(domain.getOfficialIds().clabe());
+    o.setEmployeeNumber(domain.getOfficialIds().employeeNumber());
+
+    EmployeeEmploymentEmbeddable em = e.getEmployment();
+    em.setPosition(domain.getEmployment().position());
+    em.setDepartment(domain.getEmployment().department());
+    em.setContractType(domain.getEmployment().contractType());
+    em.setWorkShift(domain.getEmployment().workShift());
+    em.setHireDate(domain.getEmployment().hireDate());
+    em.setTerminationDate(domain.getEmployment().terminationDate());
     e.setStatus(domain.getStatus());
-    e.setSalaryPerWeek(domain.getSalaryPerWeek());
-    e.setBonuses(domain.getBonuses());
-    e.setFoodVouchers(domain.getFoodVouchers());
-    e.setIntegrationFactor(domain.getIntegrationFactor());
-    e.setImssWorkerType(domain.getImssWorkerType());
-    e.setImssSalaryType(domain.getImssSalaryType());
-    e.setChristmasBonusDays(domain.getChristmasBonus());
-    e.setVacationDays(domain.getVacationDays());
-    e.setVacationPremiumPercent(domain.getVacationPremiumPercent());
+
+    EmployeeCompensationEmbeddable c = e.getCompensation();
+    c.setSalaryPerWeek(domain.getCompensation().salaryPerWeek());
+    c.setBonuses(domain.getCompensation().bonuses());
+    c.setFoodVouchers(domain.getCompensation().foodVouchers());
+
+    EmployeeBenefitsEmbeddable b = e.getBenefits();
+    b.setIntegrationFactor(domain.getBenefits().integrationFactor());
+    b.setImssWorkerType(domain.getBenefits().imssWorkerType());
+    b.setImssSalaryType(domain.getBenefits().imssSalaryType());
+    b.setChristmasBonusDays(domain.getBenefits().christmasBonusDays());
+    b.setVacationDays(domain.getBenefits().vacationDays());
+    b.setVacationPremiumPercent(domain.getBenefits().vacationPremiumPercent());
+
     e.setCreatedAt(domain.getCreatedAt());
     e.setUpdatedAt(domain.getUpdatedAt());
     e.setDeletedAt(domain.getDeletedAt());
     e.setVersion(domain.getVersion() != null ? domain.getVersion() : 0L);
+
+    e.fillCreatedAndUpdatedIfNull();
+    e.fillUpdatedIfNull();
+    e.normalizeVersionIfNull();
     return e;
   }
 
   public static Employee toDomain(EmployeeJpaEntity e) {
-    PersonalProfile personal =
-        new PersonalProfile(
-            e.getFullName(),
-            e.getEmail(),
-            e.getPhone(),
-            e.getAddress(),
-            e.getBirthDate(),
-            e.getNationality());
-    OfficialIdentifiers official =
-        new OfficialIdentifiers(
-            e.getCurp(), e.getRfc(), e.getNss(), e.getClabe(), e.getEmployeeNumber());
-    Employment employment =
-        new Employment(
-            e.getPosition(),
-            e.getDepartment(),
-            e.getContractType(),
-            e.getWorkShift(),
-            e.getHireDate(),
-            e.getTerminationDate(),
-            e.getStatus());
-    Compensation compensation =
-        new Compensation(e.getSalaryPerWeek(), e.getBonuses(), e.getFoodVouchers());
-    BenefitsProfile benefits =
-        new BenefitsProfile(
-            e.getIntegrationFactor(),
-            e.getImssWorkerType(),
-            e.getImssSalaryType(),
-            e.getChristmasBonusDays(),
-            e.getVacationDays(),
-            e.getVacationPremiumPercent());
-    return Employee.reconstruct(
-        new ReconstructEmployeeParams(
-            e.getId(),
-            personal,
-            official,
-            employment,
-            compensation,
-            benefits,
-            e.getCreatedAt(),
-            e.getUpdatedAt(),
-            e.getDeletedAt(),
-            e.getVersion()));
+    PersonalProfile personal = toPersonal(e.getPersonal());
+    OfficialIdentifiers official = toOfficialIds(e.getOfficialIds());
+    Employment employment = toEmployment(e);
+    Compensation compensation = toCompensation(e.getCompensation());
+    BenefitsProfile benefits = toBenefits(e.getBenefits());
+
+    return Employee.builder()
+        .withId(e.getId())
+        .withCreatedAt(e.getCreatedAt())
+        .withUpdatedAt(e.getUpdatedAt())
+        .withDeletedAt(e.getDeletedAt())
+        .withVersion(e.getVersion())
+        .withPersonal(personal)
+        .withOfficialIds(official)
+        .withEmployment(employment)
+        .withCompensation(compensation)
+        .withBenefits(benefits)
+        .build();
+  }
+
+  private static PersonalProfile toPersonal(EmployeePersonalEmbeddable row) {
+    if (row == null) {
+      return PersonalProfile.empty();
+    }
+    return new PersonalProfile(
+        row.getFullName(),
+        row.getEmail(),
+        row.getPhone(),
+        row.getAddress(),
+        row.getBirthDate(),
+        row.getNationality() != null && !row.getNationality().isBlank()
+            ? row.getNationality()
+            : "Mexicana");
+  }
+
+  private static OfficialIdentifiers toOfficialIds(EmployeeOfficialIdsEmbeddable row) {
+    if (row == null) {
+      return OfficialIdentifiers.empty();
+    }
+    return new OfficialIdentifiers(
+        row.getCurp(), row.getRfc(), row.getNss(), row.getClabe(), row.getEmployeeNumber());
+  }
+
+  private static Employment toEmployment(EmployeeJpaEntity entity) {
+    EmployeeEmploymentEmbeddable row = entity.getEmployment();
+    if (row == null) {
+      return Employment.empty();
+    }
+    return new Employment(
+        row.getPosition(),
+        row.getDepartment(),
+        row.getContractType(),
+        row.getWorkShift(),
+        row.getHireDate(),
+        row.getTerminationDate(),
+        entity.getStatus());
+  }
+
+  private static Compensation toCompensation(EmployeeCompensationEmbeddable row) {
+    if (row == null) {
+      return Compensation.baseline(BigDecimal.ZERO);
+    }
+    return new Compensation(row.getSalaryPerWeek(), row.getBonuses(), row.getFoodVouchers());
+  }
+
+  private static BenefitsProfile toBenefits(EmployeeBenefitsEmbeddable row) {
+    if (row == null) {
+      return BenefitsProfile.legalDefaults();
+    }
+    return new BenefitsProfile(
+        row.getIntegrationFactor(),
+        row.getImssWorkerType(),
+        row.getImssSalaryType(),
+        row.getChristmasBonusDays(),
+        row.getVacationDays(),
+        row.getVacationPremiumPercent());
   }
 }

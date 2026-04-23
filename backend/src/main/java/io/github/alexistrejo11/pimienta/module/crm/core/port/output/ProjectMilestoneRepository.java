@@ -11,6 +11,9 @@ public interface ProjectMilestoneRepository {
 
   Page<ProjectMilestone> findByProjectId(long projectId, Pageable pageable);
 
+  /** Todas las filas no borradas (export global). */
+  Page<ProjectMilestone> findAll(Pageable pageable);
+
   long countByProjectId(long projectId);
 
   long countCompletedByProjectId(long projectId);

@@ -1,8 +1,8 @@
 package io.github.alexistrejo11.pimienta.module.task.infrastructure.adapter.inbound.web;
 
+import io.github.alexistrejo11.pimienta.module.task.core.application.command.CreateTaskCommand;
 import io.github.alexistrejo11.pimienta.module.task.core.application.query.TaskSearchCriteria;
-import io.github.alexistrejo11.pimienta.module.task.core.domain.CreateChecklistLine;
-import io.github.alexistrejo11.pimienta.module.task.core.domain.CreateTaskParams;
+import io.github.alexistrejo11.pimienta.module.task.core.domain.ChecklistDraft;
 import io.github.alexistrejo11.pimienta.module.task.core.domain.Task;
 import io.github.alexistrejo11.pimienta.module.task.infrastructure.adapter.inbound.web.dto.ChecklistItemResponse;
 import io.github.alexistrejo11.pimienta.module.task.infrastructure.adapter.inbound.web.dto.ChecklistLineRequest;
@@ -17,24 +17,9 @@ public final class TaskManagerWebMapper {
 
   private TaskManagerWebMapper() {}
 
-  public static CreateTaskParams toCreateParamsForOpportunity(
+  public static CreateTaskCommand toCreateCommandForOpportunity(
       TaskRequest request, Long opportunityId) {
-    List<CreateChecklistLine> lines = new ArrayList<>();
-    if (request.checklist() != null) {
-      for (ChecklistLineRequest line : request.checklist()) {
-        lines.add(new CreateChecklistLine(line.description(), line.displayOrder()));
-      }
-    }
-    return new CreateTaskParams(
-        request.title(),
-        request.description(),
-        request.priority(),
-        request.dueDate(),
-        request.headquarterId(),
-        request.projectId(),
-        opportunityId,
-        request.createdById(),
-        lines);
+    return buildCreateCommand(request, opportunityId);
   }
 
   public static TaskSearchCriteria toCriteria(TaskSearchRequest request) {
@@ -46,23 +31,30 @@ public final class TaskManagerWebMapper {
         request.getStatus());
   }
 
-  static CreateTaskParams toCreateParams(TaskRequest request) {
-    List<CreateChecklistLine> lines = new ArrayList<>();
+  static CreateTaskCommand toCreateCommand(TaskRequest request) {
+    return buildCreateCommand(request, request.opportunityId());
+  }
+
+  private static CreateTaskCommand buildCreateCommand(TaskRequest request, Long opportunityId) {
+    List<ChecklistDraft> drafts = new ArrayList<>();
     if (request.checklist() != null) {
       for (ChecklistLineRequest line : request.checklist()) {
-        lines.add(new CreateChecklistLine(line.description(), line.displayOrder()));
+        drafts.add(new ChecklistDraft(line.description(), line.displayOrder()));
       }
     }
-    return new CreateTaskParams(
+    Task.Priority priority =
+        request.priority() != null ? request.priority() : Task.Priority.MEDIUM;
+    return new CreateTaskCommand(
         request.title(),
         request.description(),
-        request.priority(),
+        priority,
         request.dueDate(),
         request.headquarterId(),
         request.projectId(),
-        request.opportunityId(),
+        opportunityId,
         request.createdById(),
-        lines);
+        Task.Status.PENDING,
+        drafts);
   }
 
   public static TaskResponse toResponse(Task task) {

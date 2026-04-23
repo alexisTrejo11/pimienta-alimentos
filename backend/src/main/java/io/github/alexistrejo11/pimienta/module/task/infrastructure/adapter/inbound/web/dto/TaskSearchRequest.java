@@ -2,14 +2,28 @@ package io.github.alexistrejo11.pimienta.module.task.infrastructure.adapter.inbo
 
 import io.github.alexistrejo11.pimienta.module.task.core.domain.Task;
 import io.github.alexistrejo11.pimienta.shared.web.PageableRequest;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-/** Query parameters for global task search (Spring binds {@code ?headquarterId=} and related keys). */
+/**
+ * Query parameters for global task search (Spring binds {@code ?headquarterId=} and related
+ * keys).
+ */
+@Schema(description = "Filters and pagination for GET /api/v1/tasks.")
 public class TaskSearchRequest extends PageableRequest {
 
+  @Schema(description = "Filter by headquarter id.", example = "1")
   private Long headquarterId;
+
+  @Schema(description = "Filter by project id.", example = "10")
   private Long projectId;
+
+  @Schema(description = "Filter by CRM opportunity id.", example = "500")
   private Long opportunityId;
+
+  @Schema(description = "Filter by assignee (employee) id.", example = "7")
   private Long employeeId;
+
+  @Schema(description = "Filter by status.", example = "PENDING")
   private Task.Status status;
 
   public Long getHeadquarterId() {
@@ -51,5 +65,4 @@ public class TaskSearchRequest extends PageableRequest {
   public void setStatus(Task.Status status) {
     this.status = status;
   }
-
 }

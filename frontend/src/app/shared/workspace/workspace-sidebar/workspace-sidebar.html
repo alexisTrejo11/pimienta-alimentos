@@ -76,6 +76,15 @@
       </a>
 
       <a
+        routerLink="/app/nomina"
+        routerLinkActive="bg-red-50 font-semibold text-red-700 border-r-4 border-red-700 dark:bg-red-950/30 dark:text-red-500 dark:border-red-500"
+        [class]="navLinkInactive"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">payments</span>
+        <span class="font-headline font-bold tracking-tight">Nómina</span>
+      </a>
+
+      <a
         routerLink="/app/tareas"
         routerLinkActive="bg-red-50 font-semibold text-red-700 border-r-4 border-red-700 dark:bg-red-950/30 dark:text-red-500 dark:border-red-500"
         [class]="navLinkInactive"
@@ -97,6 +106,17 @@
 
   <!-- Acciones y utilidades al fondo -->
   <div class="mt-auto space-y-1 border-t border-stone-200/10 pt-6">
+    <p class="mb-1 px-4 text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-600">
+      Acciones
+    </p>
+    <a
+      routerLink="/app/contratos"
+      routerLinkActive="bg-red-50 font-semibold text-red-700 border-r-4 border-red-700 dark:bg-red-950/30 dark:text-red-500 dark:border-red-500"
+      [class]="navLinkInactive"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">contract</span>
+      <span class="font-headline font-bold tracking-tight">Contratos</span>
+    </a>
     <a [class]="navLinkInactive" routerLink="/app/dashboard">
       <span class="material-symbols-outlined" aria-hidden="true">settings</span>
       <span class="font-headline font-bold tracking-tight">Configuración</span>

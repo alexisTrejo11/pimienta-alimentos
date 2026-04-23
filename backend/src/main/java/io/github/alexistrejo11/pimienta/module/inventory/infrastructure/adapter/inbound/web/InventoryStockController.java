@@ -1,7 +1,7 @@
 package io.github.alexistrejo11.pimienta.module.inventory.infrastructure.adapter.inbound.web;
 
-import io.github.alexistrejo11.pimienta.module.inventory.core.application.InventoryManagementUseCases;
 import io.github.alexistrejo11.pimienta.module.inventory.core.domain.Inventory;
+import io.github.alexistrejo11.pimienta.module.inventory.core.port.input.InventoryManagementUseCases;
 import io.github.alexistrejo11.pimienta.module.inventory.infrastructure.adapter.inbound.web.dto.request.CreateInitialStockRequest;
 import io.github.alexistrejo11.pimienta.module.inventory.infrastructure.adapter.inbound.web.dto.request.InventoryStockSearchRequest;
 import io.github.alexistrejo11.pimienta.module.inventory.infrastructure.adapter.inbound.web.dto.response.InventoryStockResponse;
@@ -37,8 +37,7 @@ public class InventoryStockController {
   @GetMapping
   @RateLimit(profile = RateLimitProfile.READ_HEAVY)
   public PagedResponse<InventoryStockResponse> searchStock(@ModelAttribute InventoryStockSearchRequest filter) {
-    Page<Inventory> page =
-        inventoryManagementUseCases.search(filter.toCriteria(), filter.toPageable());
+    Page<Inventory> page = inventoryManagementUseCases.search(filter.toCriteria(), filter.toPageable());
     return PagedResponse.map(page, InventoryStockWebMapper::toResponse);
   }
 
@@ -81,9 +80,8 @@ public class InventoryStockController {
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
   @ResponseStatus(HttpStatus.CREATED)
   public InventoryStockResponse createInitialStock(@Valid @RequestBody CreateInitialStockRequest request) {
-    Inventory created =
-        inventoryManagementUseCases.createInitialStock(
-            request.itemId(), request.locationId(), request.initialQuantity());
+    Inventory created = inventoryManagementUseCases.createInitialStock(
+        request.itemId(), request.locationId(), request.initialQuantity());
     return InventoryStockWebMapper.toResponse(created);
   }
 }

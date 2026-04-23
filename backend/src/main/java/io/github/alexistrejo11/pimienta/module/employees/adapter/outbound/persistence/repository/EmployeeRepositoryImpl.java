@@ -8,8 +8,9 @@ import io.github.alexistrejo11.pimienta.module.employees.core.domain.DepartmentH
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.Employee;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.EmployeeStatistics;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.enums.EmployeeStatus;
+import io.github.alexistrejo11.pimienta.module.employees.core.port.output.EmployeeRepository;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.EmployeeSummary;
-import io.github.alexistrejo11.pimienta.module.employees.core.port.EmployeeRepository;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -65,10 +66,9 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
     List<DepartmentHeadcount> byDepartment = new ArrayList<>(rows.size());
     for (Object[] row : rows) {
       String dept = row[0] != null ? row[0].toString() : "";
-      long cnt =
-          row[1] instanceof Long longCount
-              ? longCount
-              : row[1] != null ? ((Number) row[1]).longValue() : 0L;
+      long cnt = row[1] instanceof Long longCount
+          ? longCount
+          : row[1] != null ? ((Number) row[1]).longValue() : 0L;
       byDepartment.add(new DepartmentHeadcount(dept, cnt));
     }
     return new EmployeeSummary(total, byDepartment);

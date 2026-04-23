@@ -15,6 +15,9 @@ public interface ProjectMilestoneJpaRepository extends JpaRepository<ProjectMile
   Page<ProjectMilestoneJpaEntity> findByProjectIdAndDeletedAtIsNullOrderBySortOrderAsc(
       Long projectId, Pageable pageable);
 
+  Page<ProjectMilestoneJpaEntity> findByDeletedAtIsNullOrderByProjectIdAscSortOrderAsc(
+      Pageable pageable);
+
   long countByProjectIdAndDeletedAtIsNull(Long projectId);
 
   long countByProjectIdAndDeletedAtIsNullAndStatus(

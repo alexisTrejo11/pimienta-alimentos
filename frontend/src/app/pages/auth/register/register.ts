@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { AuthService } from '../../../core/auth/auth.service';
@@ -9,7 +9,7 @@ import {
   parseApiError,
   type ParsedApiError,
 } from '../../../core/http/parse-api-error';
-import type { RegisterRequest } from '../../../core/model/account/auth.dto';
+import type { RegisterRequest, RegisterResponse } from '../../../core/model/account/auth.dto';
 import type { Gender } from '../../../core/model/account/enums';
 
 @Component({
@@ -20,7 +20,6 @@ import type { Gender } from '../../../core/model/account/enums';
 export class Register {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
 
   /** Options for {@link RegisterRequest.gender}; labels are UI-only. */
   readonly genderOptions: { value: Gender; label: string }[] = [
@@ -34,6 +33,8 @@ export class Register {
   readonly submitting = signal(false);
   /** Set when the API returns an error (parsed {@link ParsedApiError} for template + logging). */
   readonly apiError = signal<ParsedApiError | null>(null);
+  /** Set on successful registration (no session; user must wait for approval, then use login). */
+  readonly registerSuccess = signal<RegisterResponse | null>(null);
 
   /**
    * Client-side constraints aligned with backend {@code RegisterRequest} / Bean Validation where possible.
@@ -57,6 +58,7 @@ export class Register {
 
   submit(): void {
     this.apiError.set(null);
+    this.registerSuccess.set(null);
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -83,14 +85,10 @@ export class Register {
         }),
       )
       .subscribe({
-        next: (tokens) => {
-          console.info('[Register] cuenta creada', {
-            expiresInSeconds: tokens.expiresInSeconds,
-            tokenType: tokens.tokenType,
-          });
-          sessionStorage.setItem('accessToken', tokens.accessToken);
-          sessionStorage.setItem('refreshToken', tokens.refreshToken);
-          void this.router.navigateByUrl('/portal');
+        next: (body) => {
+          this.registerSuccess.set(body);
+          this.form.reset();
+          console.info('[Register] cuenta creada', { status: body.status });
         },
         error: (err: unknown) => {
           const parsed = parseApiError(err);
@@ -98,6 +96,11 @@ export class Register {
           console.error('[Register] fallo el registro', { http: err, parsed });
         },
       });
+  }
+
+  /** Vuelve al formulario para registrar otra cuenta. */
+  clearSuccess(): void {
+    this.registerSuccess.set(null);
   }
 
   /** Validation message from the last API response for a specific field (e.g. `email`). */

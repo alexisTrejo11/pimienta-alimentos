@@ -1,7 +1,7 @@
 package io.github.alexistrejo11.pimienta.module.inventory.infrastructure.adapter.inbound.web;
 
-import io.github.alexistrejo11.pimienta.module.inventory.core.application.InventoryTransactionManagementUseCases;
 import io.github.alexistrejo11.pimienta.module.inventory.core.domain.InventoryTransaction;
+import io.github.alexistrejo11.pimienta.module.inventory.core.port.input.InventoryTransactionManagementUseCases;
 import io.github.alexistrejo11.pimienta.module.inventory.infrastructure.adapter.inbound.web.dto.request.AdjustmentTransactionRequest;
 import io.github.alexistrejo11.pimienta.module.inventory.infrastructure.adapter.inbound.web.dto.request.ApproveTransactionRequest;
 import io.github.alexistrejo11.pimienta.module.inventory.infrastructure.adapter.inbound.web.dto.request.InventoryTransactionSearchRequest;
@@ -44,8 +44,8 @@ public class InventoryTransactionController {
   @RateLimit(profile = RateLimitProfile.READ_HEAVY)
   public PagedResponse<InventoryTransactionResponse> searchTransactions(
       @ModelAttribute InventoryTransactionSearchRequest filter) {
-    Page<InventoryTransaction> page =
-        inventoryTransactionManagementUseCases.search(filter.toCriteria(), filter.toPageable());
+    Page<InventoryTransaction> page = inventoryTransactionManagementUseCases.search(filter.toCriteria(),
+        filter.toPageable());
     return PagedResponse.map(page, InventoryTransactionWebMapper::toResponse);
   }
 
@@ -59,32 +59,32 @@ public class InventoryTransactionController {
   @PostMapping("/purchase")
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
   public InventoryTransactionResponse purchase(@Valid @RequestBody PurchaseTransactionRequest request) {
-    InventoryTransaction tx =
-        inventoryTransactionManagementUseCases.purchase(InventoryTransactionWebMapper.toCommand(request));
+    InventoryTransaction tx = inventoryTransactionManagementUseCases
+        .purchase(InventoryTransactionWebMapper.toCommand(request));
     return InventoryTransactionWebMapper.toResponse(tx);
   }
 
   @PostMapping("/sale")
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
   public InventoryTransactionResponse sale(@Valid @RequestBody SaleTransactionRequest request) {
-    InventoryTransaction tx =
-        inventoryTransactionManagementUseCases.sale(InventoryTransactionWebMapper.toCommand(request));
+    InventoryTransaction tx = inventoryTransactionManagementUseCases
+        .sale(InventoryTransactionWebMapper.toCommand(request));
     return InventoryTransactionWebMapper.toResponse(tx);
   }
 
   @PostMapping("/transfer")
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
   public InventoryTransactionResponse transfer(@Valid @RequestBody TransferTransactionRequest request) {
-    InventoryTransaction tx =
-        inventoryTransactionManagementUseCases.transfer(InventoryTransactionWebMapper.toCommand(request));
+    InventoryTransaction tx = inventoryTransactionManagementUseCases
+        .transfer(InventoryTransactionWebMapper.toCommand(request));
     return InventoryTransactionWebMapper.toResponse(tx);
   }
 
   @PostMapping("/adjustment")
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
   public InventoryTransactionResponse adjustment(@Valid @RequestBody AdjustmentTransactionRequest request) {
-    InventoryTransaction tx =
-        inventoryTransactionManagementUseCases.adjustment(InventoryTransactionWebMapper.toCommand(request));
+    InventoryTransaction tx = inventoryTransactionManagementUseCases
+        .adjustment(InventoryTransactionWebMapper.toCommand(request));
     return InventoryTransactionWebMapper.toResponse(tx);
   }
 
@@ -92,9 +92,8 @@ public class InventoryTransactionController {
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
   public InventoryTransactionResponse returnFromClient(
       @Valid @RequestBody ReturnClientTransactionRequest request) {
-    InventoryTransaction tx =
-        inventoryTransactionManagementUseCases.returnFromClient(
-            InventoryTransactionWebMapper.toCommand(request));
+    InventoryTransaction tx = inventoryTransactionManagementUseCases.returnFromClient(
+        InventoryTransactionWebMapper.toCommand(request));
     return InventoryTransactionWebMapper.toResponse(tx);
   }
 
@@ -102,17 +101,16 @@ public class InventoryTransactionController {
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
   public InventoryTransactionResponse returnToSupplier(
       @Valid @RequestBody ReturnSupplierTransactionRequest request) {
-    InventoryTransaction tx =
-        inventoryTransactionManagementUseCases.returnToSupplier(
-            InventoryTransactionWebMapper.toCommand(request));
+    InventoryTransaction tx = inventoryTransactionManagementUseCases.returnToSupplier(
+        InventoryTransactionWebMapper.toCommand(request));
     return InventoryTransactionWebMapper.toResponse(tx);
   }
 
   @PostMapping("/scrap")
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
   public InventoryTransactionResponse scrap(@Valid @RequestBody ScrapTransactionRequest request) {
-    InventoryTransaction tx =
-        inventoryTransactionManagementUseCases.scrap(InventoryTransactionWebMapper.toCommand(request));
+    InventoryTransaction tx = inventoryTransactionManagementUseCases
+        .scrap(InventoryTransactionWebMapper.toCommand(request));
     return InventoryTransactionWebMapper.toResponse(tx);
   }
 
@@ -120,9 +118,8 @@ public class InventoryTransactionController {
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
   public InventoryTransactionResponse physicalAdjustment(
       @Valid @RequestBody PhysicalAdjustmentTransactionRequest request) {
-    InventoryTransaction tx =
-        inventoryTransactionManagementUseCases.physicalAdjustment(
-            InventoryTransactionWebMapper.toCommand(request));
+    InventoryTransaction tx = inventoryTransactionManagementUseCases.physicalAdjustment(
+        InventoryTransactionWebMapper.toCommand(request));
     return InventoryTransactionWebMapper.toResponse(tx);
   }
 

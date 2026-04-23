@@ -26,6 +26,8 @@ import { TareasPageComponent } from './pages/tareas/tareas-page';
 import { TareaDetailPageComponent } from './pages/tareas/tarea-detail/tarea-detail-page';
 import { SedesPageComponent } from './pages/sedes/sedes-page';
 import { SedeDetailPageComponent } from './pages/sedes/sede-detail/sede-detail-page';
+import { ContratosPageComponent } from './pages/contratos/contratos-page';
+import { NominaPageComponent } from './pages/nomina/nomina-page';
 
 export const routes: Routes = [
   {
@@ -68,6 +70,12 @@ export const routes: Routes = [
       // ── Sedes ────────────────────────────────────────────────────────────
       { path: 'sedes', component: SedesPageComponent },
       { path: 'sedes/:id', component: SedeDetailPageComponent },
+
+      // ── Contratos ─────────────────────────────────────────────────────────
+      { path: 'contratos', component: ContratosPageComponent },
+
+      // ── Nómina ────────────────────────────────────────────────────────────
+      { path: 'nomina', component: NominaPageComponent },
     ],
   },
   {

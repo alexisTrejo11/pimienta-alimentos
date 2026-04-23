@@ -12,6 +12,16 @@ export interface RegisterRequest {
   dateOfBirth: string;
 }
 
+/**
+ * POST /api/v1/auth/register — 201.
+ * La cuenta queda pendiente de aprobación; no se emiten tokens.
+ */
+export interface RegisterResponse {
+  message: string;
+  /** Ej.: `PENDING_APPROVAL` */
+  status: string;
+}
+
 /** POST /api/v1/auth/login */
 export interface LoginRequest {
   email: string;
@@ -28,7 +38,7 @@ export interface LogoutRequest {
   refreshToken?: string | null;
 }
 
-/** Response from register, login, refresh. */
+/** Response from login and refresh (tokens). */
 export interface TokenResponse {
   accessToken: string;
   refreshToken: string;

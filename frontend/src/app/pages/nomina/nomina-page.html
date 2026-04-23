@@ -1,0 +1,499 @@
+<div class="flex flex-col gap-6 p-8">
+  <app-page-header
+    title="Nómina"
+    subtitle="Registros, períodos, pagos y adeudos según la política de la empresa"
+  />
+
+  <!-- Rango del resumen -->
+  <section
+    class="rounded-xl border border-stone-200 bg-[var(--color-surface-container-lowest)] p-4 dark:border-stone-800"
+    aria-label="Filtros de resumen"
+  >
+    <div class="flex flex-wrap items-end gap-4">
+      <div class="space-y-1">
+        <label class="ml-1 block text-[11px] font-semibold uppercase tracking-wider text-[var(--color-on-surface-variant)]" for="sum-from">Desde</label>
+        <input
+          id="sum-from"
+          type="date"
+          [(ngModel)]="summaryFrom"
+          [ngModelOptions]="{ standalone: true }"
+          class="rounded-lg border border-transparent bg-stone-100 px-3 py-2 text-sm text-on-surface focus:ring-2 focus:ring-[var(--color-primary)]/20 dark:bg-stone-900"
+        />
+      </div>
+      <div class="space-y-1">
+        <label class="ml-1 block text-[11px] font-semibold uppercase tracking-wider text-[var(--color-on-surface-variant)]" for="sum-to">Hasta</label>
+        <input
+          id="sum-to"
+          type="date"
+          [(ngModel)]="summaryTo"
+          [ngModelOptions]="{ standalone: true }"
+          class="rounded-lg border border-transparent bg-stone-100 px-3 py-2 text-sm text-on-surface focus:ring-2 focus:ring-[var(--color-primary)]/20 dark:bg-stone-900"
+        />
+      </div>
+      <button
+        type="button"
+        class="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-bold text-[var(--color-on-primary)] shadow-sm transition hover:opacity-95 disabled:opacity-60"
+        [disabled]="summaryLoading()"
+        (click)="loadSummary()"
+      >
+        @if (summaryLoading()) {
+          <span>Cargando…</span>
+        } @else {
+          <span>Actualizar resumen</span>
+        }
+      </button>
+    </div>
+    @if (summaryError(); as err) {
+      <p role="alert" class="mt-3 text-sm text-[var(--color-error)]">{{ err.message }}</p>
+    }
+  </section>
+
+  <!-- Tarjetas de resumen -->
+  @if (summary(); as s) {
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div class="rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-950">
+        <p class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Empleados pagados</p>
+        <p class="font-headline mt-1 text-2xl font-bold tabular-nums text-on-surface">{{ s.employeesPaid }}</p>
+      </div>
+      <div class="rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-950">
+        <p class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Total bruto</p>
+        <p class="font-headline mt-1 text-xl font-bold tabular-nums text-on-surface">{{ formatMXN(s.totalGross) }}</p>
+      </div>
+      <div class="rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-950">
+        <p class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Total neto</p>
+        <p class="font-headline mt-1 text-xl font-bold tabular-nums text-green-800 dark:text-green-300">{{ formatMXN(s.totalNet) }}</p>
+      </div>
+      <div class="rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-950">
+        <p class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Descuentos</p>
+        <p class="font-headline mt-1 text-xl font-bold tabular-nums text-on-surface">{{ formatMXN(s.totalDiscounts) }}</p>
+      </div>
+      <div class="rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-950">
+        <p class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Bonos</p>
+        <p class="font-headline mt-1 text-xl font-bold tabular-nums text-on-surface">{{ formatMXN(s.totalBonuses) }}</p>
+      </div>
+      <div class="rounded-xl border border-amber-200 bg-amber-50/80 p-4 dark:border-amber-900/40 dark:bg-amber-950/30">
+        <p class="text-xs font-medium uppercase tracking-wide text-amber-900 dark:text-amber-200">Adeudo acumulado</p>
+        <p class="font-headline mt-1 text-xl font-bold tabular-nums text-amber-950 dark:text-amber-100">{{ formatMXN(s.totalDebt) }}</p>
+      </div>
+    </div>
+  }
+
+  <!-- Pestañas -->
+  <div class="flex flex-wrap gap-2 border-b border-stone-200 pb-1 dark:border-stone-800" role="tablist" aria-label="Secciones de nómina">
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="activeTab() === 'registros'"
+      [class]="activeTab() === 'registros' ? tabButtonActive : tabButtonInactive"
+      (click)="setTab('registros')"
+    >
+      Registros
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="activeTab() === 'periodos'"
+      [class]="activeTab() === 'periodos' ? tabButtonActive : tabButtonInactive"
+      (click)="setTab('periodos')"
+    >
+      Períodos
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="activeTab() === 'pagos'"
+      [class]="activeTab() === 'pagos' ? tabButtonActive : tabButtonInactive"
+      (click)="setTab('pagos')"
+    >
+      Pagos
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="activeTab() === 'adeudos'"
+      [class]="activeTab() === 'adeudos' ? tabButtonActive : tabButtonInactive"
+      (click)="setTab('adeudos')"
+    >
+      Adeudos
+    </button>
+  </div>
+
+  <!-- Registros -->
+  @if (activeTab() === 'registros') {
+    <section class="space-y-4" aria-label="Registros de nómina">
+      <div class="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          class="rounded-lg border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-on-surface shadow-sm transition hover:bg-stone-50 disabled:opacity-60 dark:border-stone-700 dark:bg-stone-950 dark:hover:bg-stone-900"
+          [disabled]="importExporting()"
+          (click)="exportExcel()"
+        >
+          <span class="material-symbols-outlined mr-1 align-middle text-lg" aria-hidden="true">download</span>
+          Exportar Excel
+        </button>
+        <label
+          class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-on-surface shadow-sm hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-950 dark:hover:bg-stone-900"
+        >
+          <span class="material-symbols-outlined text-lg" aria-hidden="true">upload_file</span>
+          Importar Excel
+          <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="sr-only" (change)="onImportFile($event)" [disabled]="importExporting()" />
+        </label>
+      </div>
+      @if (importMessage(); as msg) {
+        <p class="text-sm text-green-800 dark:text-green-300" role="status">{{ msg }}</p>
+      }
+      @if (importError(); as impErr) {
+        <p class="text-sm text-[var(--color-error)]" role="alert">{{ impErr.message }}</p>
+      }
+
+      <div class="flex flex-wrap items-end gap-4 rounded-xl border border-stone-200 bg-stone-50/50 p-4 dark:border-stone-800 dark:bg-stone-900/40">
+        <div class="space-y-1">
+          <label class="text-xs font-medium text-on-surface-variant" for="f-emp">ID empleado</label>
+          <input
+            id="f-emp"
+            type="number"
+            [(ngModel)]="filterEmployeeId"
+            [ngModelOptions]="{ standalone: true }"
+            class="w-36 rounded-lg border border-transparent bg-white px-3 py-2 text-sm dark:bg-stone-950"
+            placeholder="Opcional"
+          />
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs font-medium text-on-surface-variant" for="f-per">ID período</label>
+          <input
+            id="f-per"
+            type="number"
+            [(ngModel)]="filterPeriodId"
+            [ngModelOptions]="{ standalone: true }"
+            class="w-36 rounded-lg border border-transparent bg-white px-3 py-2 text-sm dark:bg-stone-950"
+            placeholder="Opcional"
+          />
+        </div>
+        <button
+          type="button"
+          class="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-bold text-[var(--color-on-primary)]"
+          (click)="applyRecordFilters()"
+        >
+          Aplicar filtros
+        </button>
+      </div>
+
+      <div class="rounded-xl border border-stone-200 bg-[var(--color-surface-container-lowest)] p-4 dark:border-stone-800">
+        <h2 class="font-headline mb-3 text-lg font-bold text-on-surface">Nuevo registro</h2>
+        @if (recordFormError(); as fe) {
+          <p class="mb-2 text-sm text-[var(--color-error)]">{{ fe.message }}</p>
+        }
+        <form [formGroup]="recordForm" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" (ngSubmit)="submitRecord()">
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-on-surface-variant" for="nr-emp">Empleado (ID)</label>
+            <input id="nr-emp" type="number" formControlName="employeeId" class="w-full rounded-lg bg-stone-100 px-3 py-2 text-sm dark:bg-stone-900" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-on-surface-variant" for="nr-per">Período (ID)</label>
+            <input id="nr-per" type="number" formControlName="periodId" class="w-full rounded-lg bg-stone-100 px-3 py-2 text-sm dark:bg-stone-900" placeholder="Opcional" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-on-surface-variant" for="nr-start">Inicio labores</label>
+            <input id="nr-start" type="date" formControlName="workedDaysStart" class="w-full rounded-lg bg-stone-100 px-3 py-2 text-sm dark:bg-stone-900" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-on-surface-variant" for="nr-end">Fin labores</label>
+            <input id="nr-end" type="date" formControlName="workedDaysEnd" class="w-full rounded-lg bg-stone-100 px-3 py-2 text-sm dark:bg-stone-900" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-on-surface-variant" for="nr-gross">Importe bruto</label>
+            <input id="nr-gross" type="number" step="0.01" formControlName="grossAmount" class="w-full rounded-lg bg-stone-100 px-3 py-2 text-sm dark:bg-stone-900" />
+          </div>
+          <div class="flex items-end sm:col-span-2 lg:col-span-1">
+            <button
+              type="submit"
+              class="w-full rounded-lg bg-[var(--color-primary)] py-2.5 text-sm font-bold text-[var(--color-on-primary)] disabled:opacity-60"
+              [disabled]="recordSaving()"
+            >
+              {{ recordSaving() ? 'Guardando…' : 'Registrar' }}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <app-data-state
+        [loading]="recordsLoading()"
+        [error]="recordsError()"
+        [empty]="records().length === 0"
+        emptyMessage="No hay registros de nómina con los filtros actuales."
+        (retry)="loadRecords()"
+      >
+        <div class="overflow-x-auto rounded-xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950">
+          <table class="w-full min-w-[720px] text-sm" aria-label="Registros de nómina">
+            <thead class="border-b border-stone-100 bg-stone-50 dark:border-stone-800 dark:bg-stone-900">
+              <tr>
+                <th class="px-3 py-3 text-left font-semibold text-on-surface-variant">ID</th>
+                <th class="px-3 py-3 text-left font-semibold text-on-surface-variant">Empleado</th>
+                <th class="px-3 py-3 text-left font-semibold text-on-surface-variant">Período</th>
+                <th class="px-3 py-3 text-left font-semibold text-on-surface-variant">Periodo laboral</th>
+                <th class="px-3 py-3 text-right font-semibold text-on-surface-variant">Bruto</th>
+                <th class="px-3 py-3 text-right font-semibold text-on-surface-variant">Neto</th>
+                <th class="px-3 py-3 text-left font-semibold text-on-surface-variant">Estado</th>
+                <th class="px-3 py-3 text-left font-semibold text-on-surface-variant"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-stone-100 dark:divide-stone-800">
+              @for (r of records(); track r.id) {
+                <tr>
+                  <td class="px-3 py-3 tabular-nums text-on-surface">{{ r.id }}</td>
+                  <td class="px-3 py-3 tabular-nums">{{ r.employeeId }}</td>
+                  <td class="px-3 py-3 tabular-nums">{{ r.periodId ?? '—' }}</td>
+                  <td class="px-3 py-3 text-on-surface-variant">{{ formatDate(r.workedDaysStart) }} – {{ formatDate(r.workedDaysEnd) }}</td>
+                  <td class="px-3 py-3 text-right tabular-nums">{{ formatMXN(r.grossAmount) }}</td>
+                  <td class="px-3 py-3 text-right font-medium tabular-nums">{{ formatMXN(r.netAmount) }}</td>
+                  <td class="px-3 py-3">
+                    <span class="rounded-md bg-stone-100 px-2 py-0.5 text-xs font-medium dark:bg-stone-800">{{ statusLabel(r.status) }}</span>
+                  </td>
+                  <td class="px-3 py-3">
+                    <button
+                      type="button"
+                      class="text-sm font-semibold text-[var(--color-primary)] hover:underline"
+                      (click)="toggleAdjust(r.id)"
+                    >
+                      {{ adjustingRecordId() === r.id ? 'Cerrar' : 'Ajuste' }}
+                    </button>
+                  </td>
+                </tr>
+                @if (adjustingRecordId() === r.id) {
+                  <tr class="bg-stone-50/80 dark:bg-stone-900/50">
+                    <td colspan="8" class="px-3 py-4">
+                      @if (adjustmentError(); as adjErr) {
+                        <p class="mb-2 text-sm text-[var(--color-error)]">{{ adjErr.message }}</p>
+                      }
+                      <form [formGroup]="adjustmentForm" class="flex flex-wrap items-end gap-3" (ngSubmit)="submitAdjustment(r.id)">
+                        <div class="space-y-1">
+                          <label class="text-xs font-medium" for="adj-type">Tipo</label>
+                          <select id="adj-type" formControlName="type" class="rounded-lg bg-white px-2 py-2 text-sm dark:bg-stone-950">
+                            <option value="DISCOUNT">Descuento</option>
+                            <option value="BONUS">Bono</option>
+                          </select>
+                        </div>
+                        <div class="space-y-1">
+                          <label class="text-xs font-medium" for="adj-amt">Importe</label>
+                          <input id="adj-amt" type="number" step="0.01" formControlName="amount" class="w-32 rounded-lg bg-white px-2 py-2 text-sm dark:bg-stone-950" />
+                        </div>
+                        <div class="min-w-[200px] flex-1 space-y-1">
+                          <label class="text-xs font-medium" for="adj-reason">Motivo</label>
+                          <input id="adj-reason" type="text" formControlName="reason" class="w-full rounded-lg bg-white px-2 py-2 text-sm dark:bg-stone-950" />
+                        </div>
+                        <button type="submit" class="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-bold text-[var(--color-on-primary)]" [disabled]="adjustmentSaving()">
+                          {{ adjustmentSaving() ? 'Aplicando…' : 'Aplicar' }}
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (recordsMeta(); as meta) {
+          <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-on-surface-variant">
+            <span>Página {{ meta.pageNumber + 1 }} de {{ meta.totalPages || 1 }} ({{ meta.totalElements }} registros)</span>
+            <div class="flex gap-2">
+              <button
+                type="button"
+                class="rounded-lg border border-stone-200 px-3 py-1.5 font-medium disabled:opacity-40 dark:border-stone-700"
+                [disabled]="!meta.hasPrevious"
+                (click)="recordsPrev()"
+              >
+                Anterior
+              </button>
+              <button
+                type="button"
+                class="rounded-lg border border-stone-200 px-3 py-1.5 font-medium disabled:opacity-40 dark:border-stone-700"
+                [disabled]="!meta.hasNext"
+                (click)="recordsNext()"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        }
+      </app-data-state>
+    </section>
+  }
+
+  <!-- Períodos -->
+  @if (activeTab() === 'periodos') {
+    <section class="space-y-4" aria-label="Períodos de nómina">
+      <div class="rounded-xl border border-stone-200 bg-[var(--color-surface-container-lowest)] p-4 dark:border-stone-800">
+        <h2 class="font-headline mb-3 text-lg font-bold text-on-surface">Nuevo período</h2>
+        @if (periodFormError(); as pe) {
+          <p class="mb-2 text-sm text-[var(--color-error)]">{{ pe.message }}</p>
+        }
+        <form [formGroup]="periodForm" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" (ngSubmit)="submitPeriod()">
+          <div class="space-y-1">
+            <label class="text-xs font-medium" for="pf-freq">Frecuencia</label>
+            <select id="pf-freq" formControlName="frequency" class="w-full rounded-lg bg-stone-100 px-3 py-2 text-sm dark:bg-stone-900">
+              @for (opt of frequencyOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-medium" for="pf-start">Inicio</label>
+            <input id="pf-start" type="date" formControlName="startDate" class="w-full rounded-lg bg-stone-100 px-3 py-2 text-sm dark:bg-stone-900" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-medium" for="pf-end">Fin</label>
+            <input id="pf-end" type="date" formControlName="endDate" class="w-full rounded-lg bg-stone-100 px-3 py-2 text-sm dark:bg-stone-900" />
+          </div>
+          <div class="flex items-end">
+            <button type="submit" class="w-full rounded-lg bg-[var(--color-primary)] py-2.5 text-sm font-bold text-[var(--color-on-primary)]" [disabled]="periodSaving()">
+              {{ periodSaving() ? 'Guardando…' : 'Crear período' }}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <app-data-state
+        [loading]="periodsLoading()"
+        [error]="periodsError()"
+        [empty]="periods().length === 0"
+        emptyMessage="No hay períodos registrados."
+        (retry)="loadPeriods()"
+      >
+        <div class="overflow-x-auto rounded-xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950">
+          <table class="w-full text-sm" aria-label="Períodos">
+            <thead class="border-b border-stone-100 bg-stone-50 dark:border-stone-800 dark:bg-stone-900">
+              <tr>
+                <th class="px-3 py-3 text-left font-semibold text-on-surface-variant">ID</th>
+                <th class="px-3 py-3 text-left font-semibold text-on-surface-variant">Frecuencia</th>
+                <th class="px-3 py-3 text-left font-semibold text-on-surface-variant">Inicio</th>
+                <th class="px-3 py-3 text-left font-semibold text-on-surface-variant">Fin</th>
+                <th class="px-3 py-3 text-left font-semibold text-on-surface-variant">Estado</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-stone-100 dark:divide-stone-800">
+              @for (p of periods(); track p.id) {
+                <tr>
+                  <td class="px-3 py-3 tabular-nums">{{ p.id }}</td>
+                  <td class="px-3 py-3">{{ frequencyLabel(p.frequency) }}</td>
+                  <td class="px-3 py-3">{{ formatDate(p.startDate) }}</td>
+                  <td class="px-3 py-3">{{ formatDate(p.endDate) }}</td>
+                  <td class="px-3 py-3">{{ p.status }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </app-data-state>
+    </section>
+  }
+
+  <!-- Pagos -->
+  @if (activeTab() === 'pagos') {
+    <section class="space-y-4" aria-label="Pagos de nómina">
+      <div class="flex flex-wrap items-end gap-4 rounded-xl border border-stone-200 bg-stone-50/50 p-4 dark:border-stone-800 dark:bg-stone-900/40">
+        <div class="space-y-1">
+          <label class="text-xs font-medium" for="pay-emp">ID empleado</label>
+          <input
+            id="pay-emp"
+            type="number"
+            [(ngModel)]="filterPaymentEmployeeId"
+            [ngModelOptions]="{ standalone: true }"
+            class="w-40 rounded-lg bg-white px-3 py-2 text-sm dark:bg-stone-950"
+            placeholder="Todos"
+          />
+        </div>
+        <button type="button" class="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-bold text-[var(--color-on-primary)]" (click)="applyPaymentFilters()">
+          Filtrar
+        </button>
+      </div>
+      <app-data-state
+        [loading]="paymentsLoading()"
+        [error]="paymentsError()"
+        [empty]="payments().length === 0"
+        emptyMessage="No hay pagos registrados."
+        (retry)="loadPayments()"
+      >
+        <div class="overflow-x-auto rounded-xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950">
+          <table class="w-full min-w-[640px] text-sm" aria-label="Pagos">
+            <thead class="border-b border-stone-100 bg-stone-50 dark:border-stone-800 dark:bg-stone-900">
+              <tr>
+                <th class="px-3 py-3 text-left font-semibold text-on-surface-variant">ID</th>
+                <th class="px-3 py-3 text-left font-semibold text-on-surface-variant">Empleado</th>
+                <th class="px-3 py-3 text-left font-semibold text-on-surface-variant">Periodo laboral</th>
+                <th class="px-3 py-3 text-right font-semibold text-on-surface-variant">Neto</th>
+                <th class="px-3 py-3 text-left font-semibold text-on-surface-variant">Estado</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-stone-100 dark:divide-stone-800">
+              @for (p of payments(); track p.id) {
+                <tr>
+                  <td class="px-3 py-3 tabular-nums">{{ p.id }}</td>
+                  <td class="px-3 py-3 tabular-nums">{{ p.employeeId }}</td>
+                  <td class="px-3 py-3 text-on-surface-variant">{{ formatDate(p.workedDaysStart) }} – {{ formatDate(p.workedDaysEnd) }}</td>
+                  <td class="px-3 py-3 text-right font-medium">{{ formatMXN(p.netAmount) }}</td>
+                  <td class="px-3 py-3">{{ paymentStatusLabel(p.status) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (paymentsMeta(); as pm) {
+          <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-on-surface-variant">
+            <span>Página {{ pm.pageNumber + 1 }} de {{ pm.totalPages || 1 }}</span>
+            <div class="flex gap-2">
+              <button type="button" class="rounded-lg border border-stone-200 px-3 py-1.5 disabled:opacity-40 dark:border-stone-700" [disabled]="!pm.hasPrevious" (click)="paymentsPrev()">Anterior</button>
+              <button type="button" class="rounded-lg border border-stone-200 px-3 py-1.5 disabled:opacity-40 dark:border-stone-700" [disabled]="!pm.hasNext" (click)="paymentsNext()">Siguiente</button>
+            </div>
+          </div>
+        }
+      </app-data-state>
+    </section>
+  }
+
+  <!-- Adeudos -->
+  @if (activeTab() === 'adeudos') {
+    <section aria-label="Adeudos de nómina">
+      <app-data-state
+        [loading]="debtsLoading()"
+        [error]="debtsError()"
+        [empty]="debts().length === 0"
+        emptyMessage="No hay adeudos registrados."
+        (retry)="loadDebts()"
+      >
+        <div class="overflow-x-auto rounded-xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950">
+          <table class="w-full text-sm" aria-label="Adeudos">
+            <thead class="border-b border-stone-100 bg-stone-50 dark:border-stone-800 dark:bg-stone-900">
+              <tr>
+                <th class="px-3 py-3 text-left font-semibold text-on-surface-variant">ID</th>
+                <th class="px-3 py-3 text-left font-semibold text-on-surface-variant">Empleado</th>
+                <th class="px-3 py-3 text-right font-semibold text-on-surface-variant">Monto</th>
+                <th class="px-3 py-3 text-left font-semibold text-on-surface-variant">Motivo</th>
+                <th class="px-3 py-3 text-left font-semibold text-on-surface-variant">Liquidado</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-stone-100 dark:divide-stone-800">
+              @for (d of debts(); track d.id) {
+                <tr>
+                  <td class="px-3 py-3 tabular-nums">{{ d.id }}</td>
+                  <td class="px-3 py-3 tabular-nums">{{ d.employeeId }}</td>
+                  <td class="px-3 py-3 text-right tabular-nums">{{ formatMXN(d.amountOwed) }}</td>
+                  <td class="px-3 py-3 text-on-surface-variant">{{ d.reason ?? '—' }}</td>
+                  <td class="px-3 py-3">{{ d.settled ? 'Sí' : 'No' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (debtsMeta(); as dm) {
+          <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-on-surface-variant">
+            <span>Página {{ dm.pageNumber + 1 }} de {{ dm.totalPages || 1 }}</span>
+            <div class="flex gap-2">
+              <button type="button" class="rounded-lg border border-stone-200 px-3 py-1.5 disabled:opacity-40 dark:border-stone-700" [disabled]="!dm.hasPrevious" (click)="debtsPrev()">Anterior</button>
+              <button type="button" class="rounded-lg border border-stone-200 px-3 py-1.5 disabled:opacity-40 dark:border-stone-700" [disabled]="!dm.hasNext" (click)="debtsNext()">Siguiente</button>
+            </div>
+          </div>
+        }
+      </app-data-state>
+    </section>
+  }
+</div>

@@ -16,6 +16,8 @@ export type WorkShift =
 
 /** Mirrors {@link io.github.alexistrejo11.pimienta.module.employees.core.domain.EmployeeStatus}. */
 export type EmployeeStatus =
+  | 'DRAFT'
+  | 'PENDING_CONTRACT'
   | 'ACTIVE'
   | 'SICK'
   | 'ON_VACATION'
@@ -23,6 +25,9 @@ export type EmployeeStatus =
   | 'TERMINATED'
   | 'FIRED'
   | 'RESIGNED';
+
+/** Mirrors {@link io.github.alexistrejo11.pimienta.module.employees.core.domain.enums.EmployeeOnboardingPhase}. */
+export type EmployeeOnboardingPhase = 'DRAFT' | 'PENDING_CONTRACT';
 
 /** Mirrors {@link io.github.alexistrejo11.pimienta.module.employees.core.domain.ImssSalaryType}. */
 export type ImssSalaryType = 'FIXED' | 'VARIABLE' | 'MIXED';

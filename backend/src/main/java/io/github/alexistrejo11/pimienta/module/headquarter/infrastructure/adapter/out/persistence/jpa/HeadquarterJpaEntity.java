@@ -17,13 +17,13 @@ public class HeadquarterJpaEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(nullable = false, length = 512)
+  @Column(length = 512)
   private String name;
 
-  @Column(nullable = false, length = 1024)
+  @Column(length = 1024)
   private String address;
 
-  @Column(nullable = false, length = 4096)
+  @Column(length = 4096)
   private String description;
 
   @Column(nullable = false)

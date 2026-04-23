@@ -39,7 +39,7 @@ public class OpportunityJpaEntity {
   @Column(length = 255)
   private String industry;
 
-  @Column(nullable = false, length = 500)
+  @Column(length = 500)
   private String title;
 
   @Column(length = 4000)

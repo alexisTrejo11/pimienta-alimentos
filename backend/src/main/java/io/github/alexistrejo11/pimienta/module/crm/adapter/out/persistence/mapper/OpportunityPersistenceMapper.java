@@ -1,13 +1,11 @@
 package io.github.alexistrejo11.pimienta.module.crm.adapter.out.persistence.mapper;
 
-import io.github.alexistrejo11.pimienta.module.crm.core.domain.Opportunity;
-import io.github.alexistrejo11.pimienta.module.crm.core.domain.ReconstructOpportunityParams;
 import io.github.alexistrejo11.pimienta.module.crm.adapter.out.persistence.model.OpportunityJpaEntity;
+import io.github.alexistrejo11.pimienta.module.crm.core.domain.Opportunity;
 
 public class OpportunityPersistenceMapper {
 
-  private OpportunityPersistenceMapper() {
-  }
+  private OpportunityPersistenceMapper() {}
 
   public static OpportunityJpaEntity toJpa(Opportunity domain) {
     OpportunityJpaEntity e = new OpportunityJpaEntity();
@@ -39,30 +37,29 @@ public class OpportunityPersistenceMapper {
   }
 
   public static Opportunity toDomain(OpportunityJpaEntity e) {
-    ReconstructOpportunityParams params = ReconstructOpportunityParams.builder()
-        .id(e.getId())
-        .contactName(e.getContactName())
-        .contactEmail(e.getContactEmail())
-        .contactPhone(e.getContactPhone())
-        .companyName(e.getCompanyName())
-        .companyLocation(e.getCompanyLocation())
-        .industry(e.getIndustry())
-        .title(e.getTitle())
-        .description(e.getDescription())
-        .estimatedValue(e.getEstimatedValue())
-        .probabilityPercent(e.getProbabilityPercent())
-        .source(e.getSource())
-        .status(e.getStatus())
-        .expectedCloseDate(e.getExpectedCloseDate())
-        .actualCloseDate(e.getActualCloseDate())
-        .assignedSalesmanId(e.getAssignedSalesmanId())
-        .lostReason(e.getLostReason())
-        .convertedProjectId(e.getConvertedProjectId())
-        .createdAt(e.getCreatedAt())
-        .updatedAt(e.getUpdatedAt())
-        .deletedAt(e.getDeletedAt())
-        .version(e.getVersion())
-        .build();
-    return Opportunity.reconstruct(params);
+    return Opportunity.builder()
+        .withId(e.getId())
+        .withContactName(e.getContactName())
+        .withContactEmail(e.getContactEmail())
+        .withContactPhone(e.getContactPhone())
+        .withCompanyName(e.getCompanyName())
+        .withCompanyLocation(e.getCompanyLocation())
+        .withIndustry(e.getIndustry())
+        .withTitle(e.getTitle())
+        .withDescription(e.getDescription())
+        .withEstimatedValue(e.getEstimatedValue())
+        .withProbabilityPercent(e.getProbabilityPercent())
+        .withSource(e.getSource())
+        .withStatus(e.getStatus())
+        .withExpectedCloseDate(e.getExpectedCloseDate())
+        .withActualCloseDate(e.getActualCloseDate())
+        .withAssignedSalesmanId(e.getAssignedSalesmanId())
+        .withLostReason(e.getLostReason())
+        .withConvertedProjectId(e.getConvertedProjectId())
+        .withCreatedAt(e.getCreatedAt())
+        .withUpdatedAt(e.getUpdatedAt())
+        .withDeletedAt(e.getDeletedAt())
+        .withVersion(e.getVersion())
+        .reconstruct();
   }
 }

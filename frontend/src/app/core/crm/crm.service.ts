@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { API_BASE_URL } from '../config/api.config';
 import type {
@@ -29,12 +30,13 @@ export class CrmService {
   listOpportunities(
     params: OpportunitySearchParams = {},
   ): Observable<PagedResponse<OpportunityResponse>> {
-    let httpParams = new HttpParams()
-      .set('page', params.page ?? 0)
-      .set('size', params.size ?? 20);
+    let httpParams = new HttpParams().set('page', params.page ?? 0).set('size', params.size ?? 20);
+
     if (params.status) httpParams = httpParams.set('status', params.status);
+
     if (params.companyNameContains)
       httpParams = httpParams.set('companyNameContains', params.companyNameContains);
+
     if (params.titleContains) httpParams = httpParams.set('titleContains', params.titleContains);
     return this.http.get<PagedResponse<OpportunityResponse>>(this.opportunitiesBase, {
       params: httpParams,
@@ -55,9 +57,7 @@ export class CrmService {
 
   /** Lista paginada de proyectos con filtros opcionales. */
   listProjects(params: ProjectSearchParams = {}): Observable<PagedResponse<ProjectResponse>> {
-    let httpParams = new HttpParams()
-      .set('page', params.page ?? 0)
-      .set('size', params.size ?? 20);
+    let httpParams = new HttpParams().set('page', params.page ?? 0).set('size', params.size ?? 20);
     if (params.status) httpParams = httpParams.set('status', params.status);
     if (params.clientId) httpParams = httpParams.set('clientId', params.clientId);
     if (params.projectManagerId)
@@ -77,10 +77,12 @@ export class CrmService {
     return this.http.get<ProjectSummaryResponse>(`${this.projectsBase}/${id}/summary`);
   }
 
-  /** Hitos de un proyecto en orden de sortOrder. */
+  /** Hitos de un proyecto en orden de sortOrder (API: {@code PagedResponse}). */
   listMilestones(projectId: number): Observable<ProjectMilestoneResponse[]> {
-    return this.http.get<ProjectMilestoneResponse[]>(
-      `${this.projectsBase}/${projectId}/milestones`,
-    );
+    return this.http
+      .get<PagedResponse<ProjectMilestoneResponse>>(
+        `${this.projectsBase}/${projectId}/milestones`,
+      )
+      .pipe(map((page) => page.items));
   }
 }

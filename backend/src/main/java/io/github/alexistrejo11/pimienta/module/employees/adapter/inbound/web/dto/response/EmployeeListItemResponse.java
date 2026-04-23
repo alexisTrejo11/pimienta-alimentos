@@ -5,10 +5,18 @@ import java.time.LocalDate;
 
 /** Paginated listing projection (lighter than {@link EmployeeResponse}). */
 public record EmployeeListItemResponse(
-    Long id,
-    String name,
-    String email,
-    String department,
-    String position,
-    EmployeeStatus status,
-    LocalDate hireDate) {}
+        Long id,
+        String name,
+        String email,
+        String department,
+        String position,
+        EmployeeStatus status,
+        LocalDate hireDate) {
+
+    public EmployeeListItemResponse {
+        name = name != null ? name.trim() : "";
+        email = email != null ? email.trim() : "";
+        department = department != null ? department.trim() : "";
+        position = position != null ? position.trim() : "";
+    }
+}

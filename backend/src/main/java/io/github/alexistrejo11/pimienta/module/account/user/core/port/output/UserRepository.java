@@ -11,7 +11,11 @@ public interface UserRepository {
 
   Optional<User> findById(Long id);
 
+  Optional<User> findByIdAndDeletedAtIsNull(Long id);
+
   Optional<User> findByEmail(String email);
+
+  Optional<User> findByPhone(String phone);
 
   Page<User> findAll(Pageable pageable);
 

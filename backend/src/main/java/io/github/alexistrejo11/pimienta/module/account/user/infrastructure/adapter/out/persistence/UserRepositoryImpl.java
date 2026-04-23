@@ -21,7 +21,21 @@ public class UserRepositoryImpl implements UserRepository {
 
   @Override
   public Optional<User> findById(Long id) {
-    return jpaRepository.findById(id).map(UserPersistenceMapper::toDomain);
+    if (id == null) {
+      return Optional.empty();
+    }
+
+    Optional<UserJpaEntity> userJpaEntity = jpaRepository.findById(id);
+    return userJpaEntity.map(UserPersistenceMapper::toDomain);
+  }
+
+  @Override
+  public Optional<User> findByIdAndDeletedAtIsNull(Long id) {
+    if (id == null) {
+      return Optional.empty();
+    }
+    Optional<UserJpaEntity> userJpaEntity = jpaRepository.findByIdAndDeletedAtIsNull(id);
+    return userJpaEntity.map(UserPersistenceMapper::toDomain);
   }
 
   @Override
@@ -29,12 +43,25 @@ public class UserRepositoryImpl implements UserRepository {
     if (email == null || email.isBlank()) {
       return Optional.empty();
     }
-    return jpaRepository.findByEmailIgnoreCase(email.trim()).map(UserPersistenceMapper::toDomain);
+    Optional<UserJpaEntity> userJpaEntity = jpaRepository.findByEmailAndDeletedAtIsNull(email.trim());
+
+    return userJpaEntity.map(UserPersistenceMapper::toDomain);
+  }
+
+  @Override
+  public Optional<User> findByPhone(String phone) {
+    if (phone == null || phone.isBlank()) {
+      return Optional.empty();
+    }
+
+    Optional<UserJpaEntity> userJpaEntity = jpaRepository.findByPhoneAndDeletedAtIsNull(phone.trim());
+    return userJpaEntity.map(UserPersistenceMapper::toDomain);
   }
 
   @Override
   public Page<User> findAll(Pageable pageable) {
-    return jpaRepository.findAll(pageable).map(UserPersistenceMapper::toDomain);
+    Page<UserJpaEntity> userJpaEntities = jpaRepository.findAll(pageable);
+    return userJpaEntities.map(UserPersistenceMapper::toDomain);
   }
 
   @Override

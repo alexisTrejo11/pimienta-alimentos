@@ -1,5 +1,5 @@
 <div
-  class="relative flex min-h-screen flex-col overflow-hidden bg-stone-50 text-[var(--color-on-surface)]"
+  class="relative flex min-h-screen flex-col overflow-hidden bg-stone-50 text-[var(--color-on-surface)] dark:bg-stone-950"
 >
   <div class="absolute inset-0 z-0">
     <img
@@ -8,13 +8,13 @@
       src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4b3gbryQF21tWscOqM-XYw0VPFHDtlAw48-aylYxmiLc9GliAP4qW07_G4ATzs7QDBEtItZ24PcFd3UB-OejbZ2_lAsH3j3ctSky5GhpXk9dT4DVW0GLiYtidzYyu4WSKvpKCcpc6OOsMGFSurwghCnnghvUeUFoL-Q4i9t5DmElqX8FqyBzkMsX1vjS-dRkICRB2UASC0UgaF0X85fnagZnDQ2aZ7G0KTcSgD5QL93aOh-Hy2nGTfv8cPLteHz8hoh6yoYd2QZii"
     />
     <div
-      class="absolute inset-0 bg-gradient-to-tr from-stone-50/90 via-stone-50/50 to-stone-50/90"
+      class="absolute inset-0 bg-gradient-to-tr from-stone-50/90 via-stone-50/50 to-stone-50/90 dark:from-stone-950/95 dark:via-stone-950/70 dark:to-stone-950/95"
     ></div>
   </div>
 
   <header class="relative z-10 bg-white/80 backdrop-blur-md dark:bg-stone-950/80">
     <div class="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-6">
-      <a routerLink="/" class="text-xl font-extrabold tracking-tight text-stone-900">
+      <a routerLink="/" class="text-xl font-extrabold tracking-tight text-stone-900 dark:text-stone-100">
         Pimienta Alimentos
       </a>
       <div class="hidden items-center gap-6 md:flex">
@@ -43,15 +43,63 @@
 
         <div class="space-y-8">
           <div class="text-center md:text-left">
-            <h1 class="mb-2 text-3xl font-extrabold tracking-tight text-stone-900">
-              Crear cuenta
-            </h1>
-            <p class="text-sm font-normal text-stone-500">
-              Complete sus datos; deben coincidir con los requisitos del registro corporativo.
-            </p>
+            @if (registerSuccess(); as _ok) {
+              <h1 class="mb-2 text-3xl font-extrabold tracking-tight text-stone-900 dark:text-stone-100">
+                Solicitud registrada
+              </h1>
+              <p class="text-sm font-normal text-stone-500 dark:text-stone-400">
+                Revise el mensaje a continuación. No se inicia sesión automáticamente.
+              </p>
+            } @else {
+              <h1 class="mb-2 text-3xl font-extrabold tracking-tight text-stone-900 dark:text-stone-100">
+                Crear cuenta
+              </h1>
+              <p class="text-sm font-normal text-stone-500 dark:text-stone-400">
+                Complete sus datos; deben coincidir con los requisitos del registro corporativo.
+              </p>
+            }
           </div>
 
-          @if (apiError(); as err) {
+          @if (registerSuccess(); as ok) {
+            <div
+              role="status"
+              class="space-y-4 rounded-lg border border-emerald-200/80 bg-emerald-50/90 p-5 text-sm text-emerald-950 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-100"
+            >
+              <div class="flex gap-3">
+                <span
+                  class="material-symbols-outlined shrink-0 text-2xl text-emerald-700 dark:text-emerald-300"
+                  >mark_email_read</span
+                >
+                <div class="space-y-2">
+                  <p class="font-medium leading-snug">{{ ok.message }}</p>
+                  <p class="text-xs text-emerald-800/90 dark:text-emerald-200/80">
+                    Estado de la cuenta: <span class="font-mono font-semibold">{{ ok.status }}</span>
+                  </p>
+                </div>
+              </div>
+              <p class="text-xs text-emerald-900/80 dark:text-emerald-200/90">
+                Cuando un administrador apruebe su cuenta, podrá iniciar sesión con el correo y la contraseña
+                indicados.
+              </p>
+              <div class="flex flex-col gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
+                <a
+                  routerLink="/auth/login"
+                  class="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-3 text-center text-sm font-bold text-[var(--color-on-primary)] shadow-md transition hover:opacity-95"
+                >
+                  Ir a iniciar sesión
+                  <span class="material-symbols-outlined text-lg">login</span>
+                </a>
+                <button
+                  type="button"
+                  class="text-sm font-semibold text-emerald-900 underline decoration-emerald-300 underline-offset-2 hover:decoration-emerald-600 dark:text-emerald-200"
+                  (click)="clearSuccess()"
+                >
+                  Registrar otra cuenta
+                </button>
+              </div>
+            </div>
+          } @else {
+            @if (apiError(); as err) {
             <div
               role="alert"
               class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-100"
@@ -75,7 +123,7 @@
                 </ul>
               }
             </div>
-          }
+            }
 
           <form [formGroup]="form" class="space-y-5" (ngSubmit)="submit()">
             <div class="grid gap-4 sm:grid-cols-2">
@@ -90,7 +138,7 @@
                   formControlName="firstName"
                   type="text"
                   autocomplete="given-name"
-                  class="w-full rounded-lg border border-transparent bg-stone-100 px-4 py-3 text-stone-900 placeholder:text-stone-400 transition-all focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                  class="w-full rounded-lg border border-transparent bg-stone-100 px-4 py-3 text-stone-900 placeholder:text-stone-400 transition-all focus:ring-2 focus:ring-[var(--color-primary)]/20 dark:bg-stone-900 dark:text-stone-100 dark:placeholder:text-stone-500"
                   [class.ring-2]="form.controls.firstName.invalid && form.controls.firstName.touched"
                   [class.ring-red-300]="form.controls.firstName.invalid && form.controls.firstName.touched"
                   placeholder="Nombre"
@@ -113,7 +161,7 @@
                   formControlName="lastName"
                   type="text"
                   autocomplete="family-name"
-                  class="w-full rounded-lg border border-transparent bg-stone-100 px-4 py-3 text-stone-900 placeholder:text-stone-400 transition-all focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                  class="w-full rounded-lg border border-transparent bg-stone-100 px-4 py-3 text-stone-900 placeholder:text-stone-400 transition-all focus:ring-2 focus:ring-[var(--color-primary)]/20 dark:bg-stone-900 dark:text-stone-100 dark:placeholder:text-stone-500"
                   placeholder="Apellidos"
                 />
                 @if (form.controls.lastName.touched && form.controls.lastName.hasError('required')) {
@@ -134,7 +182,7 @@
               <select
                 id="gender"
                 formControlName="gender"
-                class="w-full rounded-lg border border-transparent bg-stone-100 px-4 py-3 text-stone-900 transition-all focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                class="w-full rounded-lg border border-transparent bg-stone-100 px-4 py-3 text-stone-900 transition-all focus:ring-2 focus:ring-[var(--color-primary)]/20 dark:bg-stone-900 dark:text-stone-100"
               >
                 <option value="" disabled>Seleccione…</option>
                 @for (opt of genderOptions; track opt.value) {
@@ -161,7 +209,7 @@
                   formControlName="email"
                   type="email"
                   autocomplete="email"
-                  class="w-full rounded-lg border border-transparent bg-stone-100 px-4 py-3 pr-11 text-stone-900 placeholder:text-stone-400 transition-all focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                  class="w-full rounded-lg border border-transparent bg-stone-100 px-4 py-3 pr-11 text-stone-900 placeholder:text-stone-400 transition-all focus:ring-2 focus:ring-[var(--color-primary)]/20 dark:bg-stone-900 dark:text-stone-100 dark:placeholder:text-stone-500"
                   placeholder="nombre@empresa.com"
                 />
                 <span
@@ -192,7 +240,7 @@
                   formControlName="phone"
                   type="tel"
                   autocomplete="tel"
-                  class="w-full rounded-lg border border-transparent bg-stone-100 px-4 py-3 pr-11 text-stone-900 placeholder:text-stone-400 transition-all focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                  class="w-full rounded-lg border border-transparent bg-stone-100 px-4 py-3 pr-11 text-stone-900 placeholder:text-stone-400 transition-all focus:ring-2 focus:ring-[var(--color-primary)]/20 dark:bg-stone-900 dark:text-stone-100 dark:placeholder:text-stone-500"
                   placeholder="+52 …"
                 />
                 <span
@@ -221,7 +269,7 @@
                 id="dateOfBirth"
                 formControlName="dateOfBirth"
                 type="date"
-                class="w-full rounded-lg border border-transparent bg-stone-100 px-4 py-3 text-stone-900 transition-all focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                class="w-full rounded-lg border border-transparent bg-stone-100 px-4 py-3 text-stone-900 transition-all focus:ring-2 focus:ring-[var(--color-primary)]/20 dark:bg-stone-900 dark:text-stone-100"
               />
               @if (form.controls.dateOfBirth.touched && form.controls.dateOfBirth.hasError('required')) {
                 <p class="ml-1 text-xs text-[var(--color-error)]">Requerido (mín. 13 años en el servidor).</p>
@@ -243,7 +291,7 @@
                   formControlName="password"
                   type="password"
                   autocomplete="new-password"
-                  class="w-full rounded-lg border border-transparent bg-stone-100 px-4 py-3 pr-11 text-stone-900 placeholder:text-stone-400 transition-all focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                  class="w-full rounded-lg border border-transparent bg-stone-100 px-4 py-3 pr-11 text-stone-900 placeholder:text-stone-400 transition-all focus:ring-2 focus:ring-[var(--color-primary)]/20 dark:bg-stone-900 dark:text-stone-100 dark:placeholder:text-stone-500"
                   placeholder="••••••••"
                 />
                 <span
@@ -287,6 +335,7 @@
             >
             <span>Acceso seguro (HTTPS recomendado en producción)</span>
           </div>
+          }
         </div>
       </div>
 
@@ -294,9 +343,9 @@
         <p class="text-xs font-normal text-stone-400">
           ¿Ya tiene cuenta?
           <a
-            routerLink="/portal"
-            class="font-semibold text-stone-600 underline decoration-stone-200 underline-offset-4 transition-all hover:decoration-[var(--color-primary)]"
-            >Volver al portal</a
+            routerLink="/auth/login"
+            class="font-semibold text-stone-600 underline decoration-stone-200 underline-offset-4 transition-all hover:decoration-[var(--color-primary)] dark:text-stone-300 dark:decoration-stone-700"
+            >Iniciar sesión</a
           >
         </p>
       </div>

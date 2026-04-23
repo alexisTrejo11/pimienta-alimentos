@@ -1,7 +1,7 @@
 package io.github.alexistrejo11.pimienta.module.task.core.application;
 
+import io.github.alexistrejo11.pimienta.module.task.core.application.command.CreateTaskCommand;
 import io.github.alexistrejo11.pimienta.module.task.core.application.query.TaskSearchCriteria;
-import io.github.alexistrejo11.pimienta.module.task.core.domain.CreateTaskParams;
 import io.github.alexistrejo11.pimienta.module.task.core.domain.Task;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,7 +12,7 @@ public interface TaskManagementUseCases {
 
   Task getById(Long id);
 
-  Task create(CreateTaskParams params);
+  Task create(CreateTaskCommand command);
 
   Task updateStatus(Long id, Task.Status newStatus);
 

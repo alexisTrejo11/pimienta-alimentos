@@ -34,6 +34,13 @@ public class ProjectMilestoneRepositoryImpl implements ProjectMilestoneRepositor
   }
 
   @Override
+  public Page<ProjectMilestone> findAll(Pageable pageable) {
+    return jpaRepository
+        .findByDeletedAtIsNullOrderByProjectIdAscSortOrderAsc(pageable)
+        .map(ProjectMilestonePersistenceMapper::toDomain);
+  }
+
+  @Override
   public long countByProjectId(long projectId) {
     return jpaRepository.countByProjectIdAndDeletedAtIsNull(projectId);
   }

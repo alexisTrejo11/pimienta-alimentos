@@ -1,6 +1,5 @@
 package io.github.alexistrejo11.pimienta.module.task.infrastructure.adapter.out.persistence;
 
-import io.github.alexistrejo11.pimienta.module.task.core.domain.ReconstructTaskParams;
 import io.github.alexistrejo11.pimienta.module.task.core.domain.Task;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,10 +13,10 @@ final class TaskPersistenceMapper {
     if (domain.getId() != null && domain.getId() > 0) {
       e.setId(domain.getId());
     }
-    e.setTitle(domain.getTitle());
-    e.setDescription(domain.getDescription());
-    e.setStatus(domain.getStatus());
-    e.setPriority(domain.getPriority());
+    e.setTitle(blankToNull(domain.getTitle()));
+    e.setDescription(blankToNull(domain.getDescription()));
+    e.setStatus(domain.getStatusOrNull());
+    e.setPriority(domain.getPriorityOrNull());
     e.setAssignedToId(domain.getAssignedToId());
     e.setAssignedById(domain.getAssignedById());
     e.setCreatedById(domain.getCreatedById());
@@ -37,8 +36,8 @@ final class TaskPersistenceMapper {
               item.displayOrder()));
     }
     e.setChecklist(jsonItems);
-    e.setCreatedAt(domain.getCreatedAt());
-    e.setUpdatedAt(domain.getUpdatedAt());
+    e.setCreatedAt(domain.getCreatedAt() != null ? domain.getCreatedAt() : now());
+    e.setUpdatedAt(domain.getUpdatedAt() != null ? domain.getUpdatedAt() : now());
     e.setDeletedAt(domain.getDeletedAt());
     e.setVersion(domain.getVersion() != null ? domain.getVersion() : 0L);
     return e;
@@ -56,26 +55,41 @@ final class TaskPersistenceMapper {
                 j.displayOrder()));
       }
     }
-    return Task.reconstruct(
-        new ReconstructTaskParams(
-            e.getId(),
-            e.getTitle(),
-            e.getDescription(),
-            e.getStatus(),
-            e.getPriority(),
-            e.getAssignedToId(),
-            e.getAssignedById(),
-            e.getCreatedById(),
-            e.getAssignedAt(),
-            e.getCompletedAt(),
-            e.getDueDate(),
-            e.getHeadquarterId(),
-            e.getProjectId(),
-            e.getOpportunityId(),
-            items,
-            e.getCreatedAt(),
-            e.getUpdatedAt(),
-            e.getDeletedAt(),
-            e.getVersion()));
+    return Task.builder()
+        .withId(e.getId())
+        .withTitle(text(e.getTitle()))
+        .withDescription(text(e.getDescription()))
+        .withStatus(e.getStatus())
+        .withPriority(e.getPriority())
+        .withAssignedToId(e.getAssignedToId())
+        .withAssignedById(e.getAssignedById())
+        .withCreatedById(e.getCreatedById())
+        .withAssignedAt(e.getAssignedAt())
+        .withCompletedAt(e.getCompletedAt())
+        .withDueDate(e.getDueDate())
+        .withHeadquarterId(e.getHeadquarterId())
+        .withProjectId(e.getProjectId())
+        .withOpportunityId(e.getOpportunityId())
+        .withChecklistItems(items)
+        .withCreatedAt(e.getCreatedAt())
+        .withUpdatedAt(e.getUpdatedAt())
+        .withDeletedAt(e.getDeletedAt())
+        .withVersion(e.getVersion() != null ? e.getVersion() : 0L)
+        .reconstruct();
+  }
+
+  private static String text(String s) {
+    return s != null ? s : "";
+  }
+
+  private static String blankToNull(String s) {
+    if (s == null || s.isBlank()) {
+      return null;
+    }
+    return s.strip();
+  }
+
+  private static java.time.LocalDateTime now() {
+    return java.time.LocalDateTime.now();
   }
 }

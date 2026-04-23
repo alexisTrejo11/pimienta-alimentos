@@ -1,13 +1,11 @@
 package io.github.alexistrejo11.pimienta.module.crm.adapter.out.persistence.mapper;
 
-import io.github.alexistrejo11.pimienta.module.crm.core.domain.ProjectMilestone;
-import io.github.alexistrejo11.pimienta.module.crm.core.domain.ReconstructProjectMilestoneParams;
 import io.github.alexistrejo11.pimienta.module.crm.adapter.out.persistence.model.ProjectMilestoneJpaEntity;
+import io.github.alexistrejo11.pimienta.module.crm.core.domain.ProjectMilestone;
 
 public class ProjectMilestonePersistenceMapper {
 
-  private ProjectMilestonePersistenceMapper() {
-  }
+  private ProjectMilestonePersistenceMapper() {}
 
   public static ProjectMilestoneJpaEntity toJpa(ProjectMilestone domain) {
     ProjectMilestoneJpaEntity e = new ProjectMilestoneJpaEntity();
@@ -31,22 +29,21 @@ public class ProjectMilestonePersistenceMapper {
   }
 
   public static ProjectMilestone toDomain(ProjectMilestoneJpaEntity e) {
-    ReconstructProjectMilestoneParams params = ReconstructProjectMilestoneParams.builder()
-        .id(e.getId())
-        .projectId(e.getProjectId())
-        .name(e.getName())
-        .description(e.getDescription())
-        .status(e.getStatus())
-        .plannedDate(e.getPlannedDate())
-        .actualDate(e.getActualDate())
-        .billingAmount(e.getBillingAmount())
-        .billed(e.isBilled())
-        .sortOrder(e.getSortOrder())
-        .createdAt(e.getCreatedAt())
-        .updatedAt(e.getUpdatedAt())
-        .deletedAt(e.getDeletedAt())
-        .version(e.getVersion())
-        .build();
-    return ProjectMilestone.reconstruct(params);
+    return ProjectMilestone.builder()
+        .withId(e.getId())
+        .withProjectId(e.getProjectId())
+        .withName(e.getName())
+        .withDescription(e.getDescription())
+        .withStatus(e.getStatus())
+        .withPlannedDate(e.getPlannedDate())
+        .withActualDate(e.getActualDate())
+        .withBillingAmount(e.getBillingAmount())
+        .withBilled(e.isBilled())
+        .withSortOrder(e.getSortOrder())
+        .withCreatedAt(e.getCreatedAt())
+        .withUpdatedAt(e.getUpdatedAt())
+        .withDeletedAt(e.getDeletedAt())
+        .withVersion(e.getVersion())
+        .reconstruct();
   }
 }

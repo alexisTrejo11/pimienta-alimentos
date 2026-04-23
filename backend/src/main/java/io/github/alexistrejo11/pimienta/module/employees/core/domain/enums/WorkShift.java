@@ -5,5 +5,6 @@ public enum WorkShift {
   AFTERNOON,
   NIGHT,
   MIXED,
-  REMOTE
+  REMOTE,
+  UNDEFINED
 }

@@ -23,18 +23,18 @@ public class TaskJpaEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(nullable = false, length = 300)
+  @Column(length = 300)
   private String title;
 
   @Column(length = 4000)
   private String description;
 
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false, length = 32)
+  @Column(length = 32)
   private Task.Status status;
 
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false, length = 32)
+  @Column(length = 32)
   private Task.Priority priority;
 
   @Column(name = "assigned_to_id")
@@ -65,7 +65,7 @@ public class TaskJpaEntity {
   private Long opportunityId;
 
   @JdbcTypeCode(SqlTypes.JSON)
-  @Column(name = "checklist", columnDefinition = "jsonb")
+  @Column(name = "checklist")
   private List<ChecklistItemJson> checklist = new ArrayList<>();
 
   @Column(name = "created_at", nullable = false)

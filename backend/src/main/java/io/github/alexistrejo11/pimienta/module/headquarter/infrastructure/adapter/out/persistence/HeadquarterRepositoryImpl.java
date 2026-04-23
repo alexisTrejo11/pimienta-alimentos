@@ -2,7 +2,7 @@ package io.github.alexistrejo11.pimienta.module.headquarter.infrastructure.adapt
 
 import io.github.alexistrejo11.pimienta.module.headquarter.core.domain.Headquarter;
 import io.github.alexistrejo11.pimienta.module.headquarter.core.domain.HeadquarterStatistics;
-import io.github.alexistrejo11.pimienta.module.headquarter.core.port.HeadquarterRepository;
+import io.github.alexistrejo11.pimienta.module.headquarter.core.port.output.HeadquarterRepository;
 import io.github.alexistrejo11.pimienta.module.headquarter.infrastructure.adapter.out.persistence.jpa.HeadquarterJpaEntity;
 import io.github.alexistrejo11.pimienta.module.headquarter.infrastructure.adapter.out.persistence.jpa.HeadquarterJpaRepository;
 import java.util.Objects;

@@ -10,5 +10,7 @@ public enum ContractType {
   /** Temporal / estacional */
   TEMPORARY,
   /** Honorarios (no relación laboral formal) */
-  FREELANCE
+  FREELANCE,
+  /** Desconocido */
+  UNDEFINED
 }

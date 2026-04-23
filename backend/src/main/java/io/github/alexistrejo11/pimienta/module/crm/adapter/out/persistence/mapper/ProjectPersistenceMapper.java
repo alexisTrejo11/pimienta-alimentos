@@ -1,13 +1,11 @@
 package io.github.alexistrejo11.pimienta.module.crm.adapter.out.persistence.mapper;
 
-import io.github.alexistrejo11.pimienta.module.crm.core.domain.Project;
-import io.github.alexistrejo11.pimienta.module.crm.core.domain.ReconstructProjectParams;
 import io.github.alexistrejo11.pimienta.module.crm.adapter.out.persistence.model.ProjectJpaEntity;
+import io.github.alexistrejo11.pimienta.module.crm.core.domain.Project;
 
 public class ProjectPersistenceMapper {
 
-  private ProjectPersistenceMapper() {
-  }
+  private ProjectPersistenceMapper() {}
 
   public static ProjectJpaEntity toJpa(Project domain) {
     ProjectJpaEntity e = new ProjectJpaEntity();
@@ -42,33 +40,32 @@ public class ProjectPersistenceMapper {
   }
 
   public static Project toDomain(ProjectJpaEntity e) {
-    ReconstructProjectParams params = ReconstructProjectParams.builder()
-        .id(e.getId())
-        .clientId(e.getClientId())
-        .originOpportunityId(e.getOriginOpportunityId())
-        .projectCode(e.getProjectCode())
-        .projectName(e.getProjectName())
-        .description(e.getDescription())
-        .type(e.getType())
-        .status(e.getStatus())
-        .priority(e.getPriority())
-        .projectManagerId(e.getProjectManagerId())
-        .assignedSalesmanId(e.getAssignedSalesmanId())
-        .plannedStartDate(e.getPlannedStartDate())
-        .plannedEndDate(e.getPlannedEndDate())
-        .actualStartDate(e.getActualStartDate())
-        .actualEndDate(e.getActualEndDate())
-        .onHoldReason(e.getOnHoldReason())
-        .contractedValue(e.getContractedValue())
-        .estimatedCost(e.getEstimatedCost())
-        .actualCost(e.getActualCost())
-        .progressPercent(e.getProgressPercent())
-        .cancellationReason(e.getCancellationReason())
-        .createdAt(e.getCreatedAt())
-        .updatedAt(e.getUpdatedAt())
-        .deletedAt(e.getDeletedAt())
-        .version(e.getVersion())
-        .build();
-    return Project.reconstruct(params);
+    return Project.builder()
+        .withId(e.getId())
+        .withClientId(e.getClientId())
+        .withOriginOpportunityId(e.getOriginOpportunityId())
+        .withProjectCode(e.getProjectCode())
+        .withProjectName(e.getProjectName())
+        .withDescription(e.getDescription())
+        .withType(e.getType())
+        .withStatus(e.getStatus())
+        .withPriority(e.getPriority())
+        .withProjectManagerId(e.getProjectManagerId())
+        .withAssignedSalesmanId(e.getAssignedSalesmanId())
+        .withPlannedStartDate(e.getPlannedStartDate())
+        .withPlannedEndDate(e.getPlannedEndDate())
+        .withActualStartDate(e.getActualStartDate())
+        .withActualEndDate(e.getActualEndDate())
+        .withOnHoldReason(e.getOnHoldReason())
+        .withContractedValue(e.getContractedValue())
+        .withEstimatedCost(e.getEstimatedCost())
+        .withActualCost(e.getActualCost())
+        .withProgressPercent(e.getProgressPercent())
+        .withCancellationReason(e.getCancellationReason())
+        .withCreatedAt(e.getCreatedAt())
+        .withUpdatedAt(e.getUpdatedAt())
+        .withDeletedAt(e.getDeletedAt())
+        .withVersion(e.getVersion())
+        .reconstruct();
   }
 }

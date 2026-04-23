@@ -22,6 +22,15 @@ spring:
   # Server
   server:
     port: 8080
+
+# OpenAPI / Swagger UI (springdoc)
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui
+    tags-sorter: alpha
+    operations-sorter: alpha
   # Logging
   logging:
     level:

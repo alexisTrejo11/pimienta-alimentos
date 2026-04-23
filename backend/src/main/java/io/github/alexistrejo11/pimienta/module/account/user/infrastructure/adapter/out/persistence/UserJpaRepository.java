@@ -6,7 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
 
-  Optional<UserJpaEntity> findByEmailIgnoreCase(String email);
+  Optional<UserJpaEntity> findByPhoneAndDeletedAtIsNull(String phone);
+
+  Optional<UserJpaEntity> findByEmailAndDeletedAtIsNull(String email);
+
+  Optional<UserJpaEntity> findByIdAndDeletedAtIsNull(Long id);
 
   long countByAccountStatus(AccountStatus accountStatus);
 }

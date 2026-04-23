@@ -1,84 +1,25 @@
 package io.github.alexistrejo11.pimienta.module.crm.core.domain;
 
 import io.github.alexistrejo11.pimienta.shared.BaseDomain;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * Proyecto formal generado al ganar una Opportunity.
- *
- * Ciclo de vida:
- * PLANNING → ACTIVE → ON_HOLD → ACTIVE (reactivar)
- * → COMPLETED
- * → CANCELLED
- * → ARCHIVED (solo desde COMPLETED o CANCELLED)
+ * Project aggregate: persistence-shaped, no business rules. Use cases orchestrate lifecycle;
+ * format validation on web DTOs. Build with {@link #builder()} and {@link SafeBuilder#register()}
+ * or {@link SafeBuilder#reconstruct()}.
  */
 public class Project extends BaseDomain<Long> {
 
-  // ─────────────────────────────────────────────
-  // ORIGEN
-  // ─────────────────────────────────────────────
-  /** ID del cliente (entidad externa al módulo CRM) */
-  private Long clientId;
-  /** Oportunidad que originó este proyecto */
-  private Long originOpportunityId;
-
-  // ─────────────────────────────────────────────
-  // IDENTIFICACIÓN
-  // ─────────────────────────────────────────────
-  private String projectCode; // ej. "PROJ-2024-042"
-  private String projectName;
-  private String description;
-  private ProjectType type;
-  private ProjectStatus status;
-  private ProjectPriority priority;
-
-  // ─────────────────────────────────────────────
-  // EQUIPO
-  // ─────────────────────────────────────────────
-  private Long projectManagerId;
-  private Long assignedSalesmanId;
-
-  // ─────────────────────────────────────────────
-  // FECHAS
-  // ─────────────────────────────────────────────
-  private LocalDate plannedStartDate;
-  private LocalDate plannedEndDate;
-  private LocalDate actualStartDate;
-  private LocalDate actualEndDate;
-  private String onHoldReason;
-
-  // ─────────────────────────────────────────────
-  // FINANCIERO
-  // ─────────────────────────────────────────────
-  /** Valor contratado / presupuesto aprobado */
-  private BigDecimal contractedValue;
-  /** Costo estimado de ejecución */
-  private BigDecimal estimatedCost;
-  /** Costo real acumulado (se actualiza durante el proyecto) */
-  private BigDecimal actualCost;
-
-  // ─────────────────────────────────────────────
-  // PROGRESO
-  // ─────────────────────────────────────────────
-  /** Porcentaje de avance: 0–100 */
-  private int progressPercent;
-  private String cancellationReason;
-
-  // ─────────────────────────────────────────────
-  // ENUMERACIONES
-  // ─────────────────────────────────────────────
-
   public enum ProjectStatus {
-    PLANNING, // Definiendo alcance, equipo y fechas
-    ACTIVE, // En ejecución
-    ON_HOLD, // Pausado (requiere razón)
-    COMPLETED, // Entregado y cerrado exitosamente
-    CANCELLED, // Cancelado (requiere razón)
-    ARCHIVED // Solo lectura, histórico
+    PLANNING,
+    ACTIVE,
+    ON_HOLD,
+    COMPLETED,
+    CANCELLED,
+    ARCHIVED
   }
 
   public enum ProjectType {
@@ -98,9 +39,26 @@ public class Project extends BaseDomain<Long> {
     CRITICAL
   }
 
-  // ─────────────────────────────────────────────
-  // CONSTRUCTOR
-  // ─────────────────────────────────────────────
+  private Long clientId;
+  private Long originOpportunityId;
+  private String projectCode;
+  private String projectName;
+  private String description;
+  private ProjectType type;
+  private ProjectStatus status;
+  private ProjectPriority priority;
+  private Long projectManagerId;
+  private Long assignedSalesmanId;
+  private LocalDate plannedStartDate;
+  private LocalDate plannedEndDate;
+  private LocalDate actualStartDate;
+  private LocalDate actualEndDate;
+  private String onHoldReason;
+  private BigDecimal contractedValue;
+  private BigDecimal estimatedCost;
+  private BigDecimal actualCost;
+  private int progressPercent;
+  private String cancellationReason;
 
   private Project() {
     this.id = 0L;
@@ -116,62 +74,12 @@ public class Project extends BaseDomain<Long> {
     this.version = 0L;
   }
 
-  // ─────────────────────────────────────────────
-  // FACTORY METHOD
-  // ─────────────────────────────────────────────
-
-  public static Project create(ProjectCreateParams params) {
-    var now = LocalDateTime.now();
-    var project = new Project();
-    project.projectCode = params.projectCode();
-    project.projectName = params.projectName();
-    project.description = params.description();
-    project.clientId = params.clientId();
-    project.originOpportunityId = params.originOpportunityId();
-    project.type = params.type();
-    project.priority = params.priority();
-    project.projectManagerId = params.projectManagerId();
-    project.assignedSalesmanId = params.assignedSalesmanId();
-    project.plannedStartDate = params.plannedStartDate();
-    project.plannedEndDate = params.plannedEndDate();
-    project.contractedValue = params.contractedValue();
-    project.estimatedCost = params.estimatedCost();
-    project.actualCost = BigDecimal.ZERO;
-    project.status = ProjectStatus.PLANNING;
-    project.progressPercent = 0;
-    project.createdAt = now;
-    project.updatedAt = now;
-    return project;
+  public static SafeBuilder builder() {
+    return new SafeBuilder();
   }
 
-  public static Project reconstruct(ReconstructProjectParams p) {
-    Project project = new Project();
-    project.setId(p.id());
-    project.setCreatedAt(p.createdAt());
-    project.setUpdatedAt(p.updatedAt());
-    project.setDeletedAt(p.deletedAt());
-    project.setVersion(p.version() != null ? p.version() : 0L);
-    project.clientId = p.clientId();
-    project.originOpportunityId = p.originOpportunityId();
-    project.projectCode = p.projectCode();
-    project.projectName = p.projectName();
-    project.description = p.description();
-    project.type = p.type() != null ? p.type() : ProjectType.OTHER;
-    project.status = p.status() != null ? p.status() : ProjectStatus.PLANNING;
-    project.priority = p.priority() != null ? p.priority() : ProjectPriority.MEDIUM;
-    project.projectManagerId = p.projectManagerId();
-    project.assignedSalesmanId = p.assignedSalesmanId();
-    project.plannedStartDate = p.plannedStartDate();
-    project.plannedEndDate = p.plannedEndDate();
-    project.actualStartDate = p.actualStartDate();
-    project.actualEndDate = p.actualEndDate();
-    project.onHoldReason = p.onHoldReason();
-    project.contractedValue = p.contractedValue() != null ? p.contractedValue() : BigDecimal.ZERO;
-    project.estimatedCost = p.estimatedCost() != null ? p.estimatedCost() : BigDecimal.ZERO;
-    project.actualCost = p.actualCost() != null ? p.actualCost() : BigDecimal.ZERO;
-    project.progressPercent = p.progressPercent();
-    project.cancellationReason = p.cancellationReason();
-    return project;
+  public void touch() {
+    setUpdatedAt(LocalDateTime.now());
   }
 
   public void softDelete() {
@@ -181,94 +89,28 @@ public class Project extends BaseDomain<Long> {
     setVersion(v != null ? v + 1 : 1L);
   }
 
-  // ─────────────────────────────────────────────
-  // TRANSICIONES DE ESTADO
-  // ─────────────────────────────────────────────
-
-  public void activate() {
-    if (status != ProjectStatus.PLANNING && status != ProjectStatus.ON_HOLD)
-      throw new IllegalStateException("No se puede activar desde estado " + status);
-    this.status = ProjectStatus.ACTIVE;
-    if (this.actualStartDate == null)
-      this.actualStartDate = LocalDate.now();
-    this.onHoldReason = null;
-    this.updatedAt = LocalDateTime.now();
-  }
-
-  public void putOnHold(String reason) {
-    if (status != ProjectStatus.ACTIVE)
-      throw new IllegalStateException("Solo se pueden pausar proyectos ACTIVE");
-    if (reason == null || reason.isBlank())
-      throw new IllegalArgumentException("Se requiere razón para pausar");
-    this.status = ProjectStatus.ON_HOLD;
-    this.onHoldReason = reason;
-    this.updatedAt = LocalDateTime.now();
-  }
-
-  public void complete() {
-    if (status != ProjectStatus.ACTIVE)
-      throw new IllegalStateException("Solo se pueden completar proyectos ACTIVE");
-    this.status = ProjectStatus.COMPLETED;
-    this.progressPercent = 100;
-    this.actualEndDate = LocalDate.now();
-    this.updatedAt = LocalDateTime.now();
-  }
-
-  public void cancel(String reason) {
-    if (reason == null || reason.isBlank())
-      throw new IllegalArgumentException("Se requiere razón de cancelación");
-    if (status == ProjectStatus.COMPLETED || status == ProjectStatus.ARCHIVED)
-      throw new IllegalStateException("No se puede cancelar un proyecto en estado " + status);
-    this.status = ProjectStatus.CANCELLED;
-    this.cancellationReason = reason;
-    this.updatedAt = LocalDateTime.now();
-  }
-
-  public void archive() {
-    if (status != ProjectStatus.COMPLETED && status != ProjectStatus.CANCELLED)
-      throw new IllegalStateException("Solo se pueden archivar proyectos COMPLETED o CANCELLED");
-    this.status = ProjectStatus.ARCHIVED;
-    this.updatedAt = LocalDateTime.now();
-  }
-
-  // ─────────────────────────────────────────────
-  // LÓGICA DE DOMINIO
-  // ─────────────────────────────────────────────
-
-  public void updateProgress(int percent) {
-    if (percent < 0 || percent > 100)
-      throw new IllegalArgumentException("El progreso debe ser entre 0 y 100");
-    this.progressPercent = percent;
-    this.updatedAt = LocalDateTime.now();
-  }
-
-  public void addActualCost(BigDecimal amount) {
-    if (amount == null || amount.compareTo(BigDecimal.ZERO) < 0)
-      throw new IllegalArgumentException("El monto debe ser positivo");
-    this.actualCost = this.actualCost.add(amount);
-    this.updatedAt = LocalDateTime.now();
-  }
-
-  /** Margen bruto: contractedValue − actualCost */
   public BigDecimal getGrossMargin() {
-    return contractedValue.subtract(actualCost);
+    BigDecimal contracted = contractedValue != null ? contractedValue : BigDecimal.ZERO;
+    BigDecimal actual = actualCost != null ? actualCost : BigDecimal.ZERO;
+    return contracted.subtract(actual);
   }
 
-  /** Margen en porcentaje */
   public BigDecimal getMarginPercent() {
-    if (contractedValue.compareTo(BigDecimal.ZERO) == 0)
+    BigDecimal contracted = contractedValue != null ? contractedValue : BigDecimal.ZERO;
+    if (contracted.compareTo(BigDecimal.ZERO) == 0) {
       return BigDecimal.ZERO;
+    }
     return getGrossMargin()
-        .divide(contractedValue, 4, RoundingMode.HALF_UP)
+        .divide(contracted, 4, RoundingMode.HALF_UP)
         .multiply(new BigDecimal("100"));
   }
 
-  /** ¿El costo real ya superó el estimado? */
   public boolean isOverBudget() {
-    return actualCost.compareTo(estimatedCost) > 0;
+    BigDecimal est = estimatedCost != null ? estimatedCost : BigDecimal.ZERO;
+    BigDecimal act = actualCost != null ? actualCost : BigDecimal.ZERO;
+    return act.compareTo(est) > 0;
   }
 
-  /** ¿Está retrasado respecto a la fecha planificada? */
   public boolean isOverdue() {
     return status == ProjectStatus.ACTIVE
         && plannedEndDate != null
@@ -278,10 +120,6 @@ public class Project extends BaseDomain<Long> {
   public boolean isActive() {
     return status == ProjectStatus.ACTIVE || status == ProjectStatus.ON_HOLD;
   }
-
-  // ─────────────────────────────────────────────
-  // GETTERS & SETTERS
-  // ─────────────────────────────────────────────
 
   public Long getClientId() {
     return clientId;
@@ -335,6 +173,10 @@ public class Project extends BaseDomain<Long> {
     return status;
   }
 
+  public void setStatus(ProjectStatus status) {
+    this.status = status;
+  }
+
   public ProjectPriority getPriority() {
     return priority;
   }
@@ -379,16 +221,32 @@ public class Project extends BaseDomain<Long> {
     return actualStartDate;
   }
 
+  public void setActualStartDate(LocalDate actualStartDate) {
+    this.actualStartDate = actualStartDate;
+  }
+
   public LocalDate getActualEndDate() {
     return actualEndDate;
+  }
+
+  public void setActualEndDate(LocalDate actualEndDate) {
+    this.actualEndDate = actualEndDate;
   }
 
   public String getOnHoldReason() {
     return onHoldReason;
   }
 
+  public void setOnHoldReason(String onHoldReason) {
+    this.onHoldReason = onHoldReason;
+  }
+
   public String getCancellationReason() {
     return cancellationReason;
+  }
+
+  public void setCancellationReason(String cancellationReason) {
+    this.cancellationReason = cancellationReason;
   }
 
   public BigDecimal getContractedValue() {
@@ -411,7 +269,225 @@ public class Project extends BaseDomain<Long> {
     return actualCost;
   }
 
+  public void setActualCost(BigDecimal actualCost) {
+    this.actualCost = actualCost;
+  }
+
   public int getProgressPercent() {
     return progressPercent;
+  }
+
+  public void setProgressPercent(int progressPercent) {
+    this.progressPercent = progressPercent;
+  }
+
+  public static final class SafeBuilder {
+    private Long id;
+    private Long clientId;
+    private Long originOpportunityId;
+    private String projectCode;
+    private String projectName;
+    private String description;
+    private ProjectType type;
+    private ProjectStatus status;
+    private ProjectPriority priority;
+    private Long projectManagerId;
+    private Long assignedSalesmanId;
+    private LocalDate plannedStartDate;
+    private LocalDate plannedEndDate;
+    private LocalDate actualStartDate;
+    private LocalDate actualEndDate;
+    private String onHoldReason;
+    private BigDecimal contractedValue;
+    private BigDecimal estimatedCost;
+    private BigDecimal actualCost;
+    private int progressPercent;
+    private String cancellationReason;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private LocalDateTime deletedAt;
+    private Long version;
+
+    public SafeBuilder withId(Long id) {
+      this.id = id;
+      return this;
+    }
+
+    public SafeBuilder withClientId(Long clientId) {
+      this.clientId = clientId;
+      return this;
+    }
+
+    public SafeBuilder withOriginOpportunityId(Long originOpportunityId) {
+      this.originOpportunityId = originOpportunityId;
+      return this;
+    }
+
+    public SafeBuilder withProjectCode(String projectCode) {
+      this.projectCode = projectCode;
+      return this;
+    }
+
+    public SafeBuilder withProjectName(String projectName) {
+      this.projectName = projectName;
+      return this;
+    }
+
+    public SafeBuilder withDescription(String description) {
+      this.description = description;
+      return this;
+    }
+
+    public SafeBuilder withType(ProjectType type) {
+      this.type = type;
+      return this;
+    }
+
+    public SafeBuilder withStatus(ProjectStatus status) {
+      this.status = status;
+      return this;
+    }
+
+    public SafeBuilder withPriority(ProjectPriority priority) {
+      this.priority = priority;
+      return this;
+    }
+
+    public SafeBuilder withProjectManagerId(Long projectManagerId) {
+      this.projectManagerId = projectManagerId;
+      return this;
+    }
+
+    public SafeBuilder withAssignedSalesmanId(Long assignedSalesmanId) {
+      this.assignedSalesmanId = assignedSalesmanId;
+      return this;
+    }
+
+    public SafeBuilder withPlannedStartDate(LocalDate plannedStartDate) {
+      this.plannedStartDate = plannedStartDate;
+      return this;
+    }
+
+    public SafeBuilder withPlannedEndDate(LocalDate plannedEndDate) {
+      this.plannedEndDate = plannedEndDate;
+      return this;
+    }
+
+    public SafeBuilder withActualStartDate(LocalDate actualStartDate) {
+      this.actualStartDate = actualStartDate;
+      return this;
+    }
+
+    public SafeBuilder withActualEndDate(LocalDate actualEndDate) {
+      this.actualEndDate = actualEndDate;
+      return this;
+    }
+
+    public SafeBuilder withOnHoldReason(String onHoldReason) {
+      this.onHoldReason = onHoldReason;
+      return this;
+    }
+
+    public SafeBuilder withContractedValue(BigDecimal contractedValue) {
+      this.contractedValue = contractedValue;
+      return this;
+    }
+
+    public SafeBuilder withEstimatedCost(BigDecimal estimatedCost) {
+      this.estimatedCost = estimatedCost;
+      return this;
+    }
+
+    public SafeBuilder withActualCost(BigDecimal actualCost) {
+      this.actualCost = actualCost;
+      return this;
+    }
+
+    public SafeBuilder withProgressPercent(int progressPercent) {
+      this.progressPercent = progressPercent;
+      return this;
+    }
+
+    public SafeBuilder withCancellationReason(String cancellationReason) {
+      this.cancellationReason = cancellationReason;
+      return this;
+    }
+
+    public SafeBuilder withCreatedAt(LocalDateTime createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public SafeBuilder withUpdatedAt(LocalDateTime updatedAt) {
+      this.updatedAt = updatedAt;
+      return this;
+    }
+
+    public SafeBuilder withDeletedAt(LocalDateTime deletedAt) {
+      this.deletedAt = deletedAt;
+      return this;
+    }
+
+    public SafeBuilder withVersion(Long version) {
+      this.version = version;
+      return this;
+    }
+
+    public Project reconstruct() {
+      Project project = new Project();
+      project.setId(id != null ? id : 0L);
+      project.setCreatedAt(createdAt != null ? createdAt : LocalDateTime.now());
+      project.setUpdatedAt(updatedAt != null ? updatedAt : project.getCreatedAt());
+      project.setDeletedAt(deletedAt);
+      project.setVersion(version != null ? version : 0L);
+      project.clientId = clientId;
+      project.originOpportunityId = originOpportunityId;
+      project.projectCode = projectCode;
+      project.projectName = projectName;
+      project.description = description;
+      project.type = type != null ? type : ProjectType.OTHER;
+      project.status = status != null ? status : ProjectStatus.PLANNING;
+      project.priority = priority != null ? priority : ProjectPriority.MEDIUM;
+      project.projectManagerId = projectManagerId;
+      project.assignedSalesmanId = assignedSalesmanId;
+      project.plannedStartDate = plannedStartDate;
+      project.plannedEndDate = plannedEndDate;
+      project.actualStartDate = actualStartDate;
+      project.actualEndDate = actualEndDate;
+      project.onHoldReason = onHoldReason;
+      project.contractedValue = contractedValue != null ? contractedValue : BigDecimal.ZERO;
+      project.estimatedCost = estimatedCost != null ? estimatedCost : BigDecimal.ZERO;
+      project.actualCost = actualCost != null ? actualCost : BigDecimal.ZERO;
+      project.progressPercent = progressPercent;
+      project.cancellationReason = cancellationReason;
+      return project;
+    }
+
+    public Project register() {
+      var now = LocalDateTime.now();
+      Project project = new Project();
+      project.setId(0L);
+      project.projectCode = projectCode;
+      project.projectName = projectName;
+      project.description = description;
+      project.clientId = clientId;
+      project.originOpportunityId = originOpportunityId;
+      project.type = type != null ? type : ProjectType.OTHER;
+      project.priority = priority != null ? priority : ProjectPriority.MEDIUM;
+      project.projectManagerId = projectManagerId;
+      project.assignedSalesmanId = assignedSalesmanId;
+      project.plannedStartDate = plannedStartDate;
+      project.plannedEndDate = plannedEndDate;
+      project.contractedValue = contractedValue != null ? contractedValue : BigDecimal.ZERO;
+      project.estimatedCost = estimatedCost != null ? estimatedCost : BigDecimal.ZERO;
+      project.actualCost = BigDecimal.ZERO;
+      project.status = ProjectStatus.PLANNING;
+      project.progressPercent = 0;
+      project.setCreatedAt(now);
+      project.setUpdatedAt(now);
+      project.setDeletedAt(null);
+      project.setVersion(version != null ? version : 0L);
+      return project;
+    }
   }
 }

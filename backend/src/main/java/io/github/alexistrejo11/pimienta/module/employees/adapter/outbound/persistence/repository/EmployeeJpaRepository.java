@@ -19,11 +19,11 @@ public interface EmployeeJpaRepository
 
   @Query(
       """
-      select coalesce(e.department, ''), count(e)
+      select coalesce(e.employment.department, ''), count(e)
       from EmployeeJpaEntity e
       where e.deletedAt is null
-      group by coalesce(e.department, '')
-      order by coalesce(e.department, '')
+      group by coalesce(e.employment.department, '')
+      order by coalesce(e.employment.department, '')
       """)
   List<Object[]> countByDepartmentRows();
 }

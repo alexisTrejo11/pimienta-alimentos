@@ -46,6 +46,9 @@
 	<!-- Properties -->
 	<properties>
 		<java.version>25</java.version>
+		<poi.version>5.4.1</poi.version>
+		<!-- JDK 25 needs Lombok >= 1.18.40; also register Lombok as compiler APT explicitly -->
+		<lombok.version>1.18.42</lombok.version>
 	</properties>
 
 	<!-- Dependencies -->
@@ -66,6 +69,20 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-json</artifactId>
+		</dependency>
+
+		<!-- OpenAPI 3 + Swagger UI (Spring Boot 4) -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>3.0.3</version>
+		</dependency>
+
+		<!-- In memory DB for testing -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
 		</dependency>
 
 		<!-- Jakarta Bean Validation (@NotBlank, @Valid, etc.) -->
@@ -123,6 +140,13 @@
 			<optional>true</optional>
 		</dependency>
 
+		<!-- Lombok: version from spring-boot-dependencies (1.18.x, JDK 25–compatible with Boot 4.0.5) -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
 		<!-- Spring Boot Docker Compose
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -131,6 +155,13 @@
 			<optional>true</optional>
 		</dependency>
 		-->
+		<!-- Apache POI (.xlsx) -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>${poi.version}</version>
+		</dependency>
+
 		<!-- PostgreSQL -->
 		<dependency>
 			<groupId>org.postgresql</groupId>
@@ -155,6 +186,19 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>${lombok.version}</version>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>

@@ -1,13 +1,14 @@
 import type {
   ContractType,
+  EmployeeOnboardingPhase,
   EmployeeStatus,
   ImssSalaryType,
   ImssWorkerType,
   WorkShift,
 } from './employee.enums';
 
-/** POST /api/v1/employees */
-export interface HireEmployeeRequest {
+/** POST /api/v1/employees — registro en onboarding (borrador o pendiente de contrato). */
+export interface RegisterEmployeeRequest {
   name: string;
   email: string;
   phone: string;
@@ -24,6 +25,7 @@ export interface HireEmployeeRequest {
   salaryPerWeek: number;
   /** ISO date (yyyy-MM-dd). */
   birthDate: string;
+  onboardingPhase: EmployeeOnboardingPhase;
 }
 
 /** PUT /api/v1/employees/:id */
@@ -69,7 +71,7 @@ export interface EmployeeResponse {
   department: string;
   contractType: ContractType;
   workShift: WorkShift;
-  hireDate: string;
+  hireDate: string | null;
   terminationDate: string | null;
   status: EmployeeStatus;
   salaryPerWeek: number;
@@ -93,7 +95,7 @@ export interface EmployeeListItemResponse {
   department: string;
   position: string;
   status: EmployeeStatus;
-  hireDate: string;
+  hireDate: string | null;
 }
 
 /** GET /api/v1/employees/summary */

@@ -8,6 +8,7 @@
 */.gitignore
 */.gitignore
 *.log
+.env
 *.env
 *.env.local
 *.env.development.local

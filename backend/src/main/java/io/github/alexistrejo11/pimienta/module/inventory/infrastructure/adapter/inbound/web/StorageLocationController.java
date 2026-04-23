@@ -1,8 +1,8 @@
 package io.github.alexistrejo11.pimienta.module.inventory.infrastructure.adapter.inbound.web;
 
 import io.github.alexistrejo11.pimienta.module.inventory.core.application.LocationTreeNode;
-import io.github.alexistrejo11.pimienta.module.inventory.core.application.StorageLocationManagementUseCases;
 import io.github.alexistrejo11.pimienta.module.inventory.core.domain.StorageLocation;
+import io.github.alexistrejo11.pimienta.module.inventory.core.port.input.StorageLocationManagementUseCases;
 import io.github.alexistrejo11.pimienta.module.inventory.infrastructure.adapter.inbound.web.dto.request.StorageLocationCreateRequest;
 import io.github.alexistrejo11.pimienta.module.inventory.infrastructure.adapter.inbound.web.dto.request.StorageLocationSearchRequest;
 import io.github.alexistrejo11.pimienta.module.inventory.infrastructure.adapter.inbound.web.dto.request.StorageLocationUpdateRequest;
@@ -43,8 +43,7 @@ public class StorageLocationController {
   @RateLimit(profile = RateLimitProfile.READ_HEAVY)
   public PagedResponse<StorageLocationResponse> searchLocations(
       @ModelAttribute StorageLocationSearchRequest filter) {
-    Page<StorageLocation> page =
-        storageLocationManagementUseCases.search(filter.toCriteria(), filter.toPageable());
+    Page<StorageLocation> page = storageLocationManagementUseCases.search(filter.toCriteria(), filter.toPageable());
     return PagedResponse.map(page, StorageLocationWebMapper::toResponse);
   }
 
@@ -73,8 +72,7 @@ public class StorageLocationController {
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
   @ResponseStatus(HttpStatus.CREATED)
   public StorageLocationResponse createLocation(@Valid @RequestBody StorageLocationCreateRequest request) {
-    StorageLocation created =
-        storageLocationManagementUseCases.create(StorageLocationWebMapper.toDomain(request));
+    StorageLocation created = storageLocationManagementUseCases.create(StorageLocationWebMapper.toDomain(request));
     return StorageLocationWebMapper.toResponse(created);
   }
 

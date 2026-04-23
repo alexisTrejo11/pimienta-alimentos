@@ -21,16 +21,16 @@ public class EmployeeSpecifications {
         if (criteria.department() != null && !criteria.department().isBlank()) {
           parts.add(
               cb.like(
-                  cb.lower(root.get("department")),
+                  cb.lower(root.get("employment").get("department")),
                   "%" + criteria.department().trim().toLowerCase() + "%"));
         }
         if (criteria.text() != null && !criteria.text().isBlank()) {
           String pattern = "%" + criteria.text().trim().toLowerCase() + "%";
           parts.add(
               cb.or(
-                  cb.like(cb.lower(root.get("fullName")), pattern),
-                  cb.like(cb.lower(root.get("email")), pattern),
-                  cb.like(cb.lower(root.get("employeeNumber")), pattern)));
+                  cb.like(cb.lower(root.get("personal").get("fullName")), pattern),
+                  cb.like(cb.lower(root.get("personal").get("email")), pattern),
+                  cb.like(cb.lower(root.get("officialIds").get("employeeNumber")), pattern)));
         }
       }
       return cb.and(parts.toArray(Predicate[]::new));
