@@ -7,9 +7,14 @@ import java.time.LocalDate;
 
 @Embeddable
 public class EmployeePersonalEmbeddable {
+  @Column(length = 100)
+  private String firstName;
 
-  @Column(name = "full_name", nullable = false, length = 200)
-  private String fullName;
+  @Column(length = 100)
+  private String lastName;
+
+  @Column(length = 255)
+  private String photoUrl;
 
   @Column(length = 320)
   private String email;
@@ -26,12 +31,28 @@ public class EmployeePersonalEmbeddable {
   @Column(length = 80)
   private String nationality;
 
-  public String getFullName() {
-    return fullName;
+  public String getFirstName() {
+    return firstName;
   }
 
-  public void setFullName(String fullName) {
-    this.fullName = fullName;
+  public void setFirstName(String firstName) {
+    this.firstName = firstName;
+  }
+
+  public String getLastName() {
+    return lastName;
+  }
+
+  public void setLastName(String lastName) {
+    this.lastName = lastName;
+  }
+
+  public String getPhotoUrl() {
+    return photoUrl;
+  }
+
+  public void setPhotoUrl(String photoUrl) {
+    this.photoUrl = photoUrl;
   }
 
   public String getEmail() {

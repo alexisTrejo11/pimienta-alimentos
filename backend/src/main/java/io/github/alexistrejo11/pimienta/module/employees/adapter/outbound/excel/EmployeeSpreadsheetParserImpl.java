@@ -5,7 +5,6 @@ import io.github.alexistrejo11.pimienta.module.employees.core.port.input.Employe
 import io.github.alexistrejo11.pimienta.shared.spreadsheet.SpreadsheetCellReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,16 +46,18 @@ public class EmployeeSpreadsheetParserImpl implements EmployeeSpreadsheetParser 
         }
         int excelRowNumber = r + 1;
         Long id = SpreadsheetCellReader.longAt(row, idx(col, EmployeeSpreadsheetColumn.ID));
-        String name = SpreadsheetCellReader.stringAt(row, idx(col, EmployeeSpreadsheetColumn.NAME));
+        String firstName = SpreadsheetCellReader.stringAt(row, idx(col, EmployeeSpreadsheetColumn.FIRST_NAME));
+        String lastName = SpreadsheetCellReader.stringAt(row, idx(col, EmployeeSpreadsheetColumn.LAST_NAME));
         String email = SpreadsheetCellReader.stringAt(row, idx(col, EmployeeSpreadsheetColumn.EMAIL));
-        if (id == null && name.isBlank() && email.isBlank()) {
+        if (id == null && firstName.isBlank() && lastName.isBlank() && email.isBlank()) {
           continue;
         }
         rows.add(
             new EmployeeImportRow(
                 excelRowNumber,
                 id,
-                name,
+                firstName,
+                lastName,
                 email,
                 SpreadsheetCellReader.stringAt(row, idx(col, EmployeeSpreadsheetColumn.PHONE)),
                 SpreadsheetCellReader.stringAt(row, idx(col, EmployeeSpreadsheetColumn.ADDRESS)),

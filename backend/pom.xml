@@ -13,7 +13,7 @@
 	<!-- Group ID, Artifact ID, Version -->
 	<groupId>io.github.alexistrejo11</groupId>
 	<artifactId>pimienta</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	
 	<!-- Name, description, url, licenses, developers, scm -->
 	<name>Pimienta Alimentos</name>
@@ -169,6 +169,13 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- Load .env into the Spring Environment (local dev); OS env / CLI still win -->
+		<dependency>
+			<groupId>io.github.cdimascio</groupId>
+			<artifactId>dotenv-java</artifactId>
+			<version>3.2.0</version>
+		</dependency>
+
 		<!-- Spring Boot Data Redis Reactive Test -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -182,6 +189,22 @@
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		 <!-- AWS S3 -->
+    <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>s3</artifactId>
+        <version>2.25.30</version>
+    </dependency>
+
+		<!-- To resize images -->
+    <dependency>
+        <groupId>net.coobird</groupId>
+        <artifactId>thumbnailator</artifactId>
+        <version>0.4.20</version>
+    </dependency>
+
+
 	</dependencies>
 
 	<build>

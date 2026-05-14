@@ -22,9 +22,9 @@ public class OpenApiConfig {
                 .version("v1")
                 .description(
                     """
-                    REST API for Pimienta Alimentos. \
-                    Most endpoints require a Bearer JWT access token. \
-                    Role claims are exposed as Spring authorities `ROLE_<NAME>` (e.g. `ROLE_ADMIN`, `ROLE_MANAGER`).""")
+                        REST API for Pimienta Alimentos. \
+                        Most endpoints require a Bearer JWT access token. \
+                        Role claims are exposed as Spring authorities `ROLE_<NAME>` (e.g. `ROLE_ADMIN`, `ROLE_MANAGER`).""")
                 .license(
                     new License()
                         .name("Apache 2.0")

@@ -2,7 +2,8 @@ package io.github.alexistrejo11.pimienta.module.employees.adapter.outbound.excel
 
 enum EmployeeSpreadsheetColumn {
   ID("ID"),
-  NAME("Name"),
+  FIRST_NAME("FirstName"),
+  LAST_NAME("LastName"),
   EMAIL("Email"),
   PHONE("Phone"),
   ADDRESS("Address"),

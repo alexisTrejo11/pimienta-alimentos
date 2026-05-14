@@ -13,6 +13,7 @@ import io.github.alexistrejo11.pimienta.module.account.integration.AccountTestRe
 import io.github.alexistrejo11.pimienta.module.account.user.core.domain.enums.AccountStatus;
 import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.out.persistence.UserJpaEntity;
 import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.out.persistence.UserJpaRepository;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import org.junit.jupiter.api.Test;
@@ -71,6 +72,7 @@ class EmployeeManagerIntegrationTest {
     String body =
         registerJson(
             "   ",
+            "López",
             "ok-" + UUID.randomUUID() + "@mail.com",
             "EMP-BLANK",
             "DRAFT");
@@ -89,7 +91,8 @@ class EmployeeManagerIntegrationTest {
     String body =
         """
             {
-              "name": "Test User",
+              "firstName": "Test",
+              "lastName": "User",
               "email": "%s",
               "phone": "+52 55 1000 0001",
               "address": "Calle 1",
@@ -130,6 +133,52 @@ class EmployeeManagerIntegrationTest {
   }
 
   @Test
+  void register_multipart_employeeJsonPart_returns201() throws Exception {
+    String token = obtainAccessToken();
+    String email = "mp-" + UUID.randomUUID() + "@mail.com";
+    String empNo = "EMP-MP-" + uuidSuffix();
+    String json = minimalRegisterJson(email, empNo);
+    MockMultipartFile employee =
+        new MockMultipartFile(
+            "employee",
+            null,
+            MediaType.APPLICATION_JSON_VALUE,
+            json.getBytes(StandardCharsets.UTF_8));
+
+    mockMvc
+        .perform(
+            multipart("/api/v1/employees")
+                .file(employee)
+                .header("Authorization", "Bearer " + token))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.email").value(email.toLowerCase()))
+        .andExpect(jsonPath("$.employeeNumber").value(empNo));
+  }
+
+  @Test
+  void register_multipart_employeeOctetStreamPart_returns201() throws Exception {
+    String token = obtainAccessToken();
+    String email = "mp-os-" + UUID.randomUUID() + "@mail.com";
+    String empNo = "EMP-OS-" + uuidSuffix();
+    String json = minimalRegisterJson(email, empNo);
+    MockMultipartFile employee =
+        new MockMultipartFile(
+            "employee",
+            "blob.bin",
+            MediaType.APPLICATION_OCTET_STREAM_VALUE,
+            json.getBytes(StandardCharsets.UTF_8));
+
+    mockMvc
+        .perform(
+            multipart("/api/v1/employees")
+                .file(employee)
+                .header("Authorization", "Bearer " + token))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.email").value(email.toLowerCase()))
+        .andExpect(jsonPath("$.employeeNumber").value(empNo));
+  }
+
+  @Test
   void register_happyPath_returns201WithId() throws Exception {
     String token = obtainAccessToken();
     String email = "emp-" + UUID.randomUUID() + "@mail.com";
@@ -144,7 +193,8 @@ class EmployeeManagerIntegrationTest {
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").exists())
             .andExpect(jsonPath("$.email").value(email.toLowerCase()))
-            .andExpect(jsonPath("$.name").value("María López García"))
+            .andExpect(jsonPath("$.firstName").value("María"))
+            .andExpect(jsonPath("$.lastName").value("López García"))
             .andExpect(jsonPath("$.status").value("DRAFT"))
             .andReturn();
 
@@ -244,7 +294,7 @@ class EmployeeManagerIntegrationTest {
   void submitForContract_whenRegisteredAsPending_returns400() throws Exception {
     String token = obtainAccessToken();
     String email = "sub2-" + UUID.randomUUID() + "@mail.com";
-    String body = registerJson("Pending User", email, "EMP-PEND-" + uuidSuffix(), "PENDING_CONTRACT");
+    String body = registerJson("Pending", "User", email, "EMP-PEND-" + uuidSuffix(), "PENDING_CONTRACT");
     MvcResult reg =
         mockMvc
             .perform(
@@ -278,7 +328,8 @@ class EmployeeManagerIntegrationTest {
     String updateBody =
         """
             {
-              "name": "Updated Worker",
+              "firstName": "Updated",
+              "lastName": "Worker",
               "email": "%s",
               "phone": "+52 55 2000 0002",
               "address": "Nueva dirección 2",
@@ -302,7 +353,8 @@ class EmployeeManagerIntegrationTest {
         .perform(
             AccountTestRequests.putJsonBearer("/api/v1/employees/" + id, token, updateBody))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.name").value("Updated Worker"))
+        .andExpect(jsonPath("$.firstName").value("Updated"))
+        .andExpect(jsonPath("$.lastName").value("Worker"))
         .andExpect(jsonPath("$.department").value("Calidad"));
 
     mockMvc
@@ -344,14 +396,19 @@ class EmployeeManagerIntegrationTest {
   }
 
   private static String minimalRegisterJson(String email, String employeeNumber) {
-    return registerJson("María López García", email, employeeNumber, "DRAFT");
+    return registerJson("María", "López García", email, employeeNumber, "DRAFT");
   }
 
   private static String registerJson(
-      String name, String email, String employeeNumber, String onboardingPhase) {
+      String firstName,
+      String lastName,
+      String email,
+      String employeeNumber,
+      String onboardingPhase) {
     return """
         {
-          "name": "%s",
+          "firstName": "%s",
+          "lastName": "%s",
           "email": "%s",
           "phone": "+52 55 1234 5678",
           "address": "Av. Reforma 123, CDMX",
@@ -369,7 +426,7 @@ class EmployeeManagerIntegrationTest {
           "onboardingPhase": "%s"
         }
         """
-        .formatted(name, email, employeeNumber, onboardingPhase);
+        .formatted(firstName, lastName, email, employeeNumber, onboardingPhase);
   }
 
   private static long extractLongId(String json, String jsonPath) {

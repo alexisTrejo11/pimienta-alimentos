@@ -11,6 +11,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "employees")
@@ -38,6 +40,11 @@ public class EmployeeJpaEntity extends BaseJpaEntity {
   @Enumerated(EnumType.STRING)
   @Column(length = 32)
   private EmployeeStatus status;
+
+  /** Stored as JSON; on PostgreSQL Hibernate maps this to a json/jsonb-compatible column. */
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(name = "work_schedule")
+  private EmployeeWorkScheduleJson workSchedule;
 
   public Long getId() {
     return id;
@@ -93,5 +100,13 @@ public class EmployeeJpaEntity extends BaseJpaEntity {
 
   public void setStatus(EmployeeStatus status) {
     this.status = status;
+  }
+
+  public EmployeeWorkScheduleJson getWorkSchedule() {
+    return workSchedule;
+  }
+
+  public void setWorkSchedule(EmployeeWorkScheduleJson workSchedule) {
+    this.workSchedule = workSchedule;
   }
 }

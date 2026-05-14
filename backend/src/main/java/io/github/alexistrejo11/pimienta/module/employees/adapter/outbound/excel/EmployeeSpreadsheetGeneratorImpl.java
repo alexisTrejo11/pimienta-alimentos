@@ -33,7 +33,8 @@ public class EmployeeSpreadsheetGeneratorImpl implements EmployeeSpreadsheetGene
         } else {
           dataRow.createCell(c++).setCellValue("");
         }
-        dataRow.createCell(c++).setCellValue(nullToEmpty(row.name()));
+        dataRow.createCell(c++).setCellValue(nullToEmpty(row.firstName()));
+        dataRow.createCell(c++).setCellValue(nullToEmpty(row.lastName()));
         dataRow.createCell(c++).setCellValue(nullToEmpty(row.email()));
         dataRow.createCell(c++).setCellValue(nullToEmpty(row.phone()));
         dataRow.createCell(c++).setCellValue(nullToEmpty(row.address()));

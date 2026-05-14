@@ -4,12 +4,11 @@ import java.time.LocalDate;
 
 import lombok.Builder;
 
-/**
- * Datos personales del empleado (value object).
- */
 @Builder
 public record PersonalProfile(
-    String name,
+    String firstName,
+    String lastName,
+    String photoUrl,
     String email,
     String phone,
     String address,
@@ -17,7 +16,8 @@ public record PersonalProfile(
     String nationality) {
 
   public PersonalProfile {
-    name = blankToEmpty(name);
+    firstName = blankToEmpty(firstName);
+    lastName = blankToEmpty(lastName);
     email = blankToEmpty(email);
     phone = blankToEmpty(phone);
     address = blankToEmpty(address);
@@ -25,22 +25,49 @@ public record PersonalProfile(
   }
 
   public static PersonalProfile empty() {
-    return new PersonalProfile("", "", "", "", null, "Mexicana");
+    return PersonalProfile.builder()
+        .firstName("")
+        .lastName("")
+        .photoUrl("")
+        .email("")
+        .phone("")
+        .address("")
+        .birthDate(null)
+        .nationality("Mexicana")
+        .build();
   }
 
-  public PersonalProfile setName(String name) {
-    return new PersonalProfile(
-        name,
-        this.email,
-        this.phone,
-        this.address,
-        this.birthDate,
-        this.nationality);
+  public PersonalProfile setFirstName(String firstName) {
+    return PersonalProfile.builder()
+        .firstName(firstName)
+        .lastName(this.lastName)
+        .photoUrl(this.photoUrl)
+        .email(this.email)
+        .phone(this.phone)
+        .address(this.address)
+        .birthDate(this.birthDate)
+        .nationality(this.nationality)
+        .build();
+  }
+
+  public PersonalProfile setLastName(String lastName) {
+    return PersonalProfile.builder()
+        .firstName(this.firstName)
+        .lastName(lastName)
+        .photoUrl(this.photoUrl)
+        .email(this.email)
+        .phone(this.phone)
+        .address(this.address)
+        .birthDate(this.birthDate)
+        .nationality(this.nationality)
+        .build();
   }
 
   public PersonalProfile setEmail(String email) {
     return PersonalProfile.builder()
-        .name(this.name)
+        .firstName(this.firstName)
+        .lastName(this.lastName)
+        .photoUrl(this.photoUrl)
         .email(email)
         .phone(this.phone)
         .address(this.address)
@@ -51,7 +78,9 @@ public record PersonalProfile(
 
   public PersonalProfile setPhone(String phone) {
     return PersonalProfile.builder()
-        .name(this.name)
+        .firstName(this.firstName)
+        .lastName(this.lastName)
+        .photoUrl(this.photoUrl)
         .email(this.email)
         .phone(phone)
         .address(this.address)
@@ -62,7 +91,9 @@ public record PersonalProfile(
 
   public PersonalProfile setAddress(String address) {
     return PersonalProfile.builder()
-        .name(this.name)
+        .firstName(this.firstName)
+        .lastName(this.lastName)
+        .photoUrl(this.photoUrl)
         .email(this.email)
         .phone(this.phone)
         .address(blankToEmpty(address))
@@ -73,7 +104,9 @@ public record PersonalProfile(
 
   public PersonalProfile setBirthDate(LocalDate birthDate) {
     return PersonalProfile.builder()
-        .name(this.name)
+        .firstName(this.firstName)
+        .lastName(this.lastName)
+        .photoUrl(this.photoUrl)
         .email(this.email)
         .phone(this.phone)
         .address(this.address)
@@ -84,12 +117,27 @@ public record PersonalProfile(
 
   public PersonalProfile setNationality(String nationality) {
     return PersonalProfile.builder()
-        .name(this.name)
+        .firstName(this.firstName)
+        .lastName(this.lastName)
+        .photoUrl(this.photoUrl)
         .email(this.email)
         .phone(this.phone)
         .address(this.address)
         .birthDate(this.birthDate)
         .nationality(nationality)
+        .build();
+  }
+
+  public PersonalProfile setPhotoUrl(String photoUrl) {
+    return PersonalProfile.builder()
+        .firstName(this.firstName)
+        .lastName(this.lastName)
+        .photoUrl(photoUrl)
+        .email(this.email)
+        .phone(this.phone)
+        .address(this.address)
+        .birthDate(this.birthDate)
+        .nationality(this.nationality)
         .build();
   }
 

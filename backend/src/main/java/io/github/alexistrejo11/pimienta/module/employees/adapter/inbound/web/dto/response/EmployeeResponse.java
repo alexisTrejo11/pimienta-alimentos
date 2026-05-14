@@ -8,10 +8,14 @@ import io.github.alexistrejo11.pimienta.module.employees.core.domain.enums.WorkS
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import lombok.Builder;
 
+@Builder
 public record EmployeeResponse(
         Long id,
-        String name,
+        String firstName,
+        String lastName,
+        String photoUrl,
         String email,
         String phone,
         String address,
@@ -42,7 +46,9 @@ public record EmployeeResponse(
         LocalDateTime updatedAt) {
 
     public EmployeeResponse {
-        name = name != null ? name.trim() : "";
+        firstName = firstName != null ? firstName.trim() : "";
+        lastName = lastName != null ? lastName.trim() : "";
+        photoUrl = photoUrl != null ? photoUrl.trim() : "";
         email = email != null ? email.trim() : "";
         phone = phone != null ? phone.trim() : "";
         address = address != null ? address.trim() : "";

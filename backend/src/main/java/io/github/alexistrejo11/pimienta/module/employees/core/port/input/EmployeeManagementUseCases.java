@@ -1,11 +1,12 @@
 package io.github.alexistrejo11.pimienta.module.employees.core.port.input;
 
+import io.github.alexistrejo11.pimienta.module.employees.core.application.dto.param.RegisterEmployeeParams;
+import io.github.alexistrejo11.pimienta.module.employees.core.application.dto.param.UpdateEmployeeParams;
 import io.github.alexistrejo11.pimienta.module.employees.core.application.query.EmployeeSearchCriteria;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.EmployeeSummary;
-import io.github.alexistrejo11.pimienta.module.employees.core.domain.Employee;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.model.Employee;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.EmployeeStatistics;
-import io.github.alexistrejo11.pimienta.module.employees.core.application.dto.RegisterEmployeeParams;
-import io.github.alexistrejo11.pimienta.module.employees.core.application.dto.UpdateEmployeeParams;
+
 import java.time.LocalDate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

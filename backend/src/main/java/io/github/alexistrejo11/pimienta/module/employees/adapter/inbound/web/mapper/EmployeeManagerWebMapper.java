@@ -1,10 +1,10 @@
 package io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.mapper;
 
-import io.github.alexistrejo11.pimienta.module.employees.core.domain.Employee;
+import io.github.alexistrejo11.pimienta.module.employees.core.application.dto.param.RegisterEmployeeParams;
+import io.github.alexistrejo11.pimienta.module.employees.core.application.dto.param.UpdateEmployeeParams;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.EmployeeStatistics;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.EmployeeSummary;
-import io.github.alexistrejo11.pimienta.module.employees.core.application.dto.RegisterEmployeeParams;
-import io.github.alexistrejo11.pimienta.module.employees.core.application.dto.UpdateEmployeeParams;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.model.Employee;
 import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.dto.response.DepartmentHeadcountResponse;
 import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.dto.response.EmployeeListItemResponse;
 import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.dto.response.EmployeeResponse;
@@ -12,111 +12,134 @@ import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.dto
 import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.dto.response.EmployeeSummaryResponse;
 import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.dto.request.RegisterEmployeeRequest;
 import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.dto.request.UpdateEmployeeRequest;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import org.springframework.web.multipart.MultipartFile;
 
 public final class EmployeeManagerWebMapper {
 
   private EmployeeManagerWebMapper() {
   }
 
-  public static EmployeeListItemResponse toListItem(Employee employee) {
-    return new EmployeeListItemResponse(
-        employee.getId(),
-        employee.getPersonal().name(),
-        employee.getPersonal().email(),
-        employee.getEmployment().department(),
-        employee.getEmployment().position(),
-        employee.getStatus(),
-        employee.getEmployment().hireDate());
+  public static EmployeeListItemResponse toListItem(
+      Employee employee, Function<String, String> mapPhotoUrl) {
+    String rawPhoto = employee.getPersonal().photoUrl();
+    return EmployeeListItemResponse.builder()
+        .id(employee.getId())
+        .fullName(employee.getPersonal().firstName() + " " + employee.getPersonal().lastName())
+        .photoUrl(mapPhotoUrl.apply(rawPhoto != null ? rawPhoto : ""))
+        .email(employee.getPersonal().email())
+        .department(employee.getEmployment().department())
+        .position(employee.getEmployment().position())
+        .status(employee.getStatus())
+        .hireDate(employee.getEmployment().hireDate())
+        .build();
   }
 
-  public static EmployeeResponse toResponse(Employee employee) {
-    return new EmployeeResponse(
-        employee.getId(),
-        employee.getPersonal().name(),
-        employee.getPersonal().email(),
-        employee.getPersonal().phone(),
-        employee.getPersonal().address(),
-        employee.getPersonal().birthDate(),
-        employee.getPersonal().nationality(),
-        employee.getOfficialIds().curp(),
-        employee.getOfficialIds().rfc(),
-        employee.getOfficialIds().nss(),
-        employee.getOfficialIds().clabe(),
-        employee.getOfficialIds().employeeNumber(),
-        employee.getEmployment().position(),
-        employee.getEmployment().department(),
-        employee.getEmployment().contractType(),
-        employee.getEmployment().workShift(),
-        employee.getEmployment().hireDate(),
-        employee.getEmployment().terminationDate(),
-        employee.getStatus(),
-        employee.getCompensation().salaryPerWeek(),
-        employee.getCompensation().bonuses(),
-        employee.getCompensation().foodVouchers(),
-        employee.getBenefits().integrationFactor(),
-        employee.getBenefits().imssWorkerType(),
-        employee.getBenefits().imssSalaryType(),
-        employee.getBenefits().christmasBonusDays(),
-        employee.getBenefits().vacationDays(),
-        employee.getBenefits().vacationPremiumPercent(),
-        employee.getCreatedAt(),
-        employee.getUpdatedAt());
+  public static EmployeeResponse toResponse(Employee employee, Function<String, String> mapPhotoUrl) {
+    String rawPhoto = employee.getPersonal().photoUrl();
+    return EmployeeResponse.builder()
+        .id(employee.getId())
+        .firstName(employee.getPersonal().firstName())
+        .lastName(employee.getPersonal().lastName())
+        .photoUrl(mapPhotoUrl.apply(rawPhoto != null ? rawPhoto : ""))
+        .email(employee.getPersonal().email())
+        .phone(employee.getPersonal().phone())
+        .address(employee.getPersonal().address())
+        .birthDate(employee.getPersonal().birthDate())
+        .nationality(employee.getPersonal().nationality())
+        .curp(employee.getOfficialIds().curp())
+        .rfc(employee.getOfficialIds().rfc())
+        .nss(employee.getOfficialIds().nss())
+        .clabe(employee.getOfficialIds().clabe())
+        .employeeNumber(employee.getOfficialIds().employeeNumber())
+        .position(employee.getEmployment().position())
+        .department(employee.getEmployment().department())
+        .contractType(employee.getEmployment().contractType())
+        .workShift(employee.getEmployment().workShift())
+        .hireDate(employee.getEmployment().hireDate())
+        .terminationDate(employee.getEmployment().terminationDate())
+        .status(employee.getStatus())
+        .salaryPerWeek(employee.getCompensation().salaryPerWeek())
+        .bonuses(employee.getCompensation().bonuses())
+        .foodVouchers(employee.getCompensation().foodVouchers())
+        .integrationFactor(employee.getBenefits().integrationFactor())
+        .imssWorkerType(employee.getBenefits().imssWorkerType())
+        .imssSalaryType(employee.getBenefits().imssSalaryType())
+        .christmasBonusDays(employee.getBenefits().christmasBonusDays())
+        .vacationDays(employee.getBenefits().vacationDays())
+        .vacationPremiumPercent(employee.getBenefits().vacationPremiumPercent())
+        .createdAt(employee.getCreatedAt())
+        .updatedAt(employee.getUpdatedAt())
+        .build();
   }
 
   public static EmployeeStatisticsResponse toStatisticsResponse(EmployeeStatistics statistics) {
-    return new EmployeeStatisticsResponse(
-        statistics.total(), statistics.active(), statistics.notActive());
+    return EmployeeStatisticsResponse.builder()
+        .total(statistics.total())
+        .active(statistics.active())
+        .notActive(statistics.notActive())
+        .build();
   }
 
   public static EmployeeSummaryResponse toSummaryResponse(EmployeeSummary summary) {
-    List<DepartmentHeadcountResponse> rows = new ArrayList<>();
-    summary.headcountByDepartment()
-        .forEach(
-            row -> rows.add(
-                new DepartmentHeadcountResponse(row.department(), row.headcount())));
-    return new EmployeeSummaryResponse(summary.totalNotDeleted(), rows);
+    List<DepartmentHeadcountResponse> rows = summary.headcountByDepartment().stream()
+        .map(
+            row -> DepartmentHeadcountResponse.builder()
+                .department(row.department())
+                .headcount(row.headcount())
+                .build())
+        .toList();
+    return EmployeeSummaryResponse.builder()
+        .totalNotDeleted(summary.totalNotDeleted())
+        .headcountByDepartment(rows)
+        .build();
   }
 
-  public static RegisterEmployeeParams toRegisterParams(RegisterEmployeeRequest request) {
-    return new RegisterEmployeeParams(
-        request.name(),
-        request.email().trim().toLowerCase(),
-        request.phone(),
-        request.address(),
-        request.curp(),
-        request.rfc(),
-        request.nss(),
-        request.clabe(),
-        request.employeeNumber(),
-        request.position(),
-        request.department(),
-        request.contractType(),
-        request.workShift(),
-        request.salaryPerWeek(),
-        request.birthDate(),
-        request.onboardingPhase());
+  public static RegisterEmployeeParams toRegisterParams(RegisterEmployeeRequest request, MultipartFile photo) {
+    return RegisterEmployeeParams.builder()
+        .firstName(request.firstName())
+        .lastName(request.lastName())
+        .email(request.email().trim().toLowerCase())
+        .phone(request.phone())
+        .address(request.address())
+        .curp(request.curp())
+        .rfc(request.rfc())
+        .nss(request.nss())
+        .clabe(request.clabe())
+        .employeeNumber(request.employeeNumber())
+        .position(request.position())
+        .department(request.department())
+        .contractType(request.contractType())
+        .workShift(request.workShift())
+        .salaryPerWeek(request.salaryPerWeek())
+        .birthDate(request.birthDate())
+        .onboardingPhase(request.onboardingPhase())
+        .photo(photo)
+        .build();
   }
 
-  public static UpdateEmployeeParams toUpdateParams(Long id, UpdateEmployeeRequest request) {
-    return new UpdateEmployeeParams(
-        id,
-        request.name(),
-        request.email().trim().toLowerCase(),
-        request.phone(),
-        request.address(),
-        request.curp(),
-        request.rfc(),
-        request.nss(),
-        request.clabe(),
-        request.position(),
-        request.department(),
-        request.contractType(),
-        request.workShift(),
-        request.salaryPerWeek(),
-        request.bonuses(),
-        request.foodVouchers(),
-        request.integrationFactor());
+  public static UpdateEmployeeParams toUpdateParams(Long id, UpdateEmployeeRequest request, MultipartFile photo) {
+    return UpdateEmployeeParams.builder()
+        .id(id)
+        .firstName(request.firstName())
+        .lastName(request.lastName())
+        .photo(photo)
+        .email(request.email().trim().toLowerCase())
+        .phone(request.phone())
+        .address(request.address())
+        .curp(request.curp())
+        .rfc(request.rfc())
+        .nss(request.nss())
+        .clabe(request.clabe())
+        .position(request.position())
+        .department(request.department())
+        .contractType(request.contractType())
+        .workShift(request.workShift())
+        .salaryPerWeek(request.salaryPerWeek())
+        .bonuses(request.bonuses())
+        .foodVouchers(request.foodVouchers())
+        .integrationFactor(request.integrationFactor())
+        .build();
   }
 }

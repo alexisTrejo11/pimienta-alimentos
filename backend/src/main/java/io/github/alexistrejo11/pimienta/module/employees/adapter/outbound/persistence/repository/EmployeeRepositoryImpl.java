@@ -4,10 +4,10 @@ import io.github.alexistrejo11.pimienta.module.employees.adapter.outbound.persis
 import io.github.alexistrejo11.pimienta.module.employees.adapter.outbound.persistence.EmployeePersistenceMapper;
 import io.github.alexistrejo11.pimienta.module.employees.adapter.outbound.persistence.model.EmployeeSpecifications;
 import io.github.alexistrejo11.pimienta.module.employees.core.application.query.EmployeeSearchCriteria;
-import io.github.alexistrejo11.pimienta.module.employees.core.domain.DepartmentHeadcount;
-import io.github.alexistrejo11.pimienta.module.employees.core.domain.Employee;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.EmployeeStatistics;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.enums.EmployeeStatus;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.model.Employee;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.valueobject.DepartmentHeadcount;
 import io.github.alexistrejo11.pimienta.module.employees.core.port.output.EmployeeRepository;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.EmployeeSummary;
 
@@ -42,6 +42,12 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
   @Override
   public Employee save(Employee employee) {
     EmployeeJpaEntity entity = EmployeePersistenceMapper.toJpa(employee);
+    Long id = employee.getId();
+    if (id != null && id > 0) {
+      jpaRepository
+          .findByIdAndDeletedAtIsNull(id)
+          .ifPresent(existing -> entity.setWorkSchedule(existing.getWorkSchedule()));
+    }
     EmployeeJpaEntity saved = jpaRepository.save(entity);
     return EmployeePersistenceMapper.toDomain(saved);
   }

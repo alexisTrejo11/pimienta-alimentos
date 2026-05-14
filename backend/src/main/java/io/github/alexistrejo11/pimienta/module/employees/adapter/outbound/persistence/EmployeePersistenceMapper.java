@@ -6,11 +6,11 @@ import io.github.alexistrejo11.pimienta.module.employees.adapter.outbound.persis
 import io.github.alexistrejo11.pimienta.module.employees.adapter.outbound.persistence.model.EmployeeJpaEntity;
 import io.github.alexistrejo11.pimienta.module.employees.adapter.outbound.persistence.model.EmployeeOfficialIdsEmbeddable;
 import io.github.alexistrejo11.pimienta.module.employees.adapter.outbound.persistence.model.EmployeePersonalEmbeddable;
-import io.github.alexistrejo11.pimienta.module.employees.core.domain.Employee;
-import io.github.alexistrejo11.pimienta.module.employees.core.domain.OfficialIdentifiers;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.model.Employee;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.valueobject.BenefitsProfile;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.valueobject.Compensation;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.valueobject.Employment;
+import io.github.alexistrejo11.pimienta.module.employees.core.domain.valueobject.OfficialIdentifiers;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.valueobject.PersonalProfile;
 
 import java.math.BigDecimal;
@@ -27,7 +27,9 @@ public class EmployeePersistenceMapper {
     }
 
     EmployeePersonalEmbeddable p = e.getPersonal();
-    p.setFullName(domain.getPersonal().name());
+    p.setFirstName(domain.getPersonal().firstName());
+    p.setLastName(domain.getPersonal().lastName());
+    p.setPhotoUrl(domain.getPersonal().photoUrl());
     p.setEmail(domain.getPersonal().email());
     p.setPhone(domain.getPersonal().phone());
     p.setAddress(domain.getPersonal().address());
@@ -100,14 +102,16 @@ public class EmployeePersistenceMapper {
       return PersonalProfile.empty();
     }
     return new PersonalProfile(
-        row.getFullName(),
+        row.getFirstName(),
+        row.getLastName(),
+        row.getPhotoUrl(),
         row.getEmail(),
         row.getPhone(),
         row.getAddress(),
         row.getBirthDate(),
         row.getNationality() != null && !row.getNationality().isBlank()
             ? row.getNationality()
-            : "Mexicana");
+            : "Unknown");
   }
 
   private static OfficialIdentifiers toOfficialIds(EmployeeOfficialIdsEmbeddable row) {

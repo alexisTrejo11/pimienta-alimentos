@@ -2,11 +2,14 @@ package io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.dt
 
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.enums.EmployeeStatus;
 import java.time.LocalDate;
+import lombok.Builder;
 
 /** Paginated listing projection (lighter than {@link EmployeeResponse}). */
+@Builder
 public record EmployeeListItemResponse(
         Long id,
-        String name,
+        String fullName,
+        String photoUrl,
         String email,
         String department,
         String position,
@@ -14,7 +17,8 @@ public record EmployeeListItemResponse(
         LocalDate hireDate) {
 
     public EmployeeListItemResponse {
-        name = name != null ? name.trim() : "";
+        fullName = fullName != null ? fullName.trim() : "";
+        photoUrl = photoUrl != null ? photoUrl.trim() : "";
         email = email != null ? email.trim() : "";
         department = department != null ? department.trim() : "";
         position = position != null ? position.trim() : "";

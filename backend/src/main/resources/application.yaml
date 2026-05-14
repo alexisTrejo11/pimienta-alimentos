@@ -1,11 +1,11 @@
 spring:
   application:
     name: pimienta
-  # PostgreSQL
+  # PostgreSQL (defaults match docker-compose; override via .env or OS env)
   datasource:
-    url: jdbc:postgresql://localhost:5432/pimienta_alimentos
-    username: pimienta_dba
-    password: pimienta_dba
+    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/${POSTGRES_DB:pimienta_alimentos}
+    username: ${POSTGRES_USER:pimienta_dba}
+    password: ${POSTGRES_PASSWORD:pimienta_dba}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -14,14 +14,20 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        # Dialect omitted: pick from JDBC URL/driver (PostgreSQL in prod, H2 in tests).
   # Redis
   data:
     redis:
       host: localhost
-      port: 6379
-  # Server
-  server:
-    port: 8080
+      port: ${REDIS_PORT:6379}
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: ${API_PORT:8080}
 
 # OpenAPI / Swagger UI (springdoc)
 springdoc:
@@ -31,12 +37,19 @@ springdoc:
     path: /swagger-ui
     tags-sorter: alpha
     operations-sorter: alpha
+    default-model-expand-depth: 3
+    default-models-expand-depth: 3
   # Logging
   logging:
     level:
       org.springframework.web: DEBUG
 
 pimienta:
+  image:
+    max-width: 800
+    max-height: 600
+    quality: 0.8
+    allowed-formats: jpg, jpeg, png
   # Redis-backed token bucket: global filter on /api/** + @RateLimit on controllers.
   rate-limiting:
     enabled: true
@@ -71,6 +84,20 @@ pimienta:
     max-age-seconds: 3600
   security:
     jwt:
-      secret: "change-me-use-at-least-256-bits-for-hs256-secret-key-pimienta"
+      secret: ${PIMIENTA_SECURITY_JWT_SECRET:change-me-use-at-least-256-bits-for-hs256-secret-key-pimienta}
       access-token-ttl-minutes: 15
       refresh-token-ttl-days: 7
+
+aws:
+  region: ${AWS_REGION:us-east-1}
+  s3:
+    bucket: ${AWS_S3_BUCKET_NAME}
+    folder: ${AWS_S3_FOLDER:employees}
+
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.web.servlet.mvc: DEBUG
+    org.springframework.web.multipart: DEBUG
+    org.apache.coyote: DEBUG

@@ -14,6 +14,9 @@ RUN addgroup -S spring -g 1001 \
 
 COPY --from=build /workspace/target/*.jar /app/app.jar
 
+# Logback writes under LOG_PATH (default logs/). Non-root user must own this path.
+RUN mkdir -p /app/logs && chown -R spring:spring /app
+
 USER spring:spring
 EXPOSE 8080
 

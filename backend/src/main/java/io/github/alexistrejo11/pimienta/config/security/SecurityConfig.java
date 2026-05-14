@@ -18,44 +18,42 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 public class SecurityConfig {
 
-  private static final String[] SWAGGER_PUBLIC_PATHS = {
-    "/swagger-ui/**",
-    "/swagger-ui.html",
-    "/v3/api-docs/**",
-    "/v3/api-docs.yaml"
-  };
+        private static final String[] SWAGGER_PUBLIC_PATHS = {
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/v3/api-docs/**",
+                        "/v3/api-docs.yaml"
+        };
 
-  private static final String[] ACTUATOR_PUBLIC_PATHS = {
-    "/actuator/**"
-  };
+        private static final String[] ACTUATOR_PUBLIC_PATHS = {
+                        "/actuator/**"
+        };
 
-  private static final String[] AUTH_PUBLIC_PATHS = {
-    "/api/v1/auth/**"
-  };
+        private static final String[] AUTH_PUBLIC_PATHS = {
+                        "/api/v1/auth/**"
+        };
 
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
-  }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 
-  @Bean
-  public SecurityFilterChain securityFilterChain(
-      HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
-    http.csrf(AbstractHttpConfigurer::disable)
-        .cors(Customizer.withDefaults())
-        .sessionManagement(
-            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(
-            auth ->
-                auth.requestMatchers(SWAGGER_PUBLIC_PATHS)
-                    .permitAll()
-                    .requestMatchers(ACTUATOR_PUBLIC_PATHS)
-                    .permitAll()
-                    .requestMatchers(AUTH_PUBLIC_PATHS)
-                    .permitAll()
-                    .anyRequest()
-                    .authenticated())
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-    return http.build();
-  }
+        @Bean
+        public SecurityFilterChain securityFilterChain(
+                        HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+                http.csrf(AbstractHttpConfigurer::disable)
+                                .cors(Customizer.withDefaults())
+                                .sessionManagement(
+                                                session -> session
+                                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authorizeHttpRequests(
+                                                auth -> auth.requestMatchers(SWAGGER_PUBLIC_PATHS).permitAll()
+                                                                .requestMatchers(ACTUATOR_PUBLIC_PATHS).permitAll()
+                                                                .requestMatchers(AUTH_PUBLIC_PATHS).permitAll()
+                                                                // TODO: Remove this
+                                                                .requestMatchers("/api/v1/employees/**").permitAll()
+                                                                .anyRequest().authenticated())
+                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                return http.build();
+        }
 }
