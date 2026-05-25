@@ -31,6 +31,31 @@
     color-scheme: light;
   }
 
+  /**
+   * Workspace and cards use Tailwind `dark:` surfaces while semantic tokens came only
+   * from `@theme` (light palette). With `<html class="dark">`, remap tokens so
+   * `text-on-surface`, `bg-surface`, etc. stay readable on dark UI.
+   */
+  html.dark {
+    color-scheme: dark;
+
+    --color-on-background: #fafaf9;
+    --color-on-surface: #fafaf9;
+    --color-on-surface-variant: #a8a29e;
+
+    --color-background: #0c0a09;
+    --color-surface: #1c1917;
+
+    --color-surface-container-lowest: #0c0a09;
+    --color-surface-container-low: #1c1917;
+    --color-surface-container: #292524;
+    --color-surface-container-high: #44403c;
+    --color-surface-container-highest: #57534e;
+
+    --color-outline-variant: #78716c;
+    --color-secondary: #a8a29e;
+  }
+
   body {
     margin: 0;
     font-family: var(--font-body);

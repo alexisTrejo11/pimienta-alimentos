@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 
 import type { ChecklistItemResponse } from '../../../../core/model/task/task.dto';
 
@@ -13,4 +13,11 @@ import type { ChecklistItemResponse } from '../../../../core/model/task/task.dto
 })
 export class ChecklistSectionComponent {
   readonly items = input.required<ChecklistItemResponse[]>();
+  readonly readonly = input(true);
+  readonly toggleItem = output<number>();
+
+  onToggle(displayOrder: number): void {
+    if (this.readonly()) return;
+    this.toggleItem.emit(displayOrder);
+  }
 }

@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, finalize } from 'rxjs';
 
 import { CrmService } from '../../../../core/crm/crm.service';
@@ -17,17 +17,26 @@ import { OportunidadStatsCardComponent } from '../components/oportunidad-stats-c
 @Component({
   selector: 'app-oportunidad-detail-page',
   standalone: true,
-  imports: [PageHeaderComponent, DataStateComponent, StatusBadgeComponent, OportunidadStatsCardComponent],
+  imports: [
+    PageHeaderComponent,
+    DataStateComponent,
+    StatusBadgeComponent,
+    OportunidadStatsCardComponent,
+    RouterLink,
+  ],
   templateUrl: './oportunidad-detail-page.html',
 })
 export class OportunidadDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly service = inject(CrmService);
 
   readonly loading = signal(true);
   readonly error = signal<ParsedApiError | null>(null);
   readonly oportunidad = signal<OpportunityResponse | null>(null);
   readonly summary = signal<OpportunitySummaryResponse | null>(null);
+  readonly deleting = signal(false);
+  readonly deleteError = signal<ParsedApiError | null>(null);
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -60,6 +69,27 @@ export class OportunidadDetailPageComponent implements OnInit {
 
   formatMXN(value: number): string {
     return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(value);
+  }
+
+  eliminar(): void {
+    const op = this.oportunidad();
+    if (!op) return;
+    if (
+      !confirm(
+        `¿Eliminar la oportunidad «${op.title}»? El servidor puede aplicar borrado lógico (204 sin cuerpo).`,
+      )
+    ) {
+      return;
+    }
+    this.deleteError.set(null);
+    this.deleting.set(true);
+    this.service
+      .deleteOpportunity(op.id)
+      .pipe(finalize(() => this.deleting.set(false)))
+      .subscribe({
+        next: () => void this.router.navigateByUrl('/app/crm/oportunidades'),
+        error: (err: unknown) => this.deleteError.set(parseApiError(err)),
+      });
   }
 
   /** Traduce la fuente de la oportunidad al español. */

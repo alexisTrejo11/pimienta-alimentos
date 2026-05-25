@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { TaskService } from '../../core/tasks/task.service';
@@ -12,7 +13,7 @@ import { TareaRowComponent } from './components/tarea-row/tarea-row';
 @Component({
   selector: 'app-tareas-page',
   standalone: true,
-  imports: [PageHeaderComponent, DataStateComponent, TareaRowComponent],
+  imports: [PageHeaderComponent, DataStateComponent, TareaRowComponent, RouterLink],
   templateUrl: './tareas-page.html',
 })
 export class TareasPageComponent implements OnInit {

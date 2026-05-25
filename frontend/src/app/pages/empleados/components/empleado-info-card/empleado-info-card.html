@@ -1,12 +1,41 @@
 <!-- Tarjeta: datos personales del empleado -->
 <section class="rounded-xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-950" aria-label="Información personal">
-  <h2 class="font-headline mb-4 text-base font-bold text-on-surface">Información personal</h2>
+
+  <!-- Encabezado con foto -->
+  <div class="mb-6 flex items-center gap-4">
+    @if (empleado().photoUrl) {
+      <img
+        [src]="empleado().photoUrl"
+        [alt]="empleado().firstName + ' ' + empleado().lastName"
+        class="h-16 w-16 rounded-full border-2 border-stone-200 object-cover shadow-sm dark:border-stone-700"
+        width="64"
+        height="64"
+      />
+    } @else {
+      <div class="flex h-16 w-16 items-center justify-center rounded-full border-2 border-stone-200 bg-stone-100 text-xl font-bold uppercase text-stone-500 shadow-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400">
+        {{ empleado().firstName.charAt(0) }}{{ empleado().lastName.charAt(0) }}
+      </div>
+    }
+    <div>
+      <h2 class="font-headline text-xl font-bold text-on-surface">
+        {{ empleado().firstName }} {{ empleado().lastName }}
+      </h2>
+      <p class="text-sm text-on-surface-variant">{{ empleado().position }} · {{ empleado().department }}</p>
+    </div>
+  </div>
+
+  <h3 class="font-headline mb-4 text-base font-bold text-on-surface">Información personal</h3>
 
   <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
     <div>
-      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Nombre completo</dt>
-      <dd class="mt-1 font-semibold text-on-surface">{{ empleado().name }}</dd>
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Nombre</dt>
+      <dd class="mt-1 font-semibold text-on-surface">{{ empleado().firstName }}</dd>
+    </div>
+
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Apellido</dt>
+      <dd class="mt-1 font-semibold text-on-surface">{{ empleado().lastName }}</dd>
     </div>
 
     <div>
@@ -22,6 +51,11 @@
     <div>
       <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Fecha de nacimiento</dt>
       <dd class="mt-1 text-on-surface">{{ empleado().birthDate || '—' }}</dd>
+    </div>
+
+    <div>
+      <dt class="text-xs font-medium uppercase tracking-wide text-on-surface-variant">Nacionalidad</dt>
+      <dd class="mt-1 text-on-surface">{{ empleado().nationality || '—' }}</dd>
     </div>
 
     <div class="sm:col-span-2">

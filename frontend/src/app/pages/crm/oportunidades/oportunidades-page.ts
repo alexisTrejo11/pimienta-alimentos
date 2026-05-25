@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { CrmService } from '../../../core/crm/crm.service';
@@ -15,7 +16,7 @@ import { OportunidadRowComponent } from './components/oportunidad-row/oportunida
 @Component({
   selector: 'app-oportunidades-page',
   standalone: true,
-  imports: [PageHeaderComponent, DataStateComponent, OportunidadRowComponent],
+  imports: [PageHeaderComponent, DataStateComponent, OportunidadRowComponent, RouterLink],
   templateUrl: './oportunidades-page.html',
 })
 export class OportunidadesPageComponent implements OnInit {

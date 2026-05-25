@@ -6,6 +6,7 @@ export type TaskStatus =
   | 'CANCELLED'
   | 'DELAYED'
   | 'ON_HOLD'
-  | 'FAILED';
+  | 'FAILED'
+  | 'UNDEFINED';
 
-export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | 'UNDEFINED';

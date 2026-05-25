@@ -20,10 +20,13 @@ import { EmpleadosPageComponent } from './pages/empleados/empleados-page';
 import { EmpleadoDetailPageComponent } from './pages/empleados/empleado-detail/empleado-detail-page';
 import { OportunidadesPageComponent } from './pages/crm/oportunidades/oportunidades-page';
 import { OportunidadDetailPageComponent } from './pages/crm/oportunidades/oportunidad-detail/oportunidad-detail-page';
+import { OportunidadFormPageComponent } from './pages/crm/oportunidades/oportunidad-form-page/oportunidad-form-page';
 import { ProyectosPageComponent } from './pages/crm/proyectos/proyectos-page';
 import { ProyectoDetailPageComponent } from './pages/crm/proyectos/proyecto-detail/proyecto-detail-page';
+import { ProyectoFormPageComponent } from './pages/crm/proyectos/proyecto-form-page/proyecto-form-page';
 import { TareasPageComponent } from './pages/tareas/tareas-page';
 import { TareaDetailPageComponent } from './pages/tareas/tarea-detail/tarea-detail-page';
+import { TareaFormPageComponent } from './pages/tareas/tarea-form/tarea-form-page';
 import { SedesPageComponent } from './pages/sedes/sedes-page';
 import { SedeDetailPageComponent } from './pages/sedes/sede-detail/sede-detail-page';
 import { ContratosPageComponent } from './pages/contratos/contratos-page';
@@ -55,17 +58,22 @@ export const routes: Routes = [
       { path: 'empleados', component: EmpleadosPageComponent },
       { path: 'empleados/:id', component: EmpleadoDetailPageComponent },
 
-      // ── CRM: Oportunidades ───────────────────────────────────────────────
-      { path: 'crm/oportunidades', component: OportunidadesPageComponent },
+      // ── CRM: Oportunidades (rutas estáticas y edición antes de `:id` detalle) ─
+      { path: 'crm/oportunidades/nueva', component: OportunidadFormPageComponent },
+      { path: 'crm/oportunidades/:id/editar', component: OportunidadFormPageComponent },
       { path: 'crm/oportunidades/:id', component: OportunidadDetailPageComponent },
+      { path: 'crm/oportunidades', component: OportunidadesPageComponent },
 
       // ── CRM: Proyectos ───────────────────────────────────────────────────
-      { path: 'crm/proyectos', component: ProyectosPageComponent },
+      { path: 'crm/proyectos/nuevo', component: ProyectoFormPageComponent },
+      { path: 'crm/proyectos/:id/editar', component: ProyectoFormPageComponent },
       { path: 'crm/proyectos/:id', component: ProyectoDetailPageComponent },
+      { path: 'crm/proyectos', component: ProyectosPageComponent },
 
       // ── Tareas ───────────────────────────────────────────────────────────
-      { path: 'tareas', component: TareasPageComponent },
+      { path: 'tareas/nueva', component: TareaFormPageComponent },
       { path: 'tareas/:id', component: TareaDetailPageComponent },
+      { path: 'tareas', component: TareasPageComponent },
 
       // ── Sedes ────────────────────────────────────────────────────────────
       { path: 'sedes', component: SedesPageComponent },

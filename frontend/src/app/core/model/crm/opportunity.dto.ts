@@ -25,7 +25,8 @@ export interface CreateOpportunityRequest {
   companyLocation?: string | null;
   industry?: string | null;
   estimatedValue: number;
-  probabilityPercent: number;
+  /** 0–100; optional in API, omit or send when known. */
+  probabilityPercent?: number | null;
   source: OpportunitySource;
   expectedCloseDate?: string | null;
   assignedSalesmanId?: number | null;

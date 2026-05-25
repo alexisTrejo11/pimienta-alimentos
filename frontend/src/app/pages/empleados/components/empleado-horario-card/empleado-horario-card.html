@@ -1,0 +1,125 @@
+<!-- Tarjeta: horario semanal del empleado -->
+<section class="rounded-xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-950" aria-label="Horario semanal">
+
+  <!-- Encabezado -->
+  <div class="mb-4 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-[var(--color-primary)]" aria-hidden="true">schedule</span>
+      <h2 class="font-headline text-base font-bold text-on-surface">Horario semanal</h2>
+    </div>
+    @if (!editMode()) {
+      <button
+        type="button"
+        (click)="startEdit()"
+        class="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 px-3 py-1.5 text-xs font-semibold text-on-surface transition hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-900"
+      >
+        <span class="material-symbols-outlined text-sm" aria-hidden="true">edit</span>
+        Editar horario
+      </button>
+    }
+  </div>
+
+  <app-data-state
+    [loading]="loading()"
+    [error]="error()"
+    [empty]="false"
+    (retry)="cargar()"
+  >
+    <!-- Vista de lectura -->
+    @if (!editMode()) {
+      @if (slots().length === 0) {
+        <p class="rounded-lg border border-dashed border-stone-200 p-6 text-center text-sm text-on-surface-variant dark:border-stone-700">
+          Sin horario configurado. Haz clic en <strong>Editar horario</strong> para asignar turnos.
+        </p>
+      } @else {
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+          @for (slot of slots(); track slot.dayOfWeek) {
+            <div class="rounded-lg border border-stone-100 bg-stone-50 p-3 dark:border-stone-800 dark:bg-stone-900">
+              <p class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">{{ labelFor(slot.dayOfWeek) }}</p>
+              <p class="mt-1 font-mono text-sm font-semibold text-on-surface">{{ slot.startTime }} – {{ slot.endTime }}</p>
+            </div>
+          }
+        </div>
+      }
+
+      @if (saveSuccess()) {
+        <p class="mt-3 flex items-center gap-1.5 text-sm font-semibold text-green-700 dark:text-green-400">
+          <span class="material-symbols-outlined text-base" aria-hidden="true">check_circle</span>
+          Horario guardado correctamente.
+        </p>
+      }
+    }
+
+    <!-- Editor inline -->
+    @if (editMode()) {
+      <div class="space-y-3">
+        @for (slot of typedDrafts; track slot.dayOfWeek; let i = $index) {
+          <div class="flex items-center gap-3 rounded-lg border border-stone-100 p-3 dark:border-stone-800"
+               [class.opacity-50]="!slot.enabled">
+            <!-- Toggle día -->
+            <label class="flex cursor-pointer items-center gap-2 min-w-[100px]">
+              <input
+                type="checkbox"
+                [(ngModel)]="typedDrafts[i].enabled"
+                class="h-4 w-4 rounded accent-[var(--color-primary)]"
+              />
+              <span class="text-sm font-semibold text-on-surface">{{ days[i].label }}</span>
+            </label>
+
+            <!-- Entrada -->
+            <div class="flex items-center gap-1.5">
+              <label [for]="'start-' + slot.dayOfWeek" class="text-xs text-on-surface-variant">Entrada</label>
+              <input
+                [id]="'start-' + slot.dayOfWeek"
+                type="time"
+                [(ngModel)]="typedDrafts[i].startTime"
+                [disabled]="!slot.enabled"
+                class="rounded-lg border border-stone-200 bg-stone-50 px-2 py-1 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 disabled:cursor-not-allowed disabled:opacity-40 dark:border-stone-700 dark:bg-stone-900"
+              />
+            </div>
+
+            <!-- Salida -->
+            <div class="flex items-center gap-1.5">
+              <label [for]="'end-' + slot.dayOfWeek" class="text-xs text-on-surface-variant">Salida</label>
+              <input
+                [id]="'end-' + slot.dayOfWeek"
+                type="time"
+                [(ngModel)]="typedDrafts[i].endTime"
+                [disabled]="!slot.enabled"
+                class="rounded-lg border border-stone-200 bg-stone-50 px-2 py-1 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 disabled:cursor-not-allowed disabled:opacity-40 dark:border-stone-700 dark:bg-stone-900"
+              />
+            </div>
+          </div>
+        }
+
+        <!-- Error al guardar -->
+        @if (saveError()) {
+          <div role="alert" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">
+            {{ saveError()!.message }}
+          </div>
+        }
+
+        <!-- Botones de acción -->
+        <div class="flex gap-2 pt-1">
+          <button
+            type="button"
+            (click)="save()"
+            [disabled]="saving()"
+            class="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-bold text-white transition hover:bg-[var(--color-primary-container)] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <span class="material-symbols-outlined text-sm" aria-hidden="true">save</span>
+            {{ saving() ? 'Guardando…' : 'Guardar' }}
+          </button>
+          <button
+            type="button"
+            (click)="cancelEdit()"
+            [disabled]="saving()"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 px-4 py-2 text-sm font-semibold text-on-surface transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-stone-700 dark:hover:bg-stone-900"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    }
+  </app-data-state>
+</section>

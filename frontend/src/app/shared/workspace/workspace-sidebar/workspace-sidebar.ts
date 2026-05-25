@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 import { BRAND_LOGO_URL } from '../../../pages/home/brand';
@@ -11,6 +11,9 @@ import { BRAND_LOGO_URL } from '../../../pages/home/brand';
 })
 export class WorkspaceSidebarComponent {
   readonly logoUrl = BRAND_LOGO_URL;
+
+  readonly abrirAsistenciaHoy = output<void>();
+  readonly abrirAsistenciaBusqueda = output<void>();
 
   /** Base styles; active state is layered via {@link RouterLinkActive}. */
   readonly navLinkInactive =

@@ -5,14 +5,18 @@ import { map } from 'rxjs/operators';
 
 import { API_BASE_URL } from '../config/api.config';
 import type {
+  CreateOpportunityRequest,
   OpportunityResponse,
   OpportunitySummaryResponse,
   OpportunitySearchParams,
+  UpdateOpportunityRequest,
 } from '../model/crm/opportunity.dto';
 import type {
+  CreateProjectRequest,
   ProjectResponse,
   ProjectSummaryResponse,
   ProjectSearchParams,
+  UpdateProjectRequest,
 } from '../model/crm/project.dto';
 import type { ProjectMilestoneResponse } from '../model/crm/project-milestone.dto';
 import type { PagedResponse } from '../model/common/pagination';
@@ -48,6 +52,23 @@ export class CrmService {
     return this.http.get<OpportunityResponse>(`${this.opportunitiesBase}/${id}`);
   }
 
+  /** POST /api/v1/opportunities */
+  createOpportunity(body: CreateOpportunityRequest): Observable<OpportunityResponse> {
+    return this.http.post<OpportunityResponse>(this.opportunitiesBase, body);
+  }
+
+  /** PATCH /api/v1/opportunities/:id */
+  updateOpportunity(id: number, body: UpdateOpportunityRequest): Observable<OpportunityResponse> {
+    return this.http.patch<OpportunityResponse>(`${this.opportunitiesBase}/${id}`, body);
+  }
+
+  /** DELETE /api/v1/opportunities/:id — **204** sin cuerpo. */
+  deleteOpportunity(id: number): Observable<void> {
+    return this.http.delete(`${this.opportunitiesBase}/${id}`, { observe: 'response' }).pipe(
+      map(() => undefined),
+    );
+  }
+
   /** Resumen con conteos de tareas y valor ponderado. */
   getOpportunitySummary(id: number): Observable<OpportunitySummaryResponse> {
     return this.http.get<OpportunitySummaryResponse>(`${this.opportunitiesBase}/${id}/summary`);
@@ -70,6 +91,23 @@ export class CrmService {
   /** Detalle completo de un proyecto. */
   getProject(id: number): Observable<ProjectResponse> {
     return this.http.get<ProjectResponse>(`${this.projectsBase}/${id}`);
+  }
+
+  /** POST /api/v1/projects */
+  createProject(body: CreateProjectRequest): Observable<ProjectResponse> {
+    return this.http.post<ProjectResponse>(this.projectsBase, body);
+  }
+
+  /** PATCH /api/v1/projects/:id */
+  updateProject(id: number, body: UpdateProjectRequest): Observable<ProjectResponse> {
+    return this.http.patch<ProjectResponse>(`${this.projectsBase}/${id}`, body);
+  }
+
+  /** DELETE /api/v1/projects/:id — **204** sin cuerpo. */
+  deleteProject(id: number): Observable<void> {
+    return this.http.delete(`${this.projectsBase}/${id}`, { observe: 'response' }).pipe(
+      map(() => undefined),
+    );
   }
 
   /** Resumen con conteo de hitos y tareas. */

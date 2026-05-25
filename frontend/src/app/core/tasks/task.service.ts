@@ -1,9 +1,17 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { API_BASE_URL } from '../config/api.config';
-import type { TaskListItemResponse, TaskResponse, TaskSearchParams } from '../model/task/task.dto';
+import type {
+  AssignTaskRequest,
+  StatusUpdateRequest,
+  TaskListItemResponse,
+  TaskRequest,
+  TaskResponse,
+  TaskSearchParams,
+} from '../model/task/task.dto';
 import type { PagedResponse } from '../model/common/pagination';
 
 /** Llamadas al módulo de tareas: /api/v1/tasks */
@@ -27,5 +35,32 @@ export class TaskService {
   /** Detalle completo de una tarea, incluyendo checklist. */
   getById(id: number): Observable<TaskResponse> {
     return this.http.get<TaskResponse>(`${this.base}/${id}`);
+  }
+
+  /** Crea una tarea (POST /api/v1/tasks). */
+  create(body: TaskRequest): Observable<TaskResponse> {
+    return this.http.post<TaskResponse>(this.base, body);
+  }
+
+  /** Elimina una tarea (DELETE /api/v1/tasks/:id) y normaliza 204 a void. */
+  delete(id: number): Observable<void> {
+    return this.http.delete(`${this.base}/${id}`, { observe: 'response' }).pipe(
+      map(() => undefined),
+    );
+  }
+
+  /** Actualiza estado (PATCH /api/v1/tasks/:id/status). */
+  updateStatus(id: number, body: StatusUpdateRequest): Observable<TaskResponse> {
+    return this.http.patch<TaskResponse>(`${this.base}/${id}/status`, body);
+  }
+
+  /** Asigna tarea (PATCH /api/v1/tasks/:id/assign). */
+  assign(id: number, body: AssignTaskRequest): Observable<TaskResponse> {
+    return this.http.patch<TaskResponse>(`${this.base}/${id}/assign`, body);
+  }
+
+  /** Toggle checklist item (PATCH /api/v1/tasks/:id/checklist/:itemOrder/toggle). */
+  toggleChecklistItem(id: number, itemOrder: number): Observable<TaskResponse> {
+    return this.http.patch<TaskResponse>(`${this.base}/${id}/checklist/${itemOrder}/toggle`, {});
   }
 }

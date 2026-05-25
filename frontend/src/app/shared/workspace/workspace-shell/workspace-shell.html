@@ -1,5 +1,8 @@
 <div class="flex min-h-screen bg-surface text-on-surface">
-  <app-workspace-sidebar />
+  <app-workspace-sidebar
+    (abrirAsistenciaHoy)="mostrarAsistenciaHoy.set(true)"
+    (abrirAsistenciaBusqueda)="mostrarAsistenciaBusqueda.set(true)"
+  />
   <div class="ml-64 flex min-h-screen flex-1 flex-col">
     <div class="flex flex-1 flex-col">
       <router-outlet />
@@ -7,3 +10,13 @@
     <app-workspace-footer />
   </div>
 </div>
+
+<!-- Modal: asistencia de hoy -->
+@if (mostrarAsistenciaHoy()) {
+  <app-asistencia-hoy-modal (cerrar)="mostrarAsistenciaHoy.set(false)" />
+}
+
+<!-- Modal: búsqueda libre de asistencias -->
+@if (mostrarAsistenciaBusqueda()) {
+  <app-asistencia-busqueda-modal (cerrar)="mostrarAsistenciaBusqueda.set(false)" />
+}

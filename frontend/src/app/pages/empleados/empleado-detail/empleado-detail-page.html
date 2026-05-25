@@ -2,7 +2,7 @@
 
   <!-- Encabezado con flecha de regreso a la lista -->
   <app-page-header
-    [title]="empleado()?.name ?? 'Detalle de empleado'"
+    [title]="empleado() ? (empleado()!.firstName + ' ' + empleado()!.lastName) : 'Detalle de empleado'"
     subtitle="Información completa del colaborador"
     backLink="/app/empleados"
     backLabel="Empleados"
@@ -16,12 +16,58 @@
     emptyMessage="No se encontró el empleado."
   >
     @if (empleado(); as e) {
-      <!-- Las tres tarjetas de información se muestran en columna (una bajo la otra) -->
-      <div class="flex flex-col gap-6">
-        <app-empleado-info-card [empleado]="e" />
-        <app-empleado-empleo-card [empleado]="e" />
-        <app-empleado-nomina-card [empleado]="e" />
+      <!-- Pestañas de navegación interna -->
+      <div class="flex gap-1 rounded-xl border border-stone-200 bg-stone-50 p-1 dark:border-stone-800 dark:bg-stone-900">
+        <button
+          type="button"
+          (click)="activeTab.set('info')"
+          [class]="activeTab() === 'info'
+            ? 'flex items-center gap-1.5 rounded-lg bg-white px-4 py-2 text-sm font-bold text-[var(--color-primary)] shadow-sm dark:bg-stone-950'
+            : 'flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors'"
+        >
+          <span class="material-symbols-outlined text-base" aria-hidden="true">person</span>
+          Datos del empleado
+        </button>
+        <button
+          type="button"
+          (click)="activeTab.set('horario')"
+          [class]="activeTab() === 'horario'
+            ? 'flex items-center gap-1.5 rounded-lg bg-white px-4 py-2 text-sm font-bold text-[var(--color-primary)] shadow-sm dark:bg-stone-950'
+            : 'flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors'"
+        >
+          <span class="material-symbols-outlined text-base" aria-hidden="true">schedule</span>
+          Horario de trabajo
+        </button>
+        <button
+          type="button"
+          (click)="activeTab.set('asistencia')"
+          [class]="activeTab() === 'asistencia'
+            ? 'flex items-center gap-1.5 rounded-lg bg-white px-4 py-2 text-sm font-bold text-[var(--color-primary)] shadow-sm dark:bg-stone-950'
+            : 'flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors'"
+        >
+          <span class="material-symbols-outlined text-base" aria-hidden="true">fact_check</span>
+          Registro de asistencia
+        </button>
       </div>
+
+      <!-- Pestaña: datos del empleado -->
+      @if (activeTab() === 'info') {
+        <div class="flex flex-col gap-6">
+          <app-empleado-info-card [empleado]="e" />
+          <app-empleado-empleo-card [empleado]="e" />
+          <app-empleado-nomina-card [empleado]="e" />
+        </div>
+      }
+
+      <!-- Pestaña: horario semanal -->
+      @if (activeTab() === 'horario') {
+        <app-empleado-horario-card [empleadoId]="e.id" />
+      }
+
+      <!-- Pestaña: asistencia -->
+      @if (activeTab() === 'asistencia') {
+        <app-empleado-asistencia-card [empleadoId]="e.id" />
+      }
     }
   </app-data-state>
 

@@ -7,9 +7,10 @@ import type {
   WorkShift,
 } from './employee.enums';
 
-/** POST /api/v1/employees — registro en onboarding (borrador o pendiente de contrato). */
+/** POST /api/v1/employees — registro en onboarding (multipart/form-data, part "employee"). */
 export interface RegisterEmployeeRequest {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   address: string;
@@ -28,9 +29,10 @@ export interface RegisterEmployeeRequest {
   onboardingPhase: EmployeeOnboardingPhase;
 }
 
-/** PUT /api/v1/employees/:id */
+/** PUT /api/v1/employees/:id — multipart/form-data, part "employee". */
 export interface UpdateEmployeeRequest {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   address: string;
@@ -56,7 +58,10 @@ export interface ChangePositionRequest {
 /** GET /api/v1/employees/:id */
 export interface EmployeeResponse {
   id: number;
-  name: string;
+  firstName: string;
+  lastName: string;
+  /** HTTPS URL (S3 presigned) or empty string when no photo. */
+  photoUrl: string;
   email: string;
   phone: string;
   address: string;
@@ -87,10 +92,11 @@ export interface EmployeeResponse {
   updatedAt: string;
 }
 
-/** GET /api/v1/employees (search, active) */
+/** GET /api/v1/employees (list, search, active) */
 export interface EmployeeListItemResponse {
   id: number;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   department: string;
   position: string;

@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, finalize } from 'rxjs';
 
 import { CrmService } from '../../../../core/crm/crm.service';
@@ -18,11 +18,18 @@ import { HitoItemComponent } from '../components/hito-item/hito-item';
 @Component({
   selector: 'app-proyecto-detail-page',
   standalone: true,
-  imports: [PageHeaderComponent, DataStateComponent, StatusBadgeComponent, HitoItemComponent],
+  imports: [
+    PageHeaderComponent,
+    DataStateComponent,
+    StatusBadgeComponent,
+    HitoItemComponent,
+    RouterLink,
+  ],
   templateUrl: './proyecto-detail-page.html',
 })
 export class ProyectoDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly service = inject(CrmService);
 
   readonly loading = signal(true);
@@ -30,6 +37,8 @@ export class ProyectoDetailPageComponent implements OnInit {
   readonly proyecto = signal<ProjectResponse | null>(null);
   readonly summary = signal<ProjectSummaryResponse | null>(null);
   readonly hitos = signal<ProjectMilestoneResponse[]>([]);
+  readonly deleting = signal(false);
+  readonly deleteError = signal<ParsedApiError | null>(null);
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -63,6 +72,27 @@ export class ProyectoDetailPageComponent implements OnInit {
 
   formatMXN(value: number): string {
     return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(value);
+  }
+
+  eliminar(): void {
+    const p = this.proyecto();
+    if (!p) return;
+    if (
+      !confirm(
+        `¿Eliminar el proyecto «${p.projectName}» (${p.projectCode})? La API responde 204 si tiene éxito.`,
+      )
+    ) {
+      return;
+    }
+    this.deleteError.set(null);
+    this.deleting.set(true);
+    this.service
+      .deleteProject(p.id)
+      .pipe(finalize(() => this.deleting.set(false)))
+      .subscribe({
+        next: () => void this.router.navigateByUrl('/app/crm/proyectos'),
+        error: (err: unknown) => this.deleteError.set(parseApiError(err)),
+      });
   }
 
   get tipoLabel(): string {

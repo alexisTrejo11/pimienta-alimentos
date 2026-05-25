@@ -15,7 +15,7 @@
       <p class="font-headline text-xl font-extrabold leading-tight tracking-tighter text-red-700 dark:text-red-500">
         Pimienta Alimentos
       </p>
-      <p class="font-headline text-[10px] font-bold uppercase tracking-tight text-stone-500">
+      <p class="font-headline text-[10px] font-bold uppercase tracking-tight text-stone-600 dark:text-stone-400">
         Precision Kitchen Management
       </p>
     </div>
@@ -101,6 +101,36 @@
         <span class="material-symbols-outlined" aria-hidden="true">location_on</span>
         <span class="font-headline font-bold tracking-tight">Sedes</span>
       </a>
+    </div>
+
+    <!-- ── Asistencia (acceso rápido global) ──────────────── -->
+    <div class="pt-4">
+      <p class="mb-1 px-4 text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-600">
+        Asistencia
+      </p>
+
+      <!-- Asistencia de hoy -->
+      <button
+        type="button"
+        (click)="abrirAsistenciaHoy.emit()"
+        class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold tracking-tight text-stone-600 transition-colors hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-900"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">today</span>
+        <span class="font-headline font-bold tracking-tight">Hoy</span>
+        <span class="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-[10px] font-bold text-white">
+          ↗
+        </span>
+      </button>
+
+      <!-- Búsqueda libre -->
+      <button
+        type="button"
+        (click)="abrirAsistenciaBusqueda.emit()"
+        class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold tracking-tight text-stone-600 transition-colors hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-900"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">manage_search</span>
+        <span class="font-headline font-bold tracking-tight">Buscar registros</span>
+      </button>
     </div>
   </nav>
 

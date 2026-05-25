@@ -15,16 +15,13 @@ servers:
 - url: http://localhost:8080
   description: Generated server url
 tags:
+- name: Inventory — storage locations
+  description: "Ubicaciones de almacén (árbol, bloqueo). Requiere Bearer JWT. Errores:\
+    \ `STORAGE_LOCATION_NOT_FOUND`, `STORAGE_LOCATION_NOT_EMPTY`."
 - name: Account — Profile
   description: "Current-user profile and dashboard. Requires `Authorization: Bearer\
     \ <access_token>`. JWT must map to a valid user; roles are exposed as `ROLE_*`\
     \ authorities."
-- name: Contracts
-  description: "Business agreements (employment, supplier, customer, …). Requires\
-    \ `Authorization: Bearer <access_token>`. Typical operators: **ADMIN**, **MANAGER**.\
-    \ Related entities (employee, opportunity, project) are validated when IDs are\
-    \ supplied. Domain rules may return `CONTRACT_NOT_FOUND` or validation errors\
-    \ (`errorCode` in `ApiErrorResponse`)."
 - name: HR — Employees
   description: "Employee lifecycle: search, registration, updates, contract submission,\
     \ termination/rehire, position changes, Excel import/export, and statistics. Requires\
@@ -40,15 +37,10 @@ tags:
     \ and Excel import/export. Requires `Authorization: Bearer <access_token>`. Typical\
     \ roles: **ADMIN**, **MANAGER**, **OPERATIONS** (as configured). Not-found responses\
     \ use `HEADQUARTER_NOT_FOUND` in `ApiErrorResponse`."
-- name: CRM — Project milestones
-  description: "Milestones under a project: CRUD and lifecycle (start, complete, delayed,\
-    \ cancel, billed). Requires `Authorization: Bearer <access_token>`. **404** when\
-    \ project or milestone is unknown (`PROJECT_NOT_FOUND`, `PROJECT_MILESTONE_NOT_FOUND`)."
-- name: Operations — Tasks
-  description: "Work items: search, CRUD, status and assignment updates, checklist\
-    \ toggles, and Excel import/export. Requires `Authorization: Bearer <access_token>`.\
-    \ Typical roles: **MANAGER**, **ADMIN**, **SUPPORT** (as configured). Not-found\
-    \ responses may use `TASK_NOT_FOUND` or `TASK_CHECKLIST_ITEM_NOT_FOUND` in `ApiErrorResponse`."
+- name: Inventory — movements
+  description: "Historial de movimientos de stock (consulta). Requiere Bearer JWT.\
+    \ **404**: `INVENTORY_MOVEMENT_NOT_FOUND`. Rate limit clase: **STANDARD**; lecturas:\
+    \ **READ_HEAVY**."
 - name: Account — User management
   description: "Administrative APIs under `/api/v1/users/management`. **Requires**\
     \ `Authorization: Bearer <access_token>`. Document **elevated** roles (`ROLE_ADMIN`,\
@@ -58,16 +50,56 @@ tags:
   description: "Sales opportunities: search, CRUD, Excel import/export, pipeline transitions\
     \ (discovery → win/lose), and nested tasks. Requires `Authorization: Bearer <access_token>`.\
     \ Typical roles: **MANAGER**, **ADMIN**, **SUPPORT** (as configured)."
+- name: Payroll
+  description: Payroll management and reporting endpoints.
+- name: HR — Employee work schedule
+  description: "Weekly work schedule stored on the employee record (JSON). **GET**\
+    \ returns the configured slots (possibly empty). **PUT** replaces the entire schedule.\
+    \ Requires `Authorization: Bearer <access_token>` unless this environment still\
+    \ permits the employees route for testing."
+- name: Inventory — stock
+  description: "Existencias por artículo y ubicación. Requiere Bearer JWT. Errores\
+    \ típicos: `INVENTORY_NOT_FOUND`, `INVENTORY_ALREADY_EXISTS`, `ITEM_NOT_FOUND`,\
+    \ `STORAGE_LOCATION_NOT_FOUND`."
+- name: Contracts
+  description: "Business agreements (employment, supplier, customer, …). Requires\
+    \ `Authorization: Bearer <access_token>`. Typical operators: **ADMIN**, **MANAGER**.\
+    \ Related entities (employee, opportunity, project) are validated when IDs are\
+    \ supplied. Domain rules may return `CONTRACT_NOT_FOUND` or validation errors\
+    \ (`errorCode` in `ApiErrorResponse`)."
+- name: Inventory — items
+  description: "Catálogo de artículos (SKU, categoría, estado). Requiere `Authorization:\
+    \ Bearer <access_token>`. Operadores típicos: **ADMIN**, **MANAGER**. Errores\
+    \ de dominio devuelven `ApiErrorResponse` (p. ej. `ITEM_NOT_FOUND`, `ITEM_SKU_ALREADY_EXISTS`)."
+- name: Inventory — transactions
+  description: "Movimientos de inventario (compra, venta, transferencia, ajustes,\
+    \ flujo de aprobación). Requiere Bearer JWT. Errores: `INVENTORY_TRANSACTION_NOT_FOUND`,\
+    \ `INVENTORY_TRANSACTION_INVALID_STATE`, validaciones de negocio."
+- name: CRM — Project milestones
+  description: "Milestones under a project: CRUD and lifecycle (start, complete, delayed,\
+    \ cancel, billed). Requires `Authorization: Bearer <access_token>`. **404** when\
+    \ project or milestone is unknown (`PROJECT_NOT_FOUND`, `PROJECT_MILESTONE_NOT_FOUND`)."
+- name: Operations — Tasks
+  description: "Work items: search, CRUD, status and assignment updates, checklist\
+    \ toggles, and Excel import/export. Requires `Authorization: Bearer <access_token>`.\
+    \ Typical roles: **MANAGER**, **ADMIN**, **SUPPORT** (as configured). Not-found\
+    \ responses may use `TASK_NOT_FOUND` or `TASK_CHECKLIST_ITEM_NOT_FOUND` in `ApiErrorResponse`."
+- name: HR — Employee attendance
+  description: "Check-in / check-out for employees, queries by id, by headquarter\
+    \ for the current day, paginated search, and automatic closure of forgotten open\
+    \ attendances (scheduled job). Photo fields accept caller-managed URLs. Requires\
+    \ `Authorization: Bearer <access_token>` unless this environment still permits\
+    \ the employees route for testing."
 - name: CRM — Projects
   description: "Delivery projects: search, CRUD, lifecycle (activate, hold, complete,\
     \ cancel, archive), and nested tasks. Requires `Authorization: Bearer <access_token>`."
-- name: Payroll
-  description: Payroll management and reporting endpoints.
 paths:
   /api/v1/inventory/locations/{id}:
     get:
       tags:
-      - storage-location-controller
+      - Inventory — storage locations
+      summary: Get storage location by id
+      description: "**404** (`STORAGE_LOCATION_NOT_FOUND`). Rate limit: **READ_HEAVY**."
       operationId: getLocationById
       parameters:
       - name: id
@@ -76,16 +108,60 @@ paths:
         schema:
           type: integer
           format: int64
+        example: 2
       responses:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/StorageLocationResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
     put:
       tags:
-      - storage-location-controller
+      - Inventory — storage locations
+      summary: Update storage location
+      description: "JSON **StorageLocationUpdateRequest**. Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: updateLocation
       parameters:
       - name: id
@@ -94,6 +170,7 @@ paths:
         schema:
           type: integer
           format: int64
+        example: 2
       requestBody:
         content:
           application/json:
@@ -104,12 +181,56 @@ paths:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/StorageLocationResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
     delete:
       tags:
-      - storage-location-controller
+      - Inventory — storage locations
+      summary: Delete storage location
+      description: "**204** si ok. Puede fallar si no está vacía (`STORAGE_LOCATION_NOT_EMPTY`).\
+        \ Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: deleteLocation
       parameters:
       - name: id
@@ -118,13 +239,57 @@ paths:
         schema:
           type: integer
           format: int64
+        example: 2
       responses:
-        "200":
-          description: OK
+        "204":
+          description: Eliminada.
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/locations/{id}/unblock:
     put:
       tags:
-      - storage-location-controller
+      - Inventory — storage locations
+      summary: Unblock storage location
+      description: "Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: unblockLocation
       parameters:
       - name: id
@@ -133,17 +298,61 @@ paths:
         schema:
           type: integer
           format: int64
+        example: 2
       responses:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/StorageLocationResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/locations/{id}/block:
     put:
       tags:
-      - storage-location-controller
+      - Inventory — storage locations
+      summary: Block storage location
+      description: "Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: blockLocation
       parameters:
       - name: id
@@ -152,44 +361,137 @@ paths:
         schema:
           type: integer
           format: int64
+        example: 2
       responses:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/StorageLocationResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/items/{id}:
     get:
       tags:
-      - inventory-item-controller
+      - Inventory — items
+      summary: Get item by id
+      description: "**404** si no existe (`ITEM_NOT_FOUND`). Rate limit: **READ_HEAVY**."
       operationId: getItemById
       parameters:
       - name: id
         in: path
+        description: Identificador del artículo.
         required: true
         schema:
           type: integer
           format: int64
+        example: 1
       responses:
         "200":
-          description: OK
+          description: Artículo.
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/ItemResponse"
+        "404":
+          description: No encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
     put:
       tags:
-      - inventory-item-controller
+      - Inventory — items
+      summary: Update inventory item
+      description: "Actualiza campos del artículo. **404** si no existe. Rate limit:\
+        \ **SENSITIVE_OPERATIONS**."
       operationId: updateItem
       parameters:
       - name: id
         in: path
+        description: Identificador del artículo.
         required: true
         schema:
           type: integer
           format: int64
+        example: 1
       requestBody:
+        description: Cuerpo JSON (**ItemUpdateRequest**).
         content:
           application/json:
             schema:
@@ -197,63 +499,239 @@ paths:
         required: true
       responses:
         "200":
-          description: OK
+          description: Artículo actualizado.
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/ItemResponse"
+        "404":
+          description: No encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
     delete:
       tags:
-      - inventory-item-controller
+      - Inventory — items
+      summary: Delete inventory item
+      description: "Elimina el artículo. **204** si ok. Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: deleteItem
       parameters:
       - name: id
         in: path
+        description: Identificador del artículo a eliminar.
         required: true
         schema:
           type: integer
           format: int64
+        example: 1
       responses:
-        "200":
-          description: OK
+        "204":
+          description: Sin contenido.
+        "404":
+          description: No encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/items/{id}/discontinue:
     put:
       tags:
-      - inventory-item-controller
+      - Inventory — items
+      summary: Discontinue item
+      description: "Marca el artículo como descontinuado. Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: discontinueItem
       parameters:
       - name: id
         in: path
+        description: Identificador del artículo.
         required: true
         schema:
           type: integer
           format: int64
+        example: 1
       responses:
         "200":
-          description: OK
+          description: Artículo actualizado.
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/ItemResponse"
+        "404":
+          description: No encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/items/{id}/activate:
     put:
       tags:
-      - inventory-item-controller
+      - Inventory — items
+      summary: Activate item
+      description: "Reactiva un artículo descontinuado. Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: activateItem
       parameters:
       - name: id
         in: path
+        description: Identificador del artículo.
         required: true
         schema:
           type: integer
           format: int64
+        example: 1
       responses:
         "200":
-          description: OK
+          description: Artículo actualizado.
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/ItemResponse"
+        "404":
+          description: No encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/headquarters/{id}:
     get:
       tags:
@@ -523,20 +1001,43 @@ paths:
       tags:
       - HR — Employees
       summary: Update employee
-      description: Applies `UpdateEmployeeRequest`. **404** if not found (`EMPLOYEE_NOT_FOUND`).
-      operationId: updateEmployeeDetails
+      description: |-
+        Recommended: **`multipart/form-data`** parts:
+
+        + **`employee`**: JSON matching **`UpdateEmployeeRequest`** (`Content-Type`:
+          **`application/json`** when possible).
+        + **`photo`** (optional): image (`image/jpeg`, `image/png`, …).
+
+        Browsers/Swagger may label **`employee`** as **`application/octet-stream`**; the server parses
+        the bytes as UTF-8 JSON anyway.
+
+        For JSON-without-photo only, **`application/json`** is also accepted (alternate operation hidden
+        in Swagger). **404** if not found (`EMPLOYEE_NOT_FOUND`). Rate limit: **SENSITIVE_OPERATIONS**.
+      operationId: updateEmployeeMultipart
       parameters:
       - name: id
         in: path
+        description: Identificador del empleado.
         required: true
         schema:
           type: integer
           format: int64
+        example: 42
       requestBody:
+        description: "Must be **multipart/form-data** with parts **employee** (JSON,\
+          \ UpdateEmployeeRequest) and optional **photo** (file)."
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: "#/components/schemas/UpdateEmployeeRequest"
+              $ref: "#/components/schemas/EmployeeUpdateMultipartBody"
+              description: "Two form parts: **employee** (object) and optional **photo**\
+                \ (binary)."
+              required:
+              - employee
+            encoding:
+              employee:
+                contentType: application/json
+              photo: {}
         required: true
       responses:
         "200":
@@ -801,6 +1302,137 @@ paths:
         "400":
           description: "Bad request: validation, malformed JSON, or constraint violation.\
             \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
+  /api/v1/employees/{employeeId}/work-schedule:
+    get:
+      tags:
+      - HR — Employee work schedule
+      summary: Get employee work schedule
+      description: '**404** if the employee does not exist (`EMPLOYEE_NOT_FOUND`).'
+      operationId: getEmployeeWorkSchedule
+      parameters:
+      - name: employeeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Current schedule (slots may be empty).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmployeeWorkScheduleResponse"
+        "404":
+          description: Not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
+    put:
+      tags:
+      - HR — Employee work schedule
+      summary: Replace employee work schedule
+      description: Replaces the full weekly schedule. Each slot must have **startTime**
+        strictly before **endTime** (HTTP **400** otherwise). **404** if the employee
+        does not exist.
+      operationId: replaceEmployeeWorkSchedule
+      parameters:
+      - name: employeeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplaceEmployeeWorkScheduleRequest"
+        required: true
+      responses:
+        "200":
+          description: Updated schedule.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmployeeWorkScheduleResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "404":
+          description: Not found.
           content:
             application/json:
               schema:
@@ -2990,6 +3622,23 @@ paths:
         filters.
       operationId: importPayrollRecords
       parameters:
+      - name: page
+        in: query
+        description: Page index (same as export listing).
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+        example: 0
+      - name: size
+        in: query
+        description: Page size.
+        schema:
+          type: integer
+          default: 20
+          maximum: 100
+          minimum: 1
+        example: 20
       - name: employeeId
         in: query
         description: Restrict import to employee id.
@@ -3007,6 +3656,9 @@ paths:
         description: Worked end date (inclusive).
         example: 2026-04-30
       requestBody:
+        description: "Multipart: required part **file** (`.xlsx`). Optional query-style\
+          \ fields `page`, `size`, `employeeId`, `periodId`, `from`, `to` scope the\
+          \ import (same as export)."
         content:
           multipart/form-data:
             schema:
@@ -3818,20 +4470,22 @@ paths:
       tags:
       - CRM — Opportunities
       summary: Import opportunities from spreadsheet
-      description: "Upload `multipart/form-data` with field `file` (`.xlsx`). Empty\
+      description: "Upload `multipart/form-data` with field **file** (`.xlsx`). Empty\
         \ file yields **400**. Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: importOpportunities
       requestBody:
+        description: "Form part **file**: Excel workbook (.xlsx)."
         content:
           multipart/form-data:
             schema:
               type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
+              description: Must include part `file` with the Excel binary.
               required:
               - file
+            encoding:
+              file:
+                contentType: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+        required: true
       responses:
         "200":
           description: Row-level import outcome.
@@ -3877,68 +4531,208 @@ paths:
   /api/v1/inventory/transactions/{id}/submit:
     post:
       tags:
-      - inventory-transaction-controller
+      - Inventory — transactions
+      summary: Submit transaction for approval
+      description: "Sin cuerpo. Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: submit
       parameters:
       - name: id
         in: path
+        description: ID de transacción.
         required: true
         schema:
           type: integer
           format: int64
+        example: 100
       responses:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/InventoryTransactionResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/transactions/{id}/complete:
     post:
       tags:
-      - inventory-transaction-controller
+      - Inventory — transactions
+      summary: Complete transaction
+      description: "Sin cuerpo. Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: complete_1
       parameters:
       - name: id
         in: path
+        description: ID de transacción.
         required: true
         schema:
           type: integer
           format: int64
+        example: 100
       responses:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/InventoryTransactionResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/transactions/{id}/cancel:
     post:
       tags:
-      - inventory-transaction-controller
+      - Inventory — transactions
+      summary: Cancel transaction
+      description: "**204** sin cuerpo si ok. Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: cancel_1
       parameters:
       - name: id
         in: path
+        description: ID de transacción.
         required: true
         schema:
           type: integer
           format: int64
+        example: 100
       responses:
-        "200":
-          description: OK
+        "204":
+          description: Cancelada.
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/transactions/{id}/approve:
     post:
       tags:
-      - inventory-transaction-controller
+      - Inventory — transactions
+      summary: Approve transaction
+      description: "Cuerpo JSON **ApproveTransactionRequest** (`approvedById`). Rate\
+        \ limit: **SENSITIVE_OPERATIONS**."
       operationId: approve
       parameters:
       - name: id
         in: path
+        description: ID de transacción.
         required: true
         schema:
           type: integer
           format: int64
+        example: 100
       requestBody:
         content:
           application/json:
@@ -3949,13 +4743,56 @@ paths:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/InventoryTransactionResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/transactions/transfer:
     post:
       tags:
-      - inventory-transaction-controller
+      - Inventory — transactions
+      summary: Register transfer transaction
+      description: "Cuerpo JSON **TransferTransactionRequest**. Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: transfer
       requestBody:
         content:
@@ -3967,13 +4804,50 @@ paths:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/InventoryTransactionResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/transactions/scrap:
     post:
       tags:
-      - inventory-transaction-controller
+      - Inventory — transactions
+      summary: Register scrap transaction
+      description: "Cuerpo JSON **ScrapTransactionRequest**. Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: scrap
       requestBody:
         content:
@@ -3985,13 +4859,50 @@ paths:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/InventoryTransactionResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/transactions/sale:
     post:
       tags:
-      - inventory-transaction-controller
+      - Inventory — transactions
+      summary: Register sale transaction
+      description: "Cuerpo JSON **SaleTransactionRequest**. Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: sale
       requestBody:
         content:
@@ -4003,13 +4914,51 @@ paths:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/InventoryTransactionResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/transactions/return-supplier:
     post:
       tags:
-      - inventory-transaction-controller
+      - Inventory — transactions
+      summary: Register supplier return transaction
+      description: "Cuerpo JSON **ReturnSupplierTransactionRequest**. Rate limit:\
+        \ **SENSITIVE_OPERATIONS**."
       operationId: returnToSupplier
       requestBody:
         content:
@@ -4021,13 +4970,50 @@ paths:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/InventoryTransactionResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/transactions/return-client:
     post:
       tags:
-      - inventory-transaction-controller
+      - Inventory — transactions
+      summary: Register client return transaction
+      description: "Cuerpo JSON **ReturnClientTransactionRequest**. Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: returnFromClient
       requestBody:
         content:
@@ -4039,13 +5025,50 @@ paths:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/InventoryTransactionResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/transactions/purchase:
     post:
       tags:
-      - inventory-transaction-controller
+      - Inventory — transactions
+      summary: Register purchase transaction
+      description: "Cuerpo JSON **PurchaseTransactionRequest**. Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: purchase
       requestBody:
         content:
@@ -4057,13 +5080,51 @@ paths:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/InventoryTransactionResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/transactions/physical-adjustment:
     post:
       tags:
-      - inventory-transaction-controller
+      - Inventory — transactions
+      summary: Register physical count adjustment
+      description: "Cuerpo JSON **PhysicalAdjustmentTransactionRequest**. Rate limit:\
+        \ **SENSITIVE_OPERATIONS**."
       operationId: physicalAdjustment
       requestBody:
         content:
@@ -4075,13 +5136,50 @@ paths:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/InventoryTransactionResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/transactions/adjustment:
     post:
       tags:
-      - inventory-transaction-controller
+      - Inventory — transactions
+      summary: Register adjustment transaction
+      description: "Cuerpo JSON **AdjustmentTransactionRequest**. Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: adjustment
       requestBody:
         content:
@@ -4093,32 +5191,151 @@ paths:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/InventoryTransactionResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/stock:
     get:
       tags:
-      - inventory-stock-controller
+      - Inventory — stock
+      summary: Search stock rows
+      description: "Búsqueda paginada de filas de existencia. Rate limit: **READ_HEAVY**."
       operationId: searchStock
       parameters:
-      - name: filter
+      - name: itemId
         in: query
-        required: true
+        description: Filtrar por artículo.
+        required: false
         schema:
-          $ref: "#/components/schemas/InventoryStockSearchRequest"
+          type: integer
+          format: int64
+        example: 10
+      - name: locationId
+        in: query
+        description: Filtrar por ubicación.
+        required: false
+        schema:
+          type: integer
+          format: int64
+        example: 3
+      - name: status
+        in: query
+        description: Estado del registro de inventario.
+        required: false
+        schema:
+          type: string
+          enum:
+          - NORMAL
+          - LOW_STOCK
+          - OUT_OF_STOCK
+          - OVERSTOCKED
+      - name: page
+        in: query
+        description: Índice de página (base 0).
+        required: false
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+        example: 0
+      - name: size
+        in: query
+        description: Tamaño de página (1–100).
+        required: false
+        schema:
+          type: integer
+          default: 20
+          maximum: 100
+          minimum: 1
+        example: 20
       responses:
         "200":
-          description: OK
+          description: Página de existencias.
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/PagedResponseInventoryStockResponse"
+                $ref: "#/components/schemas/PagedResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
     post:
       tags:
-      - inventory-stock-controller
+      - Inventory — stock
+      summary: Create initial stock
+      description: "Crea la primera existencia artículo+ubicación. **201** si ok.\
+        \ Puede fallar con `INVENTORY_ALREADY_EXISTS` o referencias inválidas. Rate\
+        \ limit: **SENSITIVE_OPERATIONS**."
       operationId: createInitialStock
       requestBody:
+        description: "JSON (**CreateInitialStockRequest**): `itemId`, `locationId`,\
+          \ `initialQuantity`."
         content:
           application/json:
             schema:
@@ -4126,32 +5343,141 @@ paths:
         required: true
       responses:
         "201":
-          description: Created
+          description: Fila de inventario creada.
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/InventoryStockResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/locations:
     get:
       tags:
-      - storage-location-controller
+      - Inventory — storage locations
+      summary: Search storage locations
+      description: "Lista paginada. Rate limit: **READ_HEAVY**."
       operationId: searchLocations
       parameters:
-      - name: filter
+      - name: type
         in: query
-        required: true
+        required: false
         schema:
-          $ref: "#/components/schemas/StorageLocationSearchRequest"
+          type: string
+          enum:
+          - WAREHOUSE
+          - ZONE
+          - AISLE
+          - SHELF
+          - BIN
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - ACTIVE
+          - FULL
+          - BLOCKED
+          - INACTIVE
+      - name: page
+        in: query
+        description: Índice de página basado en cero.
+        required: false
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+        example: 0
+      - name: size
+        in: query
+        description: Tamaño de página (máximo 100).
+        required: false
+        schema:
+          type: integer
+          default: 20
+          maximum: 100
+          minimum: 1
+        example: 20
       responses:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/PagedResponseStorageLocationResponse"
+                $ref: "#/components/schemas/PagedResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
     post:
       tags:
-      - storage-location-controller
+      - Inventory — storage locations
+      summary: Create storage location
+      description: "JSON **StorageLocationCreateRequest**. **201**. Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: createLocation
       requestBody:
         content:
@@ -4163,32 +5489,161 @@ paths:
         "201":
           description: Created
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/StorageLocationResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/items:
     get:
       tags:
-      - inventory-item-controller
+      - Inventory — items
+      summary: Search inventory items
+      description: "Lista paginada con filtros opcionales. Respuesta: **PagedResponse**.\
+        \ Rate limit: **READ_HEAVY**."
       operationId: searchItems
       parameters:
-      - name: filter
+      - name: name
         in: query
-        required: true
+        description: Filtro por nombre (coincidencia parcial).
+        required: false
         schema:
-          $ref: "#/components/schemas/ItemSearchRequest"
+          type: string
+      - name: sku
+        in: query
+        description: Filtro por SKU.
+        required: false
+        schema:
+          type: string
+      - name: category
+        in: query
+        description: Filtro por categoría.
+        required: false
+        schema:
+          type: string
+          enum:
+          - RAW_MATERIAL
+          - FINISHED_GOOD
+          - CONSUMABLE
+          - SPARE_PART
+          - PACKAGING
+          - TOOL
+          - MACHINE
+          - FURNITURE
+          - OTHER
+      - name: status
+        in: query
+        description: Filtro por estado del artículo.
+        required: false
+        schema:
+          type: string
+          enum:
+          - ACTIVE
+          - DISCONTINUED
+          - OUT_OF_STOCK
+          - PENDING_APPROVAL
+      - name: page
+        in: query
+        description: Índice de página (base 0).
+        required: false
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+        example: 0
+      - name: size
+        in: query
+        description: Tamaño de página (1–100).
+        required: false
+        schema:
+          type: integer
+          default: 20
+          maximum: 100
+          minimum: 1
+        example: 20
       responses:
         "200":
-          description: OK
+          description: Página de artículos.
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/PagedResponseItemResponse"
+                $ref: "#/components/schemas/PagedResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
     post:
       tags:
-      - inventory-item-controller
+      - Inventory — items
+      summary: Create inventory item
+      description: "Registra un artículo. **201** con cuerpo JSON. Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: createItem
       requestBody:
+        description: Cuerpo JSON (**ItemCreateRequest**).
         content:
           application/json:
             schema:
@@ -4196,11 +5651,46 @@ paths:
         required: true
       responses:
         "201":
-          description: Created
+          description: Artículo creado.
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/ItemResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/headquarters:
     get:
       tags:
@@ -4443,11 +5933,31 @@ paths:
         required: false
         schema:
           type: string
-      - name: pageable
+      - name: page
         in: query
-        required: true
+        description: Índice de página basado en cero.
+        required: false
         schema:
-          $ref: "#/components/schemas/PageableRequest"
+          type: integer
+          format: int32
+          default: 0
+          description: Índice de página basado en cero.
+          example: 0
+          minimum: 0
+        example: 0
+      - name: size
+        in: query
+        description: Tamaño de página (máximo 100).
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          description: Tamaño de página (máximo 100).
+          example: 20
+          maximum: 100
+          minimum: 1
+        example: 20
       responses:
         "200":
           description: Paged employee rows.
@@ -4494,13 +6004,34 @@ paths:
       tags:
       - HR — Employees
       summary: Register employee
-      description: Creates a new employee record from `RegisterEmployeeRequest`.
+      description: |-
+        Recommended: **`multipart/form-data`** parts:
+
+        + **`employee`**: JSON matching **`RegisterEmployeeRequest`** (`Content-Type`:
+          **`application/json`** when possible).
+        + **`photo`** (optional): image (`image/jpeg`, `image/png`, …).
+
+        Browsers/Swagger may label **`employee`** as **`application/octet-stream`**; the server parses
+        the bytes as UTF-8 JSON anyway. Do not send onboarding fields only as URL query strings.
+
+        For JSON-without-photo only, **`application/json`** is also accepted (alternate operation hidden
+        in Swagger). Rate limit: **SENSITIVE_OPERATIONS**.
       operationId: registerEmployee
       requestBody:
+        description: "Must be **multipart/form-data** with parts **employee** (JSON,\
+          \ RegisterEmployeeRequest) and optional **photo** (file)."
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: "#/components/schemas/RegisterEmployeeRequest"
+              $ref: "#/components/schemas/EmployeeRegisterMultipartBody"
+              description: "Two form parts: **employee** (object) and optional **photo**\
+                \ (binary)."
+              required:
+              - employee
+            encoding:
+              employee:
+                contentType: application/json
+              photo: {}
         required: true
       responses:
         "201":
@@ -4544,25 +6075,205 @@ paths:
                 $ref: "#/components/schemas/ApiErrorResponse"
       security:
       - bearer-jwt: []
+  /api/v1/employees/{employeeId}/attendance/start-workday:
+    post:
+      tags:
+      - HR — Employee attendance
+      summary: Start workday (check-in)
+      description: |-
+        Recommended: **`multipart/form-data`** parts:
+
+        + **`attendance`**: JSON matching **`StartWorkdayRequest`** (`Content-Type`:
+          **`application/json`** when possible).
+        + **`checkInEvidencePhoto`** (optional): image (`image/jpeg`, `image/png`, …). The server stores the object in S3 and persists the **object key**; API responses return a **time-limited HTTPS URL**.
+
+        Browsers/Swagger may label **`attendance`** as **`application/octet-stream`**; the server parses the bytes as UTF-8 JSON anyway.
+
+        For JSON **without** evidence photo only, **`application/json`** is also accepted (alternate operation hidden in Swagger). **409** if an open attendance already exists for the resolved work date (`ATTENDANCE_ALREADY_OPEN`). **404** for unknown employee or headquarter.
+      operationId: startWorkdayMultipart
+      parameters:
+      - name: employeeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: "Must be **multipart/form-data** with part **attendance** (JSON,\
+          \ StartWorkdayRequest) and optional **checkInEvidencePhoto** (file)."
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/AttendanceStartMultipartBody"
+              description: "Two form parts: **attendance** (object) and optional **checkInEvidencePhoto**\
+                \ (binary)."
+              required:
+              - attendance
+            encoding:
+              attendance:
+                contentType: application/json
+              checkInEvidencePhoto: {}
+        required: true
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttendanceResponse"
+        "404":
+          description: Not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "409":
+          description: Conflict.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
+  /api/v1/employees/{employeeId}/attendance/end-workday:
+    post:
+      tags:
+      - HR — Employee attendance
+      summary: End workday (check-out)
+      description: |-
+        Recommended: **`multipart/form-data`** parts:
+
+        + **`attendance`**: JSON matching **`EndWorkdayRequest`** (`Content-Type`:
+          **`application/json`** when possible).
+        + **`checkOutEvidencePhoto`** (optional): image. Stored in S3; responses use **presigned HTTPS URLs**.
+
+        For JSON **without** evidence photo only, **`application/json`** is also accepted (hidden in Swagger). **409** when no open attendance exists (`ATTENDANCE_NOT_OPEN_FOR_CHECKOUT`).
+      operationId: endWorkdayMultipart
+      parameters:
+      - name: employeeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: "Must be **multipart/form-data** with part **attendance** (JSON,\
+          \ EndWorkdayRequest) and optional **checkOutEvidencePhoto** (file)."
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/AttendanceEndMultipartBody"
+              description: "Two form parts: **attendance** (object) and optional **checkOutEvidencePhoto**\
+                \ (binary)."
+              required:
+              - attendance
+            encoding:
+              attendance:
+                contentType: application/json
+              checkOutEvidencePhoto: {}
+        required: true
+      responses:
+        "200":
+          description: Updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttendanceResponse"
+        "409":
+          description: Conflict.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/employees/import:
     post:
       tags:
       - HR — Employees
       summary: Import employees from spreadsheet
-      description: "Upload `multipart/form-data` with field `file` (`.xlsx`). Empty\
+      description: "Upload `multipart/form-data` with field **file** (`.xlsx`). Empty\
         \ file yields **400**. Rate limit: **SENSITIVE_OPERATIONS**."
       operationId: importEmployees
       requestBody:
+        description: "Form part **file**: Excel workbook (.xlsx)."
         content:
           multipart/form-data:
             schema:
               type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
+              description: Must include part `file` with the Excel binary.
               required:
               - file
+            encoding:
+              file:
+                contentType: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+        required: true
       responses:
         "200":
           description: Row-level import outcome.
@@ -6897,8 +8608,9 @@ paths:
       tags:
       - CRM — Opportunities
       summary: Export opportunities to Excel
-      description: "Streams an `.xlsx` report using the same filters as search. `Content-Disposition`\
-        \ suggests a filename. Rate limit: **READ_HEAVY**."
+      description: "Streams an `.xlsx` report using the same optional filters and\
+        \ pagination as search. `Content-Disposition` suggests a filename. Rate limit:\
+        \ **READ_HEAVY**."
       operationId: exportOpportunities
       parameters:
       - name: filter
@@ -6906,6 +8618,45 @@ paths:
         required: true
         schema:
           $ref: "#/components/schemas/OpportunitySearchRequest"
+      - name: page
+        in: query
+        description: Zero-based page index.
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+        example: 0
+      - name: size
+        in: query
+        description: Page size (1–100).
+        schema:
+          type: integer
+          default: 20
+          maximum: 100
+          minimum: 1
+        example: 20
+      - name: status
+        in: query
+        description: Filter by pipeline status.
+        schema:
+          type: string
+          enum:
+          - NEW
+          - DISCOVERY
+          - PROPOSAL
+          - NEGOTIATION
+          - WON
+          - LOST
+          - ABANDONED
+        example: NEGOTIATION
+      - name: companyNameContains
+        in: query
+        description: Case-insensitive company name substring.
+        example: Acme
+      - name: titleContains
+        in: query
+        description: Case-insensitive title substring.
+        example: rollout
       responses:
         "200":
           description: Excel workbook bytes.
@@ -6949,159 +8700,633 @@ paths:
   /api/v1/inventory/transactions:
     get:
       tags:
-      - inventory-transaction-controller
+      - Inventory — transactions
+      summary: Search inventory transactions
+      description: "Lista paginada. Rate limit: **READ_HEAVY**."
       operationId: searchTransactions
       parameters:
-      - name: filter
+      - name: type
         in: query
-        required: true
+        required: false
         schema:
-          $ref: "#/components/schemas/InventoryTransactionSearchRequest"
+          type: string
+          enum:
+          - PURCHASE_RECEIPT
+          - SALE_DISPATCH
+          - INTERNAL_TRANSFER
+          - PHYSICAL_COUNT
+          - RETURN_FROM_CLIENT
+          - RETURN_TO_SUPPLIER
+          - PRODUCTION_ISSUE
+          - SCRAP_WRITE_OFF
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - DRAFT
+          - PENDING
+          - APPROVED
+          - IN_PROGRESS
+          - COMPLETED
+          - CANCELLED
+      - name: fromDate
+        in: query
+        description: Inicio de rango (ISO-8601 date-time).
+        required: false
+        schema:
+          type: string
+          format: date-time
+        example: 2025-01-01T00:00:00
+      - name: toDate
+        in: query
+        description: Fin de rango (ISO-8601 date-time).
+        required: false
+        schema:
+          type: string
+          format: date-time
+        example: 2025-12-31T23:59:59
+      - name: initiatedById
+        in: query
+        description: Filtrar por usuario que inició.
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: page
+        in: query
+        description: Índice de página basado en cero.
+        required: false
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+        example: 0
+      - name: size
+        in: query
+        description: Tamaño de página (máximo 100).
+        required: false
+        schema:
+          type: integer
+          default: 20
+          maximum: 100
+          minimum: 1
+        example: 20
       responses:
         "200":
-          description: OK
+          description: Página de transacciones.
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/PagedResponseInventoryTransactionResponse"
+                $ref: "#/components/schemas/PagedResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/transactions/{id}:
     get:
       tags:
-      - inventory-transaction-controller
+      - Inventory — transactions
+      summary: Get transaction by id
+      description: "**404** (`INVENTORY_TRANSACTION_NOT_FOUND`). Rate limit: **READ_HEAVY**."
       operationId: getTransactionById
       parameters:
       - name: id
         in: path
+        description: ID de transacción.
         required: true
         schema:
           type: integer
           format: int64
+        example: 100
       responses:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/InventoryTransactionResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/stock/{id}:
     get:
       tags:
-      - inventory-stock-controller
+      - Inventory — stock
+      summary: Get stock row by id
+      description: "**404** (`INVENTORY_NOT_FOUND`). Rate limit: **READ_HEAVY**."
       operationId: getStockById
       parameters:
       - name: id
         in: path
+        description: Identificador de la fila de inventario.
         required: true
         schema:
           type: integer
           format: int64
+        example: 1
       responses:
         "200":
-          description: OK
+          description: Existencia.
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/InventoryStockResponse"
+        "404":
+          description: No encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/stock/out-of-stock:
     get:
       tags:
-      - inventory-stock-controller
+      - Inventory — stock
+      summary: List out-of-stock rows
+      description: "Existencias en cantidad cero. Rate limit: **READ_HEAVY**."
       operationId: findOutOfStock
       parameters:
-      - name: pageable
+      - name: page
         in: query
-        required: true
+        description: Índice de página (base 0).
+        required: false
         schema:
-          $ref: "#/components/schemas/PageableRequest"
+          type: integer
+          default: 0
+          minimum: 0
+        example: 0
+      - name: size
+        in: query
+        description: Tamaño de página (1–100).
+        required: false
+        schema:
+          type: integer
+          default: 20
+          maximum: 100
+          minimum: 1
+        example: 20
       responses:
         "200":
-          description: OK
+          description: Página de existencias.
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/PagedResponseInventoryStockResponse"
+                $ref: "#/components/schemas/PagedResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/stock/low-stock:
     get:
       tags:
-      - inventory-stock-controller
+      - Inventory — stock
+      summary: List low-stock rows
+      description: "Artículos bajo punto de reorden. Rate limit: **READ_HEAVY**."
       operationId: findLowStock
       parameters:
-      - name: pageable
+      - name: page
         in: query
-        required: true
+        description: Índice de página (base 0).
+        required: false
         schema:
-          $ref: "#/components/schemas/PageableRequest"
+          type: integer
+          default: 0
+          minimum: 0
+        example: 0
+      - name: size
+        in: query
+        description: Tamaño de página (1–100).
+        required: false
+        schema:
+          type: integer
+          default: 20
+          maximum: 100
+          minimum: 1
+        example: 20
       responses:
         "200":
-          description: OK
+          description: Página de existencias.
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/PagedResponseInventoryStockResponse"
+                $ref: "#/components/schemas/PagedResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/stock/location/{locationId}:
     get:
       tags:
-      - inventory-stock-controller
+      - Inventory — stock
+      summary: List stock by location
+      description: "Existencias en una ubicación. Rate limit: **READ_HEAVY**."
       operationId: listByLocation
       parameters:
       - name: locationId
         in: path
+        description: Identificador de la ubicación de almacén.
         required: true
         schema:
           type: integer
           format: int64
+        example: 3
       responses:
         "200":
-          description: OK
+          description: Lista de existencias.
           content:
-            '*/*':
+            application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/InventoryStockResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/stock/item/{itemId}:
     get:
       tags:
-      - inventory-stock-controller
+      - Inventory — stock
+      summary: List stock by item
+      description: "Todas las filas de existencia para un artículo. Rate limit: **READ_HEAVY**."
       operationId: listByItem
       parameters:
       - name: itemId
         in: path
+        description: Identificador del artículo.
         required: true
         schema:
           type: integer
           format: int64
+        example: 10
       responses:
         "200":
-          description: OK
+          description: Lista de existencias.
           content:
-            '*/*':
+            application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/InventoryStockResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/movements:
     get:
       tags:
-      - inventory-movement-controller
+      - Inventory — movements
+      summary: Search inventory movements
+      description: "Lista paginada. Rate limit: **READ_HEAVY**."
       operationId: searchMovements
       parameters:
-      - name: filter
+      - name: type
         in: query
-        required: true
+        required: false
         schema:
-          $ref: "#/components/schemas/InventoryMovementSearchRequest"
+          type: string
+          enum:
+          - PURCHASE
+          - RETURN_FROM_CLIENT
+          - INITIAL_STOCK
+          - SALE
+          - RETURN_TO_SUPPLIER
+          - USAGE
+          - SCRAP
+          - TRANSFER
+          - ADJUSTMENT_PLUS
+          - ADJUSTMENT_MINUS
+      - name: direction
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - IN
+          - OUT
+          - NEUTRAL
+      - name: itemId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: locationId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: fromDate
+        in: query
+        description: ISO-8601 date-time
+        required: false
+        schema:
+          type: string
+          format: date-time
+      - name: toDate
+        in: query
+        description: ISO-8601 date-time
+        required: false
+        schema:
+          type: string
+          format: date-time
+      - name: page
+        in: query
+        description: Índice de página basado en cero.
+        required: false
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+        example: 0
+      - name: size
+        in: query
+        description: Tamaño de página (máximo 100).
+        required: false
+        schema:
+          type: integer
+          default: 20
+          maximum: 100
+          minimum: 1
+        example: 20
       responses:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/PagedResponseInventoryMovementResponse"
+                $ref: "#/components/schemas/PagedResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/movements/{id}:
     get:
       tags:
-      - inventory-movement-controller
+      - Inventory — movements
+      summary: Get movement by id
+      description: "**404** (`INVENTORY_MOVEMENT_NOT_FOUND`). Rate limit: **READ_HEAVY**."
       operationId: getMovementById
       parameters:
       - name: id
@@ -7110,17 +9335,61 @@ paths:
         schema:
           type: integer
           format: int64
+        example: 500
       responses:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/InventoryMovementResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/movements/location/{locationId}:
     get:
       tags:
-      - inventory-movement-controller
+      - Inventory — movements
+      summary: List movements by location
+      description: "Rate limit: **READ_HEAVY**."
       operationId: listByLocation_1
       parameters:
       - name: locationId
@@ -7129,19 +9398,57 @@ paths:
         schema:
           type: integer
           format: int64
+        example: 3
       responses:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/InventoryMovementResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/movements/item/{itemId}:
     get:
       tags:
-      - inventory-movement-controller
+      - Inventory — movements
+      summary: List movements by item
+      description: "Rate limit: **READ_HEAVY**."
       operationId: listByItem_1
       parameters:
       - name: itemId
@@ -7150,89 +9457,286 @@ paths:
         schema:
           type: integer
           format: int64
+        example: 10
       responses:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/InventoryMovementResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/movements/by-reference:
     get:
       tags:
-      - inventory-movement-controller
+      - Inventory — movements
+      summary: List movements by reference number
+      description: "Rate limit: **READ_HEAVY**."
       operationId: findByReferenceNumber
       parameters:
       - name: referenceNumber
         in: query
+        description: Número de referencia de la transacción u operación relacionada.
         required: true
         schema:
           type: string
+        example: TX-2025-00042
       responses:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/InventoryMovementResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/locations/tree:
     get:
       tags:
-      - storage-location-controller
+      - Inventory — storage locations
+      summary: Get location tree
+      description: "Árbol completo de ubicaciones. Rate limit: **READ_HEAVY**."
       operationId: getLocationTree
       responses:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/LocationTreeNodeResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/locations/parent/{parentId}/children:
     get:
       tags:
-      - storage-location-controller
+      - Inventory — storage locations
+      summary: List child locations
+      description: "Hijos directos. Rate limit: **READ_HEAVY**."
       operationId: getChildren
       parameters:
       - name: parentId
         in: path
+        description: ID del padre.
         required: true
         schema:
           type: integer
           format: int64
+        example: 1
       responses:
         "200":
           description: OK
           content:
-            '*/*':
+            application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/StorageLocationResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/inventory/items/lookup:
     get:
       tags:
-      - inventory-item-controller
+      - Inventory — items
+      summary: Lookup item by SKU or barcode
+      description: "Devuelve un artículo por SKU o código de barras. **404** si no\
+        \ existe (`ITEM_NOT_FOUND`). Rate limit: **READ_HEAVY**."
       operationId: getItemBySkuOrBarcode
       parameters:
       - name: q
         in: query
+        description: SKU o código de barras a resolver (no vacío).
         required: true
         schema:
           type: string
           minLength: 1
+        example: SKU-001
       responses:
         "200":
-          description: OK
+          description: Artículo encontrado.
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/ItemResponse"
+        "404":
+          description: No encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/headquarters/statistics:
     get:
       tags:
@@ -7417,6 +9921,87 @@ paths:
                 $ref: "#/components/schemas/ApiErrorResponse"
       security:
       - bearer-jwt: []
+  /api/v1/employees/{employeeId}/attendances:
+    get:
+      tags:
+      - HR — Employee attendance
+      summary: List attendances by employee
+      description: Paginated history for one employee. Optional `workDateFrom` / `workDateTo`
+        (inclusive) filter by calendar work date. **404** if the employee does not
+        exist.
+      operationId: listAttendancesByEmployee
+      parameters:
+      - name: employeeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: workDateFrom
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: workDateTo
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: pageable
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/PageableRequest"
+      responses:
+        "200":
+          description: Paged list (may be empty).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PagedResponse"
+        "404":
+          description: Employee not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/employees/summary:
     get:
       tags:
@@ -7521,12 +10106,13 @@ paths:
       - HR — Employees
       summary: Export employees to Excel
       description: "Streams an `.xlsx` report using the same filters as search (`status`,\
-        \ `department`, `q`). `Content-Disposition` suggests a filename. Rate limit:\
-        \ **READ_HEAVY**."
+        \ `department`, `q`) and pagination (`page`, `size`). `Content-Disposition`\
+        \ suggests a filename. Rate limit: **READ_HEAVY**."
       operationId: exportEmployees
       parameters:
       - name: status
         in: query
+        description: Filtro por estado.
         required: false
         schema:
           type: string
@@ -7543,14 +10129,192 @@ paths:
           - UNDEFINED
       - name: department
         in: query
+        description: Filtro por departamento.
         required: false
         schema:
           type: string
       - name: q
         in: query
+        description: Búsqueda de texto.
         required: false
         schema:
           type: string
+      - name: page
+        in: query
+        description: Índice de página (base 0).
+        required: false
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+        example: 0
+      - name: size
+        in: query
+        description: Tamaño de página (1–100).
+        required: false
+        schema:
+          type: integer
+          default: 20
+          maximum: 100
+          minimum: 1
+        example: 20
+      responses:
+        "200":
+          description: Excel workbook bytes.
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet: {}
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
+  /api/v1/employees/attendances/{attendanceId}:
+    get:
+      tags:
+      - HR — Employee attendance
+      summary: Get attendance by id
+      description: '**404** if not found (`ATTENDANCE_NOT_FOUND`).'
+      operationId: getAttendanceById
+      parameters:
+      - name: attendanceId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Attendance row.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttendanceResponse"
+        "404":
+          description: Not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
+  /api/v1/employees/attendances/search:
+    get:
+      tags:
+      - HR — Employee attendance
+      summary: Search attendances
+      description: Paginated search using optional filters; `onlyOpen=true` restricts
+        to open check-ins.
+      operationId: searchAttendances
+      parameters:
+      - name: employeeId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: headquarterId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: workDate
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: workDateFrom
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: workDateTo
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - UNDEFINED
+          - CHECKED_IN
+          - CHECKED_OUT
+          - AUTO_CLOSED_EXCEEDED_MAX_SHIFT_HOURS
+          - AUTO_CLOSED_ASSUMED_CONTRACT_DAY
+      - name: onlyOpen
+        in: query
+        required: false
+        schema:
+          type: boolean
       - name: pageable
         in: query
         required: true
@@ -7558,9 +10322,73 @@ paths:
           $ref: "#/components/schemas/PageableRequest"
       responses:
         "200":
-          description: Excel workbook bytes.
+          description: Paged result.
           content:
-            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet: {}
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PagedResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
+  /api/v1/employees/attendances/for-today:
+    get:
+      tags:
+      - HR — Employee attendance
+      summary: List attendances for today
+      description: Paginated attendances for the current calendar work date. Omit
+        `headquarterId` to include all headquarters; pass it to restrict to one site.
+      operationId: listAttendancesForToday
+      parameters:
+      - name: headquarterId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: pageable
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/PageableRequest"
+      responses:
+        "200":
+          description: Paged list (may be empty).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PagedResponse"
         "400":
           description: "Bad request: validation, malformed JSON, or constraint violation.\
             \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
@@ -7604,11 +10432,31 @@ paths:
       description: "Returns only **active** employments, paginated. Rate limit: **READ_HEAVY**."
       operationId: getActiveEmployees
       parameters:
-      - name: pageable
+      - name: page
         in: query
-        required: true
+        description: Índice de página basado en cero.
+        required: false
         schema:
-          $ref: "#/components/schemas/PageableRequest"
+          type: integer
+          format: int32
+          default: 0
+          description: Índice de página basado en cero.
+          example: 0
+          minimum: 0
+        example: 0
+      - name: size
+        in: query
+        description: Tamaño de página (máximo 100).
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          description: Tamaño de página (máximo 100).
+          example: 20
+          maximum: 100
+          minimum: 1
+        example: 20
       responses:
         "200":
           description: Paged employee rows.
@@ -7743,6 +10591,29 @@ components:
         version:
           type: integer
           format: int64
+    ApiErrorResponse:
+      type: object
+      properties:
+        errorCode:
+          type: string
+        message:
+          type: string
+        traceId:
+          type: string
+        context:
+          type: object
+          additionalProperties: {}
+        fieldErrors:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldError"
+    FieldError:
+      type: object
+      properties:
+        field:
+          type: string
+        message:
+          type: string
     ItemUpdateRequest:
       type: object
       properties:
@@ -7938,33 +10809,30 @@ components:
           format: int64
           description: Optimistic lock version (JPA @Version).
           example: 3
-    ApiErrorResponse:
+    EmployeeUpdateMultipartBody:
       type: object
+      description: "Send as **multipart/form-data**: required part **employee** =\
+        \ JSON (schema **UpdateEmployeeRequest**), optional part **photo** = image\
+        \ file."
       properties:
-        errorCode:
+        employee:
+          $ref: "#/components/schemas/UpdateEmployeeRequest"
+          description: JSON payload for this part; prefer Content-Type **application/json**
+            on the part. The server also accepts UTF-8 JSON if the part is sent as
+            generic binary.
+        photo:
           type: string
-        message:
-          type: string
-        traceId:
-          type: string
-        context:
-          type: object
-          additionalProperties: {}
-        fieldErrors:
-          type: array
-          items:
-            $ref: "#/components/schemas/FieldError"
-    FieldError:
-      type: object
-      properties:
-        field:
-          type: string
-        message:
-          type: string
+          format: binary
+          description: Optional profile photo (e.g. JPEG or PNG).
+      required:
+      - employee
     UpdateEmployeeRequest:
       type: object
       properties:
-        name:
+        firstName:
+          type: string
+          minLength: 1
+        lastName:
           type: string
           minLength: 1
         email:
@@ -8029,9 +10897,10 @@ components:
       - curp
       - department
       - email
+      - firstName
       - foodVouchers
       - integrationFactor
-      - name
+      - lastName
       - nss
       - phone
       - position
@@ -8044,7 +10913,11 @@ components:
         id:
           type: integer
           format: int64
-        name:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        photoUrl:
           type: string
         email:
           type: string
@@ -8143,6 +11016,79 @@ components:
         updatedAt:
           type: string
           format: date-time
+    ReplaceEmployeeWorkScheduleRequest:
+      type: object
+      description: Full replacement of an employee weekly work schedule.
+      properties:
+        slots:
+          type: array
+          description: Ordered list of weekly slots; may be empty to clear the schedule.
+          items:
+            $ref: "#/components/schemas/WorkDayScheduleSlotRequest"
+      required:
+      - slots
+    WorkDayScheduleSlotRequest:
+      type: object
+      description: Recurring weekly time window.
+      properties:
+        dayOfWeek:
+          type: string
+          description: Day of week for this window.
+          enum:
+          - MONDAY
+          - TUESDAY
+          - WEDNESDAY
+          - THURSDAY
+          - FRIDAY
+          - SATURDAY
+          - SUNDAY
+          example: MONDAY
+        startTime:
+          type: string
+          format: time
+          description: Inclusive shift start (local time).
+          example: 09:00
+        endTime:
+          type: string
+          format: time
+          description: Exclusive or inclusive end depending on client convention;
+            must be after startTime.
+          example: 18:00
+      required:
+      - dayOfWeek
+      - endTime
+      - startTime
+    EmployeeWorkScheduleResponse:
+      type: object
+      description: Weekly work schedule slots for an employee.
+      properties:
+        slots:
+          type: array
+          description: Weekly slots; empty when no schedule is configured.
+          items:
+            $ref: "#/components/schemas/WorkDayScheduleSlotResponse"
+    WorkDayScheduleSlotResponse:
+      type: object
+      properties:
+        dayOfWeek:
+          type: string
+          enum:
+          - MONDAY
+          - TUESDAY
+          - WEDNESDAY
+          - THURSDAY
+          - FRIDAY
+          - SATURDAY
+          - SUNDAY
+          example: MONDAY
+        startTime:
+          type: string
+          format: time
+          example: 09:00
+        endTime:
+          type: string
+          format: time
+          example: 18:00
     UpdateContractRequest:
       type: object
       description: "Misma forma y reglas que el alta (**CreateContractRequest**):\
@@ -9904,15 +12850,37 @@ components:
       - salePrice
       - sku
       - unit
+    EmployeeRegisterMultipartBody:
+      type: object
+      description: "Send as **multipart/form-data**: required part **employee** =\
+        \ JSON (schema **RegisterEmployeeRequest**), optional part **photo** = image\
+        \ file."
+      properties:
+        employee:
+          $ref: "#/components/schemas/RegisterEmployeeRequest"
+          description: JSON payload for this part; prefer Content-Type **application/json**
+            on the part. The server also accepts UTF-8 JSON if the part is sent as
+            generic binary.
+        photo:
+          type: string
+          format: binary
+          description: Optional profile photo (e.g. JPEG or PNG).
+      required:
+      - employee
     RegisterEmployeeRequest:
       type: object
       description: Payload to register a new employee in onboarding (draft or pending
         employment contract).
       properties:
-        name:
+        firstName:
           type: string
-          description: Full legal name.
-          example: María López García
+          description: First name.
+          example: María
+          minLength: 1
+        lastName:
+          type: string
+          description: Last name.
+          example: López García
           minLength: 1
         email:
           type: string
@@ -10013,7 +12981,8 @@ components:
       - department
       - email
       - employeeNumber
-      - name
+      - firstName
+      - lastName
       - nss
       - onboardingPhase
       - phone
@@ -10021,6 +12990,123 @@ components:
       - rfc
       - salaryPerWeek
       - workShift
+    AttendanceStartMultipartBody:
+      type: object
+      description: "Send as **multipart/form-data**: part **attendance** = JSON (**StartWorkdayRequest**),\
+        \ optional part **checkInEvidencePhoto** = image file."
+      properties:
+        attendance:
+          $ref: "#/components/schemas/StartWorkdayRequest"
+          description: JSON payload; prefer Content-Type **application/json** on the
+            part. The server also accepts UTF-8 JSON if the part is sent as generic
+            binary.
+        checkInEvidencePhoto:
+          type: string
+          format: binary
+          description: Optional check-in evidence image (e.g. JPEG or PNG).
+      required:
+      - attendance
+    StartWorkdayRequest:
+      type: object
+      description: "JSON part for check-in when using **multipart/form-data** (`attendance`\
+        \ part), or full body for **application/json**. Evidence photos are uploaded\
+        \ as the **`checkInEvidencePhoto`** multipart part only (not a URL field)."
+      properties:
+        headquarterId:
+          type: integer
+          format: int64
+          description: Headquarter where the employee is clocking in.
+          example: 3
+        workDate:
+          type: string
+          format: date
+          description: Optional calendar work date; defaults to today when omitted.
+          example: 2026-05-14
+      required:
+      - headquarterId
+    AttendanceResponse:
+      type: object
+      description: Single employee attendance record.
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Primary key.
+          example: 42
+        employeeId:
+          type: integer
+          format: int64
+          description: Employee id.
+          example: 7
+        headquarterId:
+          type: integer
+          format: int64
+          description: Headquarter id.
+          example: 3
+        workDate:
+          type: string
+          format: date
+          description: Calendar work date.
+          example: 2026-05-14
+        checkInTime:
+          type: string
+          format: date-time
+          description: Check-in timestamp.
+        checkOutTime:
+          type: string
+          format: date-time
+          description: Check-out timestamp; null while still checked in.
+        status:
+          type: string
+          description: Lifecycle status.
+          enum:
+          - UNDEFINED
+          - CHECKED_IN
+          - CHECKED_OUT
+          - AUTO_CLOSED_EXCEEDED_MAX_SHIFT_HOURS
+          - AUTO_CLOSED_ASSUMED_CONTRACT_DAY
+        checkInEvidencePhotoUrl:
+          type: string
+          description: "Check-in evidence: **HTTPS presigned URL** when stored value\
+            \ is an S3 object key; legacy rows may return a plain URL. Empty when\
+            \ no photo was uploaded."
+        checkOutEvidencePhotoUrl:
+          type: string
+          description: "Check-out evidence: **HTTPS presigned URL** when stored value\
+            \ is an S3 object key; legacy rows may return a plain URL. Empty when\
+            \ no photo was uploaded."
+        minutesWorked:
+          type: integer
+          format: int64
+          description: Minutes between check-in and check-out (0 if open).
+          example: 480
+    AttendanceEndMultipartBody:
+      type: object
+      description: "Send as **multipart/form-data**: part **attendance** = JSON (**EndWorkdayRequest**),\
+        \ optional part **checkOutEvidencePhoto** = image file."
+      properties:
+        attendance:
+          $ref: "#/components/schemas/EndWorkdayRequest"
+          description: JSON payload; prefer Content-Type **application/json** on the
+            part. The server also accepts UTF-8 JSON if the part is sent as generic
+            binary.
+        checkOutEvidencePhoto:
+          type: string
+          format: binary
+          description: Optional check-out evidence image (e.g. JPEG or PNG).
+      required:
+      - attendance
+    EndWorkdayRequest:
+      type: object
+      description: "JSON part for check-out when using **multipart/form-data** (`attendance`\
+        \ part), or full body for **application/json**. Evidence photos are uploaded\
+        \ as the **`checkOutEvidencePhoto`** multipart part only (not a URL field)."
+      properties:
+        workDate:
+          type: string
+          format: date
+          description: Optional calendar work date; defaults to today when omitted.
+          example: 2026-05-14
     CreateContractRequest:
       type: object
       description: "Cuerpo para registrar un contrato. **EMPLOYEE** exige `employeeId`.\
@@ -10708,226 +13794,6 @@ components:
           type: number
         overdue:
           type: boolean
-    InventoryTransactionSearchRequest:
-      type: object
-      description: "Parámetros de paginación estándar (`page`, `size`)."
-      properties:
-        page:
-          type: integer
-          format: int32
-          default: 0
-          description: Índice de página basado en cero.
-          example: 0
-          minimum: 0
-        size:
-          type: integer
-          format: int32
-          default: 20
-          description: Tamaño de página (máximo 100).
-          example: 20
-          maximum: 100
-          minimum: 1
-        type:
-          type: string
-          enum:
-          - PURCHASE_RECEIPT
-          - SALE_DISPATCH
-          - INTERNAL_TRANSFER
-          - PHYSICAL_COUNT
-          - RETURN_FROM_CLIENT
-          - RETURN_TO_SUPPLIER
-          - PRODUCTION_ISSUE
-          - SCRAP_WRITE_OFF
-        status:
-          type: string
-          enum:
-          - DRAFT
-          - PENDING
-          - APPROVED
-          - IN_PROGRESS
-          - COMPLETED
-          - CANCELLED
-        fromDate:
-          type: string
-          format: date-time
-        toDate:
-          type: string
-          format: date-time
-        initiatedById:
-          type: integer
-          format: int64
-    PagedResponseInventoryTransactionResponse:
-      type: object
-      description: "Respuesta paginada genérica: lista `items` y objeto `metadata`\
-        \ con totales y banderas de navegación. El esquema de cada elemento depende\
-        \ del endpoint (p. ej. ContractResponse)."
-      properties:
-        items:
-          type: array
-          description: Elementos de la página actual.
-          items:
-            $ref: "#/components/schemas/InventoryTransactionResponse"
-        metadata:
-          $ref: "#/components/schemas/PageMetadata"
-          description: Metadatos de paginación.
-    InventoryStockSearchRequest:
-      type: object
-      description: "Parámetros de paginación estándar (`page`, `size`)."
-      properties:
-        page:
-          type: integer
-          format: int32
-          default: 0
-          description: Índice de página basado en cero.
-          example: 0
-          minimum: 0
-        size:
-          type: integer
-          format: int32
-          default: 20
-          description: Tamaño de página (máximo 100).
-          example: 20
-          maximum: 100
-          minimum: 1
-        itemId:
-          type: integer
-          format: int64
-        locationId:
-          type: integer
-          format: int64
-        status:
-          type: string
-          enum:
-          - NORMAL
-          - LOW_STOCK
-          - OUT_OF_STOCK
-          - OVERSTOCKED
-    PagedResponseInventoryStockResponse:
-      type: object
-      description: "Respuesta paginada genérica: lista `items` y objeto `metadata`\
-        \ con totales y banderas de navegación. El esquema de cada elemento depende\
-        \ del endpoint (p. ej. ContractResponse)."
-      properties:
-        items:
-          type: array
-          description: Elementos de la página actual.
-          items:
-            $ref: "#/components/schemas/InventoryStockResponse"
-        metadata:
-          $ref: "#/components/schemas/PageMetadata"
-          description: Metadatos de paginación.
-    InventoryMovementSearchRequest:
-      type: object
-      description: "Parámetros de paginación estándar (`page`, `size`)."
-      properties:
-        page:
-          type: integer
-          format: int32
-          default: 0
-          description: Índice de página basado en cero.
-          example: 0
-          minimum: 0
-        size:
-          type: integer
-          format: int32
-          default: 20
-          description: Tamaño de página (máximo 100).
-          example: 20
-          maximum: 100
-          minimum: 1
-        type:
-          type: string
-          enum:
-          - PURCHASE
-          - RETURN_FROM_CLIENT
-          - INITIAL_STOCK
-          - SALE
-          - RETURN_TO_SUPPLIER
-          - USAGE
-          - SCRAP
-          - TRANSFER
-          - ADJUSTMENT_PLUS
-          - ADJUSTMENT_MINUS
-        direction:
-          type: string
-          enum:
-          - IN
-          - OUT
-          - NEUTRAL
-        itemId:
-          type: integer
-          format: int64
-        locationId:
-          type: integer
-          format: int64
-        fromDate:
-          type: string
-          format: date-time
-        toDate:
-          type: string
-          format: date-time
-    PagedResponseInventoryMovementResponse:
-      type: object
-      description: "Respuesta paginada genérica: lista `items` y objeto `metadata`\
-        \ con totales y banderas de navegación. El esquema de cada elemento depende\
-        \ del endpoint (p. ej. ContractResponse)."
-      properties:
-        items:
-          type: array
-          description: Elementos de la página actual.
-          items:
-            $ref: "#/components/schemas/InventoryMovementResponse"
-        metadata:
-          $ref: "#/components/schemas/PageMetadata"
-          description: Metadatos de paginación.
-    StorageLocationSearchRequest:
-      type: object
-      description: "Parámetros de paginación estándar (`page`, `size`)."
-      properties:
-        page:
-          type: integer
-          format: int32
-          default: 0
-          description: Índice de página basado en cero.
-          example: 0
-          minimum: 0
-        size:
-          type: integer
-          format: int32
-          default: 20
-          description: Tamaño de página (máximo 100).
-          example: 20
-          maximum: 100
-          minimum: 1
-        type:
-          type: string
-          enum:
-          - WAREHOUSE
-          - ZONE
-          - AISLE
-          - SHELF
-          - BIN
-        status:
-          type: string
-          enum:
-          - ACTIVE
-          - FULL
-          - BLOCKED
-          - INACTIVE
-    PagedResponseStorageLocationResponse:
-      type: object
-      description: "Respuesta paginada genérica: lista `items` y objeto `metadata`\
-        \ con totales y banderas de navegación. El esquema de cada elemento depende\
-        \ del endpoint (p. ej. ContractResponse)."
-      properties:
-        items:
-          type: array
-          description: Elementos de la página actual.
-          items:
-            $ref: "#/components/schemas/StorageLocationResponse"
-        metadata:
-          $ref: "#/components/schemas/PageMetadata"
-          description: Metadatos de paginación.
     LocationTreeNodeResponse:
       type: object
       properties:
@@ -10966,62 +13832,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/LocationTreeNodeResponse"
-    ItemSearchRequest:
-      type: object
-      description: "Parámetros de paginación estándar (`page`, `size`)."
-      properties:
-        page:
-          type: integer
-          format: int32
-          default: 0
-          description: Índice de página basado en cero.
-          example: 0
-          minimum: 0
-        size:
-          type: integer
-          format: int32
-          default: 20
-          description: Tamaño de página (máximo 100).
-          example: 20
-          maximum: 100
-          minimum: 1
-        name:
-          type: string
-        sku:
-          type: string
-        category:
-          type: string
-          enum:
-          - RAW_MATERIAL
-          - FINISHED_GOOD
-          - CONSUMABLE
-          - SPARE_PART
-          - PACKAGING
-          - TOOL
-          - MACHINE
-          - FURNITURE
-          - OTHER
-        status:
-          type: string
-          enum:
-          - ACTIVE
-          - DISCONTINUED
-          - OUT_OF_STOCK
-          - PENDING_APPROVAL
-    PagedResponseItemResponse:
-      type: object
-      description: "Respuesta paginada genérica: lista `items` y objeto `metadata`\
-        \ con totales y banderas de navegación. El esquema de cada elemento depende\
-        \ del endpoint (p. ej. ContractResponse)."
-      properties:
-        items:
-          type: array
-          description: Elementos de la página actual.
-          items:
-            $ref: "#/components/schemas/ItemResponse"
-        metadata:
-          $ref: "#/components/schemas/PageMetadata"
-          description: Metadatos de paginación.
     Page:
       type: object
       properties:
@@ -11044,13 +13854,13 @@ components:
           $ref: "#/components/schemas/SortObject"
         pageable:
           $ref: "#/components/schemas/PageableObject"
-        numberOfElements:
-          type: integer
-          format: int32
         first:
           type: boolean
         last:
           type: boolean
+        numberOfElements:
+          type: integer
+          format: int32
         empty:
           type: boolean
     PageableObject:

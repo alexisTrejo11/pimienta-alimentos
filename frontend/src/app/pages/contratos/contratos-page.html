@@ -93,7 +93,7 @@
             >
               <option [ngValue]="null">Selecciona…</option>
               @for (e of employeeOptions(); track e.id) {
-                <option [ngValue]="e.id">{{ e.name }} — {{ e.department }} ({{ e.status }})</option>
+                <option [ngValue]="e.id">{{ e.firstName }} {{ e.lastName }} — {{ e.department }} ({{ e.status }})</option>
               }
             </select>
           </div>

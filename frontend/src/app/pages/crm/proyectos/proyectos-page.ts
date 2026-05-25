@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { CrmService } from '../../../core/crm/crm.service';
@@ -14,7 +15,7 @@ import { ProyectoRowComponent } from './components/proyecto-row/proyecto-row';
 @Component({
   selector: 'app-proyectos-page',
   standalone: true,
-  imports: [PageHeaderComponent, DataStateComponent, ProyectoRowComponent],
+  imports: [PageHeaderComponent, DataStateComponent, ProyectoRowComponent, RouterLink],
   templateUrl: './proyectos-page.html',
 })
 export class ProyectosPageComponent implements OnInit {

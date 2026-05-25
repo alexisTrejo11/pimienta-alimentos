@@ -1,0 +1,125 @@
+<div class="flex flex-col gap-6 p-8">
+  <app-page-header
+    title="Nueva tarea"
+    subtitle="Operación POST /api/v1/tasks (TaskRequest)."
+    backLink="/app/tareas"
+    backLabel="Tareas"
+  />
+
+  <form class="space-y-6" [formGroup]="form" (ngSubmit)="submit()">
+    @if (apiError(); as err) {
+      <div
+        role="alert"
+        class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-100"
+      >
+        <p class="font-semibold">{{ err.message }}</p>
+      </div>
+    }
+
+    <section class="rounded-xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-950">
+      <h2 class="font-headline mb-4 text-base font-bold text-on-surface">Datos principales</h2>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="sm:col-span-2 space-y-1.5">
+          <label class="ml-1 block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant" for="task-title">Titulo</label>
+          <input
+            id="task-title"
+            formControlName="title"
+            type="text"
+            class="w-full rounded-lg border border-transparent bg-stone-100 px-3 py-2 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 dark:bg-stone-900"
+          />
+          @if (form.controls.title.touched && form.controls.title.hasError('required')) {
+            <p class="ml-1 text-xs text-[var(--color-error)]">Requerido.</p>
+          }
+          @if (apiFieldMessage('title'); as m) {
+            <p class="ml-1 text-xs text-[var(--color-error)]">{{ m }}</p>
+          }
+        </div>
+
+        <div class="sm:col-span-2 space-y-1.5">
+          <label class="ml-1 block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant" for="task-desc">Descripcion</label>
+          <textarea
+            id="task-desc"
+            formControlName="description"
+            rows="3"
+            class="w-full rounded-lg border border-transparent bg-stone-100 px-3 py-2 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 dark:bg-stone-900"
+          ></textarea>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="ml-1 block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant" for="task-priority">Prioridad</label>
+          <select
+            id="task-priority"
+            formControlName="priority"
+            class="w-full rounded-lg border border-transparent bg-stone-100 px-3 py-2 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 dark:bg-stone-900"
+          >
+            @for (p of priorities; track p) {
+              <option [value]="p">{{ priorityLabel[p] }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="ml-1 block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant" for="task-due">Fecha limite</label>
+          <input
+            id="task-due"
+            formControlName="dueDate"
+            type="datetime-local"
+            class="w-full rounded-lg border border-transparent bg-stone-100 px-3 py-2 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 dark:bg-stone-900"
+          />
+        </div>
+      </div>
+    </section>
+
+    <section class="rounded-xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-950">
+      <h2 class="font-headline mb-4 text-base font-bold text-on-surface">Relacion y checklist</h2>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="space-y-1.5">
+          <label class="ml-1 block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant" for="task-hq">ID sede</label>
+          <input id="task-hq" formControlName="headquarterId" type="number" min="1" class="w-full rounded-lg border border-transparent bg-stone-100 px-3 py-2 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 dark:bg-stone-900" />
+        </div>
+        <div class="space-y-1.5">
+          <label class="ml-1 block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant" for="task-project">ID proyecto</label>
+          <input id="task-project" formControlName="projectId" type="number" min="1" class="w-full rounded-lg border border-transparent bg-stone-100 px-3 py-2 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 dark:bg-stone-900" />
+        </div>
+        <div class="space-y-1.5">
+          <label class="ml-1 block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant" for="task-opportunity">ID oportunidad</label>
+          <input id="task-opportunity" formControlName="opportunityId" type="number" min="1" class="w-full rounded-lg border border-transparent bg-stone-100 px-3 py-2 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 dark:bg-stone-900" />
+        </div>
+        <div class="space-y-1.5">
+          <label class="ml-1 block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant" for="task-created-by">ID creador</label>
+          <input id="task-created-by" formControlName="createdById" type="number" min="1" class="w-full rounded-lg border border-transparent bg-stone-100 px-3 py-2 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 dark:bg-stone-900" />
+        </div>
+        <div class="sm:col-span-2 space-y-1.5">
+          <label class="ml-1 block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant" for="task-checklist">Checklist (una linea por item)</label>
+          <textarea
+            id="task-checklist"
+            formControlName="checklistText"
+            rows="5"
+            placeholder="Llamar proveedor&#10;Confirmar costo&#10;Enviar resumen"
+            class="w-full rounded-lg border border-transparent bg-stone-100 px-3 py-2 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 dark:bg-stone-900"
+          ></textarea>
+        </div>
+      </div>
+    </section>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <button
+        type="submit"
+        class="rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-on-primary shadow-md transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+        [disabled]="saving()"
+      >
+        @if (saving()) {
+          Guardando...
+        } @else {
+          Crear tarea
+        }
+      </button>
+      <a
+        routerLink="/app/tareas"
+        class="rounded-lg border border-stone-300 px-5 py-2.5 text-sm font-semibold text-on-surface transition hover:bg-stone-100 dark:border-stone-600 dark:hover:bg-stone-900"
+      >
+        Cancelar
+      </a>
+    </div>
+  </form>
+</div>

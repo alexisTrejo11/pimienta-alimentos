@@ -10,11 +10,12 @@ import { DataStateComponent } from '../../../shared/ui/data-state/data-state';
 import { EmpleadoInfoCardComponent } from '../components/empleado-info-card/empleado-info-card';
 import { EmpleadoEmpleoCardComponent } from '../components/empleado-empleo-card/empleado-empleo-card';
 import { EmpleadoNominaCardComponent } from '../components/empleado-nomina-card/empleado-nomina-card';
+import { EmpleadoHorarioCardComponent } from '../components/empleado-horario-card/empleado-horario-card';
+import { EmpleadoAsistenciaCardComponent } from '../components/empleado-asistencia-card/empleado-asistencia-card';
 
 /**
  * Página de detalle de un empleado.
- * Obtiene el :id de la URL y divide la información en tres tarjetas:
- * datos personales, laborales y de nómina.
+ * Cinco secciones: información personal, laboral, nómina, horario semanal y asistencia.
  */
 @Component({
   selector: 'app-empleado-detail-page',
@@ -25,6 +26,8 @@ import { EmpleadoNominaCardComponent } from '../components/empleado-nomina-card/
     EmpleadoInfoCardComponent,
     EmpleadoEmpleoCardComponent,
     EmpleadoNominaCardComponent,
+    EmpleadoHorarioCardComponent,
+    EmpleadoAsistenciaCardComponent,
   ],
   templateUrl: './empleado-detail-page.html',
 })
@@ -36,8 +39,10 @@ export class EmpleadoDetailPageComponent implements OnInit {
   readonly error = signal<ParsedApiError | null>(null);
   readonly empleado = signal<EmployeeResponse | null>(null);
 
+  /** Controls which inner tab is active: 'info' | 'horario' | 'asistencia' */
+  readonly activeTab = signal<'info' | 'horario' | 'asistencia'>('info');
+
   ngOnInit(): void {
-    // El ID viene como string de la URL; se convierte a número
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.cargar(id);
   }

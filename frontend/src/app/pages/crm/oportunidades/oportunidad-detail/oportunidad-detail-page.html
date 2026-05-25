@@ -15,6 +15,35 @@
   >
     @if (oportunidad(); as op) {
       <div class="flex flex-col gap-6">
+        @if (deleteError(); as de) {
+          <div
+            role="alert"
+            class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-100"
+          >
+            <p class="font-semibold">No se pudo eliminar: {{ de.message }}</p>
+          </div>
+        }
+
+        <div class="flex flex-wrap gap-2">
+          <a
+            [routerLink]="['/app/crm/oportunidades', op.id, 'editar']"
+            class="inline-flex items-center justify-center rounded-lg border border-stone-300 px-4 py-2 text-sm font-semibold text-on-surface transition hover:bg-stone-100 dark:border-stone-600 dark:hover:bg-stone-900"
+          >
+            Editar
+          </a>
+          <button
+            type="button"
+            class="inline-flex items-center justify-center rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-100 disabled:opacity-50 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200 dark:hover:bg-red-950/60"
+            [disabled]="deleting()"
+            (click)="eliminar()"
+          >
+            @if (deleting()) {
+              Eliminando…
+            } @else {
+              Eliminar
+            }
+          </button>
+        </div>
 
         <!-- Resumen estadístico -->
         @if (summary(); as s) {
