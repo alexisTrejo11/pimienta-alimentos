@@ -378,6 +378,67 @@ class EmployeeManagerIntegrationTest {
   }
 
   @Test
+  void update_multipart_employeeJsonPart_returns200() throws Exception {
+    String token = obtainAccessToken();
+    String email = "mp-upd-" + UUID.randomUUID() + "@mail.com";
+    String empNo = "EMP-MPU-" + uuidSuffix();
+    MvcResult created =
+        mockMvc
+            .perform(
+                AccountTestRequests.postJson("/api/v1/employees", minimalRegisterJson(email, empNo))
+                    .header("Authorization", "Bearer " + token))
+            .andExpect(status().isCreated())
+            .andReturn();
+    long id = extractLongId(created.getResponse().getContentAsString(), "$.id");
+
+    String updEmail = "mp-upd-ch-" + UUID.randomUUID() + "@mail.com";
+    String updateJson =
+        """
+            {
+              "firstName": "Multipart",
+              "lastName": "Updater",
+              "email": "%s",
+              "phone": "+52 55 2000 0003",
+              "address": "Dir MP",
+              "curp": "LOLA850101HDFPLN09",
+              "rfc": "XAXX010101000",
+              "nss": "12345678901",
+              "clabe": "012180001234567890",
+              "position": "Lead",
+              "department": "Ops",
+              "contractType": "INDEFINITE",
+              "workShift": "MIXED",
+              "salaryPerWeek": 4100.00,
+              "bonuses": 110.00,
+              "foodVouchers": 55.00,
+              "integrationFactor": 1.11
+            }
+            """
+            .formatted(updEmail);
+
+    MockMultipartFile employee =
+        new MockMultipartFile(
+            "employee",
+            null,
+            MediaType.APPLICATION_JSON_VALUE,
+            updateJson.getBytes(StandardCharsets.UTF_8));
+
+    mockMvc
+        .perform(
+            multipart("/api/v1/employees/" + id)
+                .file(employee)
+                .with(
+                    request -> {
+                      request.setMethod("PUT");
+                      return request;
+                    })
+                .header("Authorization", "Bearer " + token))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.firstName").value("Multipart"))
+        .andExpect(jsonPath("$.email").value(updEmail.toLowerCase()));
+  }
+
+  @Test
   void importEmployees_emptyFile_returns400() throws Exception {
     String token = obtainAccessToken();
     MockMultipartFile file =

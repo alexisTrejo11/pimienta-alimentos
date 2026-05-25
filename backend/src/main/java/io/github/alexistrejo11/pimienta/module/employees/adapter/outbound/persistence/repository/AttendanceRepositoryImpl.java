@@ -44,12 +44,13 @@ public class AttendanceRepositoryImpl implements AttendanceRepository {
   }
 
   @Override
-  public List<Attendance> findAllForHeadquarterAndWorkDate(long headquarterId, LocalDate workDate) {
-    return jpaRepository
-        .findAllByHeadquarterIdAndWorkDateAndDeletedAtIsNullOrderByCheckInTimeAsc(headquarterId, workDate)
-        .stream()
-        .map(AttendancePersistenceMapper::toDomain)
-        .toList();
+  public Page<Attendance> findPageForWorkDate(LocalDate workDate, Long headquarterId, Pageable pageable) {
+    Page<AttendanceJpaEntity> page =
+        headquarterId == null
+            ? jpaRepository.findAllByWorkDateAndDeletedAtIsNullOrderByCheckInTimeAsc(workDate, pageable)
+            : jpaRepository.findAllByHeadquarterIdAndWorkDateAndDeletedAtIsNullOrderByCheckInTimeAsc(
+                headquarterId, workDate, pageable);
+    return page.map(AttendancePersistenceMapper::toDomain);
   }
 
   @Override

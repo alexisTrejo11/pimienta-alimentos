@@ -10,12 +10,19 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "inventory_items")
+@Table(
+    name = "inventory_items",
+    indexes = {
+      @Index(name = "idx_inventory_items_barcode", columnList = "barcode"),
+      @Index(name = "idx_inventory_items_status", columnList = "status"),
+      @Index(name = "idx_inventory_items_deleted_at", columnList = "deleted_at")
+    })
 public class ItemJpaEntity {
 
   @Id

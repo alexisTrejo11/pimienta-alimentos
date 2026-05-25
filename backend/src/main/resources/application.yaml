@@ -3,16 +3,24 @@ spring:
     name: pimienta
   # PostgreSQL (defaults match docker-compose; override via .env or OS env)
   datasource:
-    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/${POSTGRES_DB:pimienta_alimentos}
-    username: ${POSTGRES_USER:pimienta_dba}
-    password: ${POSTGRES_PASSWORD:pimienta_dba}
+    url: ${POSTGRES_URL}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    # RDS setup uses schema pimienta (not public); keep Flyway history + DDL there too.
+    schemas: pimienta
+    default-schema: pimienta
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
+        default_schema: pimienta
         format_sql: true
         # Dialect omitted: pick from JDBC URL/driver (PostgreSQL in prod, H2 in tests).
   # Redis
@@ -93,7 +101,6 @@ aws:
   s3:
     bucket: ${AWS_S3_BUCKET_NAME}
     folder: ${AWS_S3_FOLDER:employees}
-
 
 logging:
   level:

@@ -135,8 +135,21 @@ public class AttendanceUseCasesImpl
 
   @Override
   @Transactional(readOnly = true)
-  public List<Attendance> listForHeadquarterAndToday(Long headquarterId) {
-    return attendanceRepository.findAllForHeadquarterAndWorkDate(headquarterId, LocalDate.now());
+  public Page<Attendance> listForToday(Long headquarterId, Pageable pageable) {
+    return attendanceRepository.findPageForWorkDate(LocalDate.now(), headquarterId, pageable);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<Attendance> listByEmployee(
+      long employeeId, LocalDate workDateFrom, LocalDate workDateTo, Pageable pageable) {
+    employeeRepository.findById(employeeId).orElseThrow(() -> new EmployeeNotFoundException(employeeId));
+    if (workDateFrom != null && workDateTo != null && workDateTo.isBefore(workDateFrom)) {
+      throw new IllegalArgumentException("workDateTo must not be before workDateFrom");
+    }
+    AttendanceSearchCriteria criteria =
+        new AttendanceSearchCriteria(employeeId, null, null, workDateFrom, workDateTo, null, null);
+    return attendanceRepository.search(criteria, pageable);
   }
 
   @Override

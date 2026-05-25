@@ -9,12 +9,24 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "employee_attendances")
+@Table(
+    name = "employee_attendances",
+    indexes = {
+      @Index(
+          name = "idx_employee_attendances_employee_work_date",
+          columnList = "employee_id, work_date"),
+      @Index(
+          name = "idx_employee_attendances_headquarter_work_date",
+          columnList = "headquarter_id, work_date"),
+      @Index(name = "idx_employee_attendances_work_date", columnList = "work_date"),
+      @Index(name = "idx_employee_attendances_deleted_at", columnList = "deleted_at")
+    })
 public class AttendanceJpaEntity extends BaseJpaEntity {
 
   @Id

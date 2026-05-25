@@ -12,6 +12,7 @@ import io.github.alexistrejo11.pimienta.module.account.integration.AccountTestRe
 import io.github.alexistrejo11.pimienta.module.account.user.core.domain.enums.AccountStatus;
 import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.out.persistence.UserJpaEntity;
 import io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adapter.out.persistence.UserJpaRepository;
+import java.time.LocalDate;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import org.junit.jupiter.api.Test;
@@ -129,6 +130,103 @@ class AttendanceIntegrationTest {
   }
 
   @Test
+  void listAttendancesForToday_withoutToken_returns403() throws Exception {
+    mockMvc.perform(get("/api/v1/employees/attendances/for-today?page=0&size=10")).andExpect(status().isForbidden());
+  }
+
+  @Test
+  void searchAttendances_withoutToken_returns403() throws Exception {
+    mockMvc
+        .perform(get("/api/v1/employees/attendances/search?page=0&size=10"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void listAttendancesByEmployee_withoutToken_returns403() throws Exception {
+    mockMvc.perform(get("/api/v1/employees/1/attendances?page=0&size=10")).andExpect(status().isForbidden());
+  }
+
+  @Test
+  void endWorkday_withoutToken_returns403() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/v1/employees/1/attendance/end-workday")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void listAttendancesByEmployee_unknownEmployee_returns404() throws Exception {
+    String token = obtainAccessToken();
+    mockMvc
+        .perform(
+            AccountTestRequests.getBearer(
+                "/api/v1/employees/999999997/attendances?page=0&size=10", token))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.errorCode").value("EMPLOYEE_NOT_FOUND"));
+  }
+
+  @Test
+  void listAttendancesByEmployee_dateRangeInverted_returns400() throws Exception {
+    String token = obtainAccessToken();
+    String email = "att-range-" + UUID.randomUUID() + "@mail.com";
+    long employeeId = createEmployee(token, email, "EMP-RNG-" + uuidSuffix());
+    mockMvc
+        .perform(
+            AccountTestRequests.getBearer(
+                "/api/v1/employees/"
+                    + employeeId
+                    + "/attendances?workDateFrom=2026-05-10&workDateTo=2026-05-01&page=0&size=10",
+                token))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.errorCode").value("INVALID_ARGUMENT"));
+  }
+
+  @Test
+  void listAttendancesByEmployee_withDateRange_returnsTodayRow() throws Exception {
+    String token = obtainAccessToken();
+    long hqId = createHeadquarter(token, "HQ-RANGE-OK-" + UUID.randomUUID());
+    String email = "att-range-ok-" + UUID.randomUUID() + "@mail.com";
+    long employeeId = createEmployee(token, email, "EMP-RNGOK-" + uuidSuffix());
+    LocalDate today = LocalDate.now();
+    String startBody =
+        """
+            {
+              "headquarterId": %d,
+              "workDate": "%s"
+            }
+            """
+            .formatted(hqId, today);
+
+    MvcResult started =
+        mockMvc
+            .perform(
+                post("/api/v1/employees/" + employeeId + "/attendance/start-workday")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
+                    .content(startBody))
+            .andExpect(status().isCreated())
+            .andReturn();
+    long attendanceId = extractLongId(started.getResponse().getContentAsString(), "$.id");
+
+    mockMvc
+        .perform(
+            AccountTestRequests.getBearer(
+                "/api/v1/employees/"
+                    + employeeId
+                    + "/attendances?workDateFrom="
+                    + today
+                    + "&workDateTo="
+                    + today
+                    + "&page=0&size=10",
+                token))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.items[0].id").value(attendanceId))
+        .andExpect(jsonPath("$.metadata").exists());
+  }
+
+  @Test
   void endWorkday_withoutOpenAttendance_returns409() throws Exception {
     String token = obtainAccessToken();
     String email = "att-end-" + UUID.randomUUID() + "@mail.com";
@@ -187,10 +285,28 @@ class AttendanceIntegrationTest {
     mockMvc
         .perform(
             AccountTestRequests.getBearer(
-                "/api/v1/employees/attendances/by-headquarter/" + hqId + "/today", token))
+                "/api/v1/employees/attendances/for-today?headquarterId="
+                    + hqId
+                    + "&page=0&size=20",
+                token))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$[0].id").value(attendanceId))
-        .andExpect(jsonPath("$[0].employeeId").value(employeeId));
+        .andExpect(jsonPath("$.items[0].id").value(attendanceId))
+        .andExpect(jsonPath("$.items[0].employeeId").value(employeeId))
+        .andExpect(jsonPath("$.metadata").exists());
+
+    mockMvc
+        .perform(
+            AccountTestRequests.getBearer("/api/v1/employees/attendances/for-today?page=0&size=20", token))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.items.length()").value(greaterThanOrEqualTo(1)));
+
+    mockMvc
+        .perform(
+            AccountTestRequests.getBearer(
+                "/api/v1/employees/" + employeeId + "/attendances?page=0&size=10", token))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.items[0].id").value(attendanceId))
+        .andExpect(jsonPath("$.metadata").exists());
 
     mockMvc
         .perform(

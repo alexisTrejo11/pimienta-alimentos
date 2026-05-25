@@ -24,6 +24,18 @@ import org.springframework.http.MediaType;
 @Documented
 @DocJwtSecured
 @Parameters({
+  @Parameter(
+      name = "page",
+      in = ParameterIn.QUERY,
+      description = "Page index (same as export listing).",
+      example = "0",
+      schema = @Schema(type = "integer", defaultValue = "0", minimum = "0")),
+  @Parameter(
+      name = "size",
+      in = ParameterIn.QUERY,
+      description = "Page size.",
+      example = "20",
+      schema = @Schema(type = "integer", defaultValue = "20", minimum = "1", maximum = "100")),
   @Parameter(name = "employeeId", in = ParameterIn.QUERY, description = "Restrict import to employee id.", example = "101"),
   @Parameter(name = "periodId", in = ParameterIn.QUERY, description = "Restrict import to period id.", example = "22"),
   @Parameter(name = "from", in = ParameterIn.QUERY, description = "Worked start date (inclusive).", example = "2026-04-01"),
@@ -32,6 +44,7 @@ import org.springframework.http.MediaType;
 @Operation(summary = "Import payroll records", description = "Bulk create/update payroll records from .xlsx using optional scope filters.")
 @RequestBody(
     required = true,
+    description = "Multipart: required part **file** (`.xlsx`). Optional query-style fields `page`, `size`, `employeeId`, `periodId`, `from`, `to` scope the import (same as export).",
     content =
         @Content(
             mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,

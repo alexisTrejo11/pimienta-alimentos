@@ -4,7 +4,8 @@ import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.Emp
 import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.doc.DocAttendanceEndWorkday;
 import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.doc.DocAttendanceEndWorkdayJsonHidden;
 import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.doc.DocAttendanceGetById;
-import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.doc.DocAttendanceListHeadquarterToday;
+import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.doc.DocAttendanceListByEmployee;
+import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.doc.DocAttendanceListForToday;
 import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.doc.DocAttendanceSearch;
 import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.doc.DocAttendanceStartWorkday;
 import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.doc.DocAttendanceStartWorkdayJsonHidden;
@@ -27,7 +28,6 @@ import io.github.alexistrejo11.pimienta.shared.web.PageableRequest;
 import io.github.alexistrejo11.pimienta.shared.web.PagedResponse;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
-import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -127,13 +127,29 @@ public class EmployeeAttendanceController {
         page, a -> AttendanceWebMapper.toResponse(a, employeePhotoUrlPresenter::present));
   }
 
-  @GetMapping("/attendances/by-headquarter/{headquarterId}/today")
+  @GetMapping("/attendances/for-today")
   @RateLimit(profile = RateLimitProfile.READ_HEAVY)
-  @DocAttendanceListHeadquarterToday
-  public List<AttendanceResponse> listAttendancesForHeadquarterToday(@PathVariable Long headquarterId) {
-    return attendanceQueryUseCases.listForHeadquarterAndToday(headquarterId).stream()
-        .map(a -> AttendanceWebMapper.toResponse(a, employeePhotoUrlPresenter::present))
-        .toList();
+  @DocAttendanceListForToday
+  public PagedResponse<AttendanceResponse> listAttendancesForToday(
+      @RequestParam(required = false) Long headquarterId, @ModelAttribute PageableRequest pageable) {
+    Page<Attendance> page = attendanceQueryUseCases.listForToday(headquarterId, pageable.toPageable());
+    return PagedResponse.map(
+        page, a -> AttendanceWebMapper.toResponse(a, employeePhotoUrlPresenter::present));
+  }
+
+  @GetMapping("/{employeeId}/attendances")
+  @RateLimit(profile = RateLimitProfile.READ_HEAVY)
+  @DocAttendanceListByEmployee
+  public PagedResponse<AttendanceResponse> listAttendancesByEmployee(
+      @PathVariable Long employeeId,
+      @RequestParam(required = false) LocalDate workDateFrom,
+      @RequestParam(required = false) LocalDate workDateTo,
+      @ModelAttribute PageableRequest pageable) {
+    Page<Attendance> page =
+        attendanceQueryUseCases.listByEmployee(
+            employeeId, workDateFrom, workDateTo, pageable.toPageable());
+    return PagedResponse.map(
+        page, a -> AttendanceWebMapper.toResponse(a, employeePhotoUrlPresenter::present));
   }
 
   @GetMapping("/attendances/{attendanceId}")

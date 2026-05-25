@@ -10,12 +10,21 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 @Entity
-@Table(name = "employees")
+@Table(
+    name = "employees",
+    indexes = {
+      @Index(name = "idx_employees_status", columnList = "status"),
+      @Index(name = "idx_employees_deleted_at", columnList = "deleted_at"),
+      @Index(name = "idx_employees_personal_email", columnList = "personal_email"),
+      @Index(name = "idx_employees_employee_number", columnList = "employee_number"),
+      @Index(name = "idx_employees_employment_department", columnList = "employment_department")
+    })
 public class EmployeeJpaEntity extends BaseJpaEntity {
 
   @Id

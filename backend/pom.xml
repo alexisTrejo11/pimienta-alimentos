@@ -103,6 +103,17 @@
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 
+		<!-- Schema migrations (PostgreSQL) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway</artifactId>
+		</dependency>
+		<!-- Required since Flyway 10: PostgreSQL driver is not bundled in flyway-core -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
+
 		<!-- Security + JWT -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -147,14 +158,6 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- Spring Boot Docker Compose
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-docker-compose</artifactId>
-			<scope>runtime</scope>
-			<optional>true</optional>
-		</dependency>
-		-->
 		<!-- Apache POI (.xlsx) -->
 		<dependency>
 			<groupId>org.apache.poi</groupId>

@@ -1,6 +1,7 @@
 package io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.controller;
 
 import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.mapper.RegisterEmployeeMultipartPayloadReader;
+import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.mapper.UpdateEmployeeMultipartPayloadReader;
 import io.github.alexistrejo11.pimienta.module.employees.core.application.dto.param.RegisterEmployeeParams;
 import io.github.alexistrejo11.pimienta.module.employees.core.application.query.EmployeeSearchCriteria;
 import io.github.alexistrejo11.pimienta.module.employees.core.domain.EmployeeStatistics;
@@ -24,6 +25,7 @@ import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.doc
 import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.doc.DocEmployeeSummary;
 import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.doc.DocEmployeeTerminate;
 import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.doc.DocEmployeeUpdate;
+import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.doc.DocEmployeeUpdateJsonHidden;
 import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.doc.DocEmployees;
 import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.dto.response.EmployeeListItemResponse;
 import io.github.alexistrejo11.pimienta.module.employees.adapter.inbound.web.dto.response.EmployeeResponse;
@@ -39,6 +41,7 @@ import io.github.alexistrejo11.pimienta.shared.web.PageableRequest;
 import io.github.alexistrejo11.pimienta.shared.web.PagedResponse;
 import jakarta.validation.Valid;
 import java.io.IOException;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -70,16 +73,19 @@ public class EmployeeManagerController {
   private final EmployeeBulkSyncUseCases employeeBulkSyncUseCases;
   private final EmployeePhotoUrlPresenter employeePhotoUrlPresenter;
   private final RegisterEmployeeMultipartPayloadReader registerEmployeeMultipartPayloadReader;
+  private final UpdateEmployeeMultipartPayloadReader updateEmployeeMultipartPayloadReader;
 
   public EmployeeManagerController(
       EmployeeManagementUseCases employeeManagementUseCases,
       EmployeeBulkSyncUseCases employeeBulkSyncUseCases,
       EmployeePhotoUrlPresenter employeePhotoUrlPresenter,
-      RegisterEmployeeMultipartPayloadReader registerEmployeeMultipartPayloadReader) {
+      RegisterEmployeeMultipartPayloadReader registerEmployeeMultipartPayloadReader,
+      UpdateEmployeeMultipartPayloadReader updateEmployeeMultipartPayloadReader) {
     this.employeeManagementUseCases = employeeManagementUseCases;
     this.employeeBulkSyncUseCases = employeeBulkSyncUseCases;
     this.employeePhotoUrlPresenter = employeePhotoUrlPresenter;
     this.registerEmployeeMultipartPayloadReader = registerEmployeeMultipartPayloadReader;
+    this.updateEmployeeMultipartPayloadReader = updateEmployeeMultipartPayloadReader;
   }
 
   @GetMapping("/statistics")
@@ -105,7 +111,7 @@ public class EmployeeManagerController {
       @RequestParam(required = false) EmployeeStatus status,
       @RequestParam(required = false) String department,
       @RequestParam(required = false) String q,
-      @ModelAttribute PageableRequest pageable) {
+      @ParameterObject @ModelAttribute PageableRequest pageable) {
     EmployeeSearchCriteria criteria = new EmployeeSearchCriteria(status, blankToNull(department), blankToNull(q));
     Page<Employee> employees = employeeManagementUseCases.search(criteria, pageable.toPageable());
     return PagedResponse.map(
@@ -115,7 +121,7 @@ public class EmployeeManagerController {
   @GetMapping("/active")
   @RateLimit(profile = RateLimitProfile.READ_HEAVY)
   @DocEmployeeListActive
-  public PagedResponse<EmployeeListItemResponse> getActiveEmployees(@ModelAttribute PageableRequest pageable) {
+  public PagedResponse<EmployeeListItemResponse> getActiveEmployees(@ParameterObject @ModelAttribute PageableRequest pageable) {
     Page<Employee> employees = employeeManagementUseCases.search(
         EmployeeSearchCriteria.onlyActive(), pageable.toPageable());
     return PagedResponse.map(
@@ -129,7 +135,7 @@ public class EmployeeManagerController {
       @RequestParam(required = false) EmployeeStatus status,
       @RequestParam(required = false) String department,
       @RequestParam(required = false) String q,
-      @ModelAttribute PageableRequest pageable)
+      @ParameterObject @ModelAttribute PageableRequest pageable)
       throws IOException {
     EmployeeSearchCriteria criteria = new EmployeeSearchCriteria(status, blankToNull(department), blankToNull(q));
     byte[] bytes = employeeBulkSyncUseCases.exportEmployees(criteria, pageable.toPageable());
@@ -188,14 +194,29 @@ public class EmployeeManagerController {
     return EmployeeManagerWebMapper.toResponse(employee, employeePhotoUrlPresenter::present);
   }
 
-  @PutMapping("/{id}")
+  @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
   @DocEmployeeUpdate
-  public EmployeeResponse updateEmployeeDetails(
-      @PathVariable Long id, @Valid @RequestBody UpdateEmployeeRequest request, // TODO: transform to MultipartFile
-      @RequestPart(value = "photo", required = false) MultipartFile photo) {
-    Employee updated = employeeManagementUseCases.update(id,
-        EmployeeManagerWebMapper.toUpdateParams(id, request, photo));
+  public EmployeeResponse updateEmployeeMultipart(
+      @PathVariable Long id,
+      @RequestPart("employee") MultipartFile employeePayload,
+      @RequestPart(value = "photo", required = false) MultipartFile photo)
+      throws MethodArgumentNotValidException {
+    UpdateEmployeeRequest parsed = updateEmployeeMultipartPayloadReader.readAndValidate(employeePayload);
+    return updateEmployeeInternal(id, parsed, photo);
+  }
+
+  @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @RateLimit(profile = RateLimitProfile.SENSITIVE_OPERATIONS)
+  @DocEmployeeUpdateJsonHidden
+  public EmployeeResponse updateEmployeeJsonOnly(@PathVariable Long id, @Valid @RequestBody UpdateEmployeeRequest request) {
+    return updateEmployeeInternal(id, request, null);
+  }
+
+  private EmployeeResponse updateEmployeeInternal(
+      Long id, UpdateEmployeeRequest request, MultipartFile photo) {
+    Employee updated =
+        employeeManagementUseCases.update(id, EmployeeManagerWebMapper.toUpdateParams(id, request, photo));
     return EmployeeManagerWebMapper.toResponse(updated, employeePhotoUrlPresenter::present);
   }
 

@@ -1,14 +1,15 @@
 # Profile: docker — use with SPRING_PROFILES_ACTIVE=docker (see docker-compose / Dockerfile).
-# Override any value via standard Spring Boot env vars (see Docker Compose `environment` block).
+# Datasource: AWS RDS via SPRING_DATASOURCE_* from docker-compose (.env POSTGRES_URL).
+# For local Compose Postgres instead, uncomment the `postgres` service and use host `postgres`.
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/pimienta_alimentos}
-    username: ${SPRING_DATASOURCE_USERNAME:pimienta_dba}
-    password: ${SPRING_DATASOURCE_PASSWORD:pimienta_dba}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:

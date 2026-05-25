@@ -8,13 +8,21 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "crm_opportunities")
+@Table(
+    name = "crm_opportunities",
+    indexes = {
+      @Index(name = "idx_crm_opportunities_status", columnList = "status"),
+      @Index(name = "idx_crm_opportunities_assigned_salesman_id", columnList = "assigned_salesman_id"),
+      @Index(name = "idx_crm_opportunities_expected_close_date", columnList = "expected_close_date"),
+      @Index(name = "idx_crm_opportunities_deleted_at", columnList = "deleted_at")
+    })
 public class OpportunityJpaEntity {
 
   @Id

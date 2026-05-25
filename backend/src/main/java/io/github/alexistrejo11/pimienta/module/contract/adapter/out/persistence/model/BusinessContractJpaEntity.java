@@ -9,13 +9,22 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "business_contracts")
+@Table(
+    name = "business_contracts",
+    indexes = {
+      @Index(name = "idx_business_contracts_employee_id", columnList = "employee_id"),
+      @Index(name = "idx_business_contracts_opportunity_id", columnList = "opportunity_id"),
+      @Index(name = "idx_business_contracts_project_id", columnList = "project_id"),
+      @Index(name = "idx_business_contracts_reference_code", columnList = "reference_code"),
+      @Index(name = "idx_business_contracts_deleted_at", columnList = "deleted_at")
+    })
 public class BusinessContractJpaEntity {
 
   @Id

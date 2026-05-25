@@ -9,12 +9,24 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "inventory_movements")
+@Table(
+    name = "inventory_movements",
+    indexes = {
+      @Index(name = "idx_inventory_movements_item_id", columnList = "item_id"),
+      @Index(name = "idx_inventory_movements_transaction_id", columnList = "transaction_id"),
+      @Index(name = "idx_inventory_movements_reference_number", columnList = "reference_number"),
+      @Index(name = "idx_inventory_movements_source_location_id", columnList = "source_location_id"),
+      @Index(
+          name = "idx_inventory_movements_destination_location_id",
+          columnList = "destination_location_id"),
+      @Index(name = "idx_inventory_movements_created_at", columnList = "created_at")
+    })
 public class InventoryMovementJpaEntity {
 
   @Id

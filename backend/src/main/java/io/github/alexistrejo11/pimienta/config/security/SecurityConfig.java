@@ -50,8 +50,7 @@ public class SecurityConfig {
                                                 auth -> auth.requestMatchers(SWAGGER_PUBLIC_PATHS).permitAll()
                                                                 .requestMatchers(ACTUATOR_PUBLIC_PATHS).permitAll()
                                                                 .requestMatchers(AUTH_PUBLIC_PATHS).permitAll()
-                                                                // TODO: Remove this
-                                                                .requestMatchers("/api/v1/employees/**").permitAll()
+                                                                .requestMatchers("/api/v1/employees/**").authenticated()
                                                                 .anyRequest().authenticated())
                                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
                 return http.build();

@@ -17,7 +17,11 @@ public interface AttendanceRepository {
 
   Optional<Attendance> findOpenForEmployeeOnWorkDate(long employeeId, LocalDate workDate);
 
-  List<Attendance> findAllForHeadquarterAndWorkDate(long headquarterId, LocalDate workDate);
+  /**
+   * Paginated attendances for a calendar work date. When {@code headquarterId} is null, all
+   * non-deleted rows for that date are returned.
+   */
+  Page<Attendance> findPageForWorkDate(LocalDate workDate, Long headquarterId, Pageable pageable);
 
   List<Attendance> findAllOpenCheckedIn();
 

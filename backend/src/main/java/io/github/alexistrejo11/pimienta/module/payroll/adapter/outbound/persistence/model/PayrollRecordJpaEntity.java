@@ -9,6 +9,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -17,7 +18,14 @@ import lombok.Builder;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "payroll_records")
+@Table(
+    name = "payroll_records",
+    indexes = {
+      @Index(name = "idx_payroll_records_employee_id", columnList = "employee_id"),
+      @Index(name = "idx_payroll_records_period_id", columnList = "period_id"),
+      @Index(name = "idx_payroll_records_status", columnList = "status"),
+      @Index(name = "idx_payroll_records_deleted_at", columnList = "deleted_at")
+    })
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor

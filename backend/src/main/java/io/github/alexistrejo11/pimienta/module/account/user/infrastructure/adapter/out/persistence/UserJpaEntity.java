@@ -13,6 +13,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
@@ -21,7 +22,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "account_users")
+@Table(
+    name = "account_users",
+    indexes = {
+      @Index(name = "idx_account_users_phone", columnList = "phone"),
+      @Index(name = "idx_account_users_deleted_at", columnList = "deleted_at"),
+      @Index(name = "idx_account_users_account_status", columnList = "account_status")
+    })
 public class UserJpaEntity {
 
   @Id
@@ -61,7 +68,10 @@ public class UserJpaEntity {
   private LocalDateTime bannedAt;
 
   @ElementCollection(fetch = FetchType.EAGER)
-  @CollectionTable(name = "account_user_roles", joinColumns = @JoinColumn(name = "user_id"))
+  @CollectionTable(
+      name = "account_user_roles",
+      joinColumns = @JoinColumn(name = "user_id"),
+      indexes = @Index(name = "idx_account_user_roles_user_id", columnList = "user_id"))
   @Column(name = "role")
   @Enumerated(EnumType.STRING)
   private Set<Role> roles = new HashSet<>();

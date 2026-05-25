@@ -9,11 +9,18 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "storage_locations")
+@Table(
+    name = "storage_locations",
+    indexes = {
+      @Index(name = "idx_storage_locations_code", columnList = "code"),
+      @Index(name = "idx_storage_locations_parent_id", columnList = "parent_id"),
+      @Index(name = "idx_storage_locations_deleted_at", columnList = "deleted_at")
+    })
 public class StorageLocationJpaEntity {
 
   @Id

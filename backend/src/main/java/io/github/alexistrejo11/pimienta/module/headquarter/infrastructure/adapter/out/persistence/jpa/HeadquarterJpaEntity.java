@@ -5,12 +5,18 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "headquarters")
+@Table(
+    name = "headquarters",
+    indexes = {
+      @Index(name = "idx_headquarters_name", columnList = "name"),
+      @Index(name = "idx_headquarters_deleted_at", columnList = "deleted_at")
+    })
 public class HeadquarterJpaEntity {
 
   @Id

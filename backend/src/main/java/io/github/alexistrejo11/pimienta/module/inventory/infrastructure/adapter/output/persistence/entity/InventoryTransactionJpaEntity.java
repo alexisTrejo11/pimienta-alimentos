@@ -9,11 +9,18 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "inventory_transactions")
+@Table(
+    name = "inventory_transactions",
+    indexes = {
+      @Index(name = "idx_inventory_transactions_status", columnList = "status"),
+      @Index(name = "idx_inventory_transactions_type", columnList = "type"),
+      @Index(name = "idx_inventory_transactions_deleted_at", columnList = "deleted_at")
+    })
 public class InventoryTransactionJpaEntity {
 
   @Id

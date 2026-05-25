@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -16,7 +17,17 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 @Entity
-@Table(name = "tasks")
+@Table(
+    name = "tasks",
+    indexes = {
+      @Index(name = "idx_tasks_assigned_to_id", columnList = "assigned_to_id"),
+      @Index(name = "idx_tasks_status", columnList = "status"),
+      @Index(name = "idx_tasks_project_id", columnList = "project_id"),
+      @Index(name = "idx_tasks_opportunity_id", columnList = "opportunity_id"),
+      @Index(name = "idx_tasks_headquarter_id", columnList = "headquarter_id"),
+      @Index(name = "idx_tasks_due_date", columnList = "due_date"),
+      @Index(name = "idx_tasks_deleted_at", columnList = "deleted_at")
+    })
 public class TaskJpaEntity {
 
   @Id
