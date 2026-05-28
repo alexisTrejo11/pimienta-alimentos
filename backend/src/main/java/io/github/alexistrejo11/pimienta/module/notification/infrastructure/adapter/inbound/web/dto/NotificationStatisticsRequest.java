@@ -13,7 +13,9 @@ public class NotificationStatisticsRequest {
   @Schema(
       description = "Interval start (inclusive), ISO-8601 date-time.",
       example = "2026-05-01T00:00:00",
-      requiredMode = Schema.RequiredMode.REQUIRED)
+      requiredMode = Schema.RequiredMode.REQUIRED,
+      type = "string",
+      format = "date-time")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private LocalDateTime from;
 
@@ -21,7 +23,9 @@ public class NotificationStatisticsRequest {
   @Schema(
       description = "Interval end (inclusive), ISO-8601 date-time.",
       example = "2026-05-28T23:59:59",
-      requiredMode = Schema.RequiredMode.REQUIRED)
+      requiredMode = Schema.RequiredMode.REQUIRED,
+      type = "string",
+      format = "date-time")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private LocalDateTime to;
 

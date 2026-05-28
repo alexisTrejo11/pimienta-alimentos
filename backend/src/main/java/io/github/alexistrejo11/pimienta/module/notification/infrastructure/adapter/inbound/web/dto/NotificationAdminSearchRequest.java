@@ -45,19 +45,35 @@ public class NotificationAdminSearchRequest extends PageableRequest {
   @Schema(description = "Body contains (case-insensitive).", example = "registered")
   private String bodyContains;
 
-  @Schema(description = "Created at from (inclusive).", example = "2026-05-01T00:00:00")
+  @Schema(
+      description = "Created at from (inclusive), ISO-8601.",
+      example = "2026-05-01T00:00:00",
+      type = "string",
+      format = "date-time")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private LocalDateTime createdFrom;
 
-  @Schema(description = "Created at to (inclusive).", example = "2026-05-28T23:59:59")
+  @Schema(
+      description = "Created at to (inclusive), ISO-8601.",
+      example = "2026-05-28T23:59:59",
+      type = "string",
+      format = "date-time")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private LocalDateTime createdTo;
 
-  @Schema(description = "Sent at from (inclusive).", example = "2026-05-01T00:00:00")
+  @Schema(
+      description = "Sent at from (inclusive), ISO-8601.",
+      example = "2026-05-01T00:00:00",
+      type = "string",
+      format = "date-time")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private LocalDateTime sentFrom;
 
-  @Schema(description = "Sent at to (inclusive).", example = "2026-05-28T23:59:59")
+  @Schema(
+      description = "Sent at to (inclusive), ISO-8601.",
+      example = "2026-05-28T23:59:59",
+      type = "string",
+      format = "date-time")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private LocalDateTime sentTo;
 

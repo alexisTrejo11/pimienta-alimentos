@@ -28,11 +28,19 @@ public class FileResourceSearchRequest extends PageableRequest {
   @Schema(description = "Content type contains.", example = "pdf")
   private String contentTypeContains;
 
-  @Schema(description = "Created from (inclusive).", example = "2026-05-01T00:00:00")
+  @Schema(
+      description = "Created from (inclusive), ISO-8601.",
+      example = "2026-05-01T00:00:00",
+      type = "string",
+      format = "date-time")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private LocalDateTime createdFrom;
 
-  @Schema(description = "Created to (inclusive).", example = "2026-05-31T23:59:59")
+  @Schema(
+      description = "Created to (inclusive), ISO-8601.",
+      example = "2026-05-31T23:59:59",
+      type = "string",
+      format = "date-time")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private LocalDateTime createdTo;
 

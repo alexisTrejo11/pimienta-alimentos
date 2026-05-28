@@ -42,11 +42,19 @@ public class NotificationManagerLogSearchRequest extends PageableRequest {
   @Schema(description = "Body contains (case-insensitive).", example = "registered")
   private String bodyContains;
 
-  @Schema(description = "Sent at from (inclusive), within today.", example = "2026-05-28T08:00:00")
+  @Schema(
+      description = "Sent at from (inclusive), within today, ISO-8601.",
+      example = "2026-05-28T08:00:00",
+      type = "string",
+      format = "date-time")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private LocalDateTime sentFrom;
 
-  @Schema(description = "Sent at to (inclusive), within today.", example = "2026-05-28T18:00:00")
+  @Schema(
+      description = "Sent at to (inclusive), within today, ISO-8601.",
+      example = "2026-05-28T18:00:00",
+      type = "string",
+      format = "date-time")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private LocalDateTime sentTo;
 
