@@ -68,28 +68,28 @@ CREATE TABLE employees (
     personal_email                  VARCHAR(320),
     personal_phone                  VARCHAR(40),
     personal_address                VARCHAR(500),
-    personal_birth_date             DATE,
+    birth_date                      DATE,
     personal_nationality            VARCHAR(80),
     official_ids_curp               VARCHAR(18),
     official_ids_rfc                VARCHAR(13),
     official_ids_nss                VARCHAR(11),
     official_ids_clabe              VARCHAR(18),
-    official_ids_employee_number    VARCHAR(32),
+    employee_number                 VARCHAR(32),
     employment_position             VARCHAR(120),
     employment_department           VARCHAR(120),
-    employment_contract_type        VARCHAR(32),
-    employment_work_shift           VARCHAR(32),
-    employment_hire_date            DATE,
-    employment_termination_date     DATE,
-    compensation_salary_per_week    NUMERIC(19, 6),
+    contract_type                   VARCHAR(32),
+    work_shift                      VARCHAR(32),
+    hire_date                       DATE,
+    termination_date                DATE,
+    salary_per_week                 NUMERIC(19, 6),
     compensation_bonuses            NUMERIC(19, 6),
-    compensation_food_vouchers      NUMERIC(19, 6),
-    benefits_integration_factor     NUMERIC(19, 6),
-    benefits_imss_worker_type       VARCHAR(32),
-    benefits_imss_salary_type       VARCHAR(32),
-    benefits_christmas_bonus_days   INTEGER      NOT NULL DEFAULT 0,
-    benefits_vacation_days          INTEGER      NOT NULL DEFAULT 0,
-    benefits_vacation_premium_percent NUMERIC(19, 6),
+    food_vouchers                   NUMERIC(19, 6),
+    integration_factor              NUMERIC(19, 6),
+    imss_worker_type                VARCHAR(32),
+    imss_salary_type                VARCHAR(32),
+    christmas_bonus_days            INTEGER      NOT NULL DEFAULT 0,
+    vacation_days                   INTEGER      NOT NULL DEFAULT 0,
+    vacation_premium_percent        NUMERIC(19, 6),
     status                          VARCHAR(32),
     work_schedule                   JSONB,
     created_at                      TIMESTAMP    NOT NULL,
@@ -101,7 +101,7 @@ CREATE TABLE employees (
 CREATE INDEX idx_employees_status ON employees (status);
 CREATE INDEX idx_employees_deleted_at ON employees (deleted_at);
 CREATE INDEX idx_employees_personal_email ON employees (personal_email);
-CREATE INDEX idx_employees_official_ids_employee_number ON employees (official_ids_employee_number);
+CREATE INDEX idx_employees_employee_number ON employees (employee_number);
 CREATE INDEX idx_employees_employment_department ON employees (employment_department);
 
 COMMENT ON TABLE employees IS 'HR employee master data with embedded personal, employment, and payroll fields.';

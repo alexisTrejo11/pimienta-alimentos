@@ -3,8 +3,10 @@ package io.github.alexistrejo11.pimienta.module.account.user.infrastructure.adap
 import io.github.alexistrejo11.pimienta.module.account.user.core.domain.entities.User;
 import io.github.alexistrejo11.pimienta.module.account.user.core.domain.entities.UserStatistics;
 import io.github.alexistrejo11.pimienta.module.account.user.core.domain.enums.AccountStatus;
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.enums.Role;
 import io.github.alexistrejo11.pimienta.module.account.user.core.port.output.UserRepository;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -62,6 +64,16 @@ public class UserRepositoryImpl implements UserRepository {
   public Page<User> findAll(Pageable pageable) {
     Page<UserJpaEntity> userJpaEntities = jpaRepository.findAll(pageable);
     return userJpaEntities.map(UserPersistenceMapper::toDomain);
+  }
+
+  @Override
+  public List<User> findActiveByRole(Role role) {
+    if (role == null) {
+      return List.of();
+    }
+    return jpaRepository.findActiveByRole(role, AccountStatus.ACTIVE).stream()
+        .map(UserPersistenceMapper::toDomain)
+        .toList();
   }
 
   @Override

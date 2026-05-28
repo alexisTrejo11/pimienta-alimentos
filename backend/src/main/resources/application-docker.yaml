@@ -1,6 +1,6 @@
-# Profile: docker — use with SPRING_PROFILES_ACTIVE=docker (see docker-compose / Dockerfile).
-# Datasource: AWS RDS via SPRING_DATASOURCE_* from docker-compose (.env POSTGRES_URL).
-# For local Compose Postgres instead, uncomment the `postgres` service and use host `postgres`.
+# Profile: docker — use with SPRING_PROFILES_ACTIVE=docker (see docker/README.md).
+# Local stack: SPRING_DATASOURCE_* / SPRING_DATA_REDIS_* set in docker-compose.local.yml.
+# Cloud stack: same vars from .env via docker-compose.cloud.yml (POSTGRES_URL, REDIS_HOST).
 spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL}

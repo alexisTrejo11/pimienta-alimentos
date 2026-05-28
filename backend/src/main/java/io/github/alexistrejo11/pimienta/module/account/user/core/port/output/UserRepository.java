@@ -1,5 +1,7 @@
 package io.github.alexistrejo11.pimienta.module.account.user.core.port.output;
 
+import io.github.alexistrejo11.pimienta.module.account.user.core.domain.enums.Role;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +20,9 @@ public interface UserRepository {
   Optional<User> findByPhone(String phone);
 
   Page<User> findAll(Pageable pageable);
+
+  /** Non-deleted users that have the given role assigned. */
+  List<User> findActiveByRole(Role role);
 
   User save(User user);
 

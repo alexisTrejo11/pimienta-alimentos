@@ -8,7 +8,7 @@ import io.github.alexistrejo11.pimienta.module.account.auth.core.domain.entity.I
 
 public interface AuthUseCases {
 
-  void register(RegisterCommand command);
+  String register(RegisterCommand command);
 
   IssuedTokens login(LoginCommand command);
 

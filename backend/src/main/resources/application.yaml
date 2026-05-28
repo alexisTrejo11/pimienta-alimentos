@@ -1,7 +1,7 @@
 spring:
   application:
     name: pimienta
-  # PostgreSQL (defaults match docker-compose; override via .env or OS env)
+  # PostgreSQL (override via .env or OS env; see docker/README.md for Compose)
   datasource:
     url: ${POSTGRES_URL}
     username: ${POSTGRES_USER}
@@ -53,6 +53,8 @@ springdoc:
       org.springframework.web: DEBUG
 
 pimienta:
+  notifications:
+    admin-emails: ${PIMIENTA_NOTIFICATIONS_ADMIN_EMAILS:admin@example.com}
   image:
     max-width: 800
     max-height: 600

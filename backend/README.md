@@ -45,9 +45,11 @@ cd pimenta-alimentos/backend
 # Run with Maven
 ./mvnw spring-boot:run
 
-# Or with Docker Compose
-docker-compose up -d
+# Or with Docker (local Postgres + Redis + API)
+docker compose -f docker/docker-compose.local.yml up -d --build
 ```
+
+See [docker/README.md](docker/README.md) for local vs cloud Compose and environment variables.
 
 ### Access Points
 
@@ -217,8 +219,7 @@ backend/
 │   ├── application.yaml
 │   └── pimenta-alimentos/  # Bruno API collections
 ├── docs/               # Documentation
-├── docker-compose.yml  # Local development
-└── Dockerfile         # Production container
+└── docker/            # Dockerfile, Compose (local / cloud), Docker guide
 ```
 
 ## License

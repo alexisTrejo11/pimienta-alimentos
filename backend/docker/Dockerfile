@@ -1,4 +1,5 @@
 # Multi-stage build: requires network during `docker build` for Maven dependencies.
+# Build context is the backend project root (see docker-compose *.yml).
 FROM maven:3.9-eclipse-temurin-25-alpine AS build
 WORKDIR /workspace
 

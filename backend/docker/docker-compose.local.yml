@@ -1,0 +1,72 @@
+name: pimienta-backend-local
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: pimienta_alimentos
+      POSTGRES_USER: pimienta_dba
+      POSTGRES_PASSWORD: pimienta_dba
+    ports:
+      - "5431:5432"
+    volumes:
+      - pimienta_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pimienta_dba -d pimienta_alimentos"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6378:6379"
+    volumes:
+      - pimienta_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    working_dir: /workspace
+    volumes:
+      # Bind mount: edit on host, compile + devtools restart in container
+      - ..:/workspace
+      # Anonymous volumes: keep build output and Maven cache off the host (faster on macOS)
+      - /workspace/target
+      - /root/.m2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-8080}:8080"
+    env_file:
+      - path: ../.env
+        required: false
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pimienta_alimentos
+      SPRING_DATASOURCE_USERNAME: pimienta_dba
+      SPRING_DATASOURCE_PASSWORD: pimienta_dba
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      SERVER_PORT: "8080"
+      PIMIENTA_SECURITY_JWT_SECRET: ${PIMIENTA_SECURITY_JWT_SECRET}
+      JAVA_OPTS: ${JAVA_OPTS:-}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
+      AWS_S3_FOLDER: ${AWS_S3_FOLDER:-employees}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+
+volumes:
+  pimienta_pg_data:
+  pimienta_redis_data:

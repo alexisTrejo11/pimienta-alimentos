@@ -15,7 +15,10 @@ import io.github.alexistrejo11.pimienta.module.account.user.core.domain.exceptio
 import io.github.alexistrejo11.pimienta.module.account.user.core.domain.exceptions.PhoneAlreadyExistsException;
 import io.github.alexistrejo11.pimienta.module.account.user.core.domain.exceptions.UserNotFoundException;
 import io.github.alexistrejo11.pimienta.module.account.user.core.port.output.UserRepository;
+import io.github.alexistrejo11.pimienta.module.notification.core.application.event.AccountPendingApprovalEvent;
+import io.github.alexistrejo11.pimienta.module.notification.core.port.output.DomainEventPublisher;
 import io.github.alexistrejo11.pimienta.shared.exception.AuthenticationException;
+import java.time.Instant;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,21 +33,24 @@ public class AuthUseCasesImpl implements AuthUseCases {
   private final PasswordEncoder passwordEncoder;
   private final TokenService tokenService;
   private final RefreshTokenStore refreshTokenStore;
+  private final DomainEventPublisher domainEventPublisher;
 
   public AuthUseCasesImpl(
       UserRepository userRepository,
       PasswordEncoder passwordEncoder,
       TokenService tokenService,
-      RefreshTokenStore refreshTokenStore) {
+      RefreshTokenStore refreshTokenStore,
+      DomainEventPublisher domainEventPublisher) {
     this.userRepository = userRepository;
     this.passwordEncoder = passwordEncoder;
     this.tokenService = tokenService;
     this.refreshTokenStore = refreshTokenStore;
+    this.domainEventPublisher = domainEventPublisher;
   }
 
   @Override
   @Transactional
-  public void register(RegisterCommand command) {
+  public String register(RegisterCommand command) {
     log.info("register start {}", command.toStringMasked());
 
     if (userRepository.findByEmail(command.email()).isPresent()) {
@@ -76,6 +82,16 @@ public class AuthUseCasesImpl implements AuthUseCases {
 
     userRepository.save(user);
     log.info("register complete email={}", command.email());
+
+    domainEventPublisher.publish(new AccountPendingApprovalEvent(
+        user.getId(),
+        user.getEmail(),
+        user.getFirstName(),
+        user.getLastName(),
+        user.getPhone(),
+        Instant.now()));
+
+    return "Registration successful. Your account is pending approval by an administrator.";
   }
 
   @Override
