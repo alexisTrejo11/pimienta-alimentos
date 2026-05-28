@@ -54,7 +54,7 @@ export class AsistenciaHoyModalComponent {
   }
 
   get totalHoy(): number {
-    return this.page()?.totalElements ?? 0;
+    return this.page()?.metadata?.totalElements ?? 0;
   }
 
   get enTurno(): number {

@@ -165,7 +165,7 @@
 
       @if (!loading() && records.length > 0) {
         <div class="mb-2 text-xs text-on-surface-variant">
-          {{ page()?.totalElements ?? 0 }} resultado(s) encontrados
+          {{ page()?.metadata?.totalElements ?? 0 }} resultado(s) encontrados
         </div>
         <div class="overflow-x-auto rounded-xl border border-stone-100 dark:border-stone-800">
           <table class="w-full text-sm" aria-label="Resultados de búsqueda">

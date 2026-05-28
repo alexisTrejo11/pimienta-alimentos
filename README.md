@@ -42,8 +42,8 @@ cd backend
 # With Maven
 ./mvnw spring-boot:run
 
-# Or with Docker
-docker-compose up -d
+# Or with Docker (see backend/docker/README.md)
+docker compose -f docker/docker-compose.local.yml up -d --build
 ```
 
 The API runs at **http://localhost:8080**
@@ -207,8 +207,7 @@ pimienta-alimentos/
 │   │   └── pimenta-alimentos/  # Bruno API collections
 │   ├── src/test/            # Unit & integration tests
 │   ├── docs/               # Documentation
-│   ├── docker-compose.yml   # Local development
-│   ├── Dockerfile          # Production container
+│   └── docker/              # Dockerfile, Compose, Docker guide
 │   └── pom.xml             # Maven configuration
 │
 ├── frontend/                   # Angular SPA

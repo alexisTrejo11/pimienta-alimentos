@@ -1,0 +1,33 @@
+package io.github.alexistrejo11.pimienta.module.notification.infrastructure.adapter.inbound.web.doc;
+
+import io.github.alexistrejo11.pimienta.module.notification.infrastructure.adapter.inbound.web.dto.NotificationStatisticsResponse;
+import io.github.alexistrejo11.pimienta.shared.web.openapi.doc.DocJwtSecured;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/** {@code GET /api/v1/notifications/management/statistics} */
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@DocJwtSecured
+@Operation(
+    summary = "Notification statistics (admin)",
+    description =
+        """
+        Summary counts by status, channel, and type for a required ISO-8601 interval (`from`, `to`). \
+        Maximum range 366 days. **ROLE_ADMIN** only. Rate limit: **READ_HEAVY**.""")
+@ApiResponse(
+    responseCode = "200",
+    description = "Aggregated statistics.",
+    content =
+        @Content(
+            mediaType = "application/json",
+            schema = @Schema(implementation = NotificationStatisticsResponse.class)))
+public @interface DocNotificationManagementStatistics {}

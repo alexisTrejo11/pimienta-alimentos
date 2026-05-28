@@ -9,6 +9,8 @@ import io.github.alexistrejo11.pimienta.module.notification.core.domain.enums.No
 import io.github.alexistrejo11.pimienta.module.notification.core.port.input.NotificationDispatchUseCases;
 import io.github.alexistrejo11.pimienta.module.notification.core.port.output.AdminRecipientPort;
 import io.github.alexistrejo11.pimienta.module.notification.core.port.output.NotificationChannelSender;
+import io.github.alexistrejo11.pimienta.module.notification.core.port.output.NotificationRepository;
+import java.time.LocalDateTime;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -22,11 +24,15 @@ public class NotificationDispatchUseCasesImpl implements NotificationDispatchUse
   private static final Logger log = LoggerFactory.getLogger(NotificationDispatchUseCasesImpl.class);
 
   private final AdminRecipientPort adminRecipientPort;
+  private final NotificationRepository notificationRepository;
   private final Map<NotificationChannel, NotificationChannelSender> sendersByChannel;
 
   public NotificationDispatchUseCasesImpl(
-      AdminRecipientPort adminRecipientPort, List<NotificationChannelSender> senders) {
+      AdminRecipientPort adminRecipientPort,
+      NotificationRepository notificationRepository,
+      List<NotificationChannelSender> senders) {
     this.adminRecipientPort = adminRecipientPort;
+    this.notificationRepository = notificationRepository;
     this.sendersByChannel = new EnumMap<>(NotificationChannel.class);
     for (NotificationChannelSender sender : senders) {
       sendersByChannel.put(sender.channel(), sender);
@@ -110,12 +116,23 @@ public class NotificationDispatchUseCasesImpl implements NotificationDispatchUse
   }
 
   private void send(Notification notification) {
-    NotificationChannelSender sender = sendersByChannel.get(notification.getChannel());
+    Notification persisted = notificationRepository.save(notification);
+    NotificationChannelSender sender = sendersByChannel.get(persisted.getChannel());
     if (sender == null) {
-      log.warn("no sender registered for channel={}", notification.getChannel());
+      log.warn("no sender registered for channel={}", persisted.getChannel());
+      notificationRepository.updateStatus(
+          persisted.getId(), NotificationStatus.SKIPPED, null, "No channel sender registered");
       return;
     }
-    sender.send(notification);
+    try {
+      sender.send(persisted);
+      notificationRepository.updateStatus(
+          persisted.getId(), NotificationStatus.SENT, LocalDateTime.now(), null);
+    } catch (RuntimeException ex) {
+      log.warn("notification send failed id={} channel={}", persisted.getId(), persisted.getChannel(), ex);
+      notificationRepository.updateStatus(
+          persisted.getId(), NotificationStatus.FAILED, null, ex.getMessage());
+    }
   }
 
   private static String buildAdminBody(AccountPendingApprovalEvent event) {

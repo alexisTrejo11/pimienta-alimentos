@@ -103,6 +103,7 @@ aws:
   s3:
     bucket: ${AWS_S3_BUCKET_NAME}
     folder: ${AWS_S3_FOLDER:employees}
+    sources-root: ${AWS_S3_SOURCES_ROOT:pimienta/sources}
 
 logging:
   level:
