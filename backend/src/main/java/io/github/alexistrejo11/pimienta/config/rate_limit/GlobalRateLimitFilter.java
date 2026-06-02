@@ -31,6 +31,7 @@ public final class GlobalRateLimitFilter extends OncePerRequestFilter {
       return true;
     }
     return !path.startsWith("/api/")
+        || path.startsWith("/api/v2/health")
         || path.startsWith("/api/actuator")
         || path.startsWith("/actuator");
   }

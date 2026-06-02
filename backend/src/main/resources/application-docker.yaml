@@ -17,8 +17,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   data:
     redis:
-      host: ${SPRING_DATA_REDIS_HOST:redis}
-      port: ${SPRING_DATA_REDIS_PORT:6379}
+      url: ${REDIS_URL:redis://redis:6379}
 
 server:
   port: ${SERVER_PORT:8080}
@@ -28,6 +27,8 @@ logging:
     org.springframework.web: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB:INFO}
 
 pimienta:
+  redis:
+    key-prefix: ${PIMIENTA_REDIS_KEY_PREFIX:pimienta-alimentos}
   rate-limiting:
     enabled: ${PIMIENTA_RATE_LIMITING_ENABLED:true}
   security:

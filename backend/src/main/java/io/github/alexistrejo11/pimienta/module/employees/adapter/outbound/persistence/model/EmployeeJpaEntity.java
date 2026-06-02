@@ -21,9 +21,9 @@ import org.hibernate.type.SqlTypes;
     indexes = {
       @Index(name = "idx_employees_status", columnList = "status"),
       @Index(name = "idx_employees_deleted_at", columnList = "deleted_at"),
-      @Index(name = "idx_employees_personal_email", columnList = "personal_email"),
+      @Index(name = "idx_employees_personal_email", columnList = "email"),
       @Index(name = "idx_employees_employee_number", columnList = "employee_number"),
-      @Index(name = "idx_employees_employment_department", columnList = "employment_department")
+      @Index(name = "idx_employees_employment_department", columnList = "department")
     })
 public class EmployeeJpaEntity extends BaseJpaEntity {
 

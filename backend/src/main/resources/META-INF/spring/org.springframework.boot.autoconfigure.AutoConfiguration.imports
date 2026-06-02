@@ -1,1 +1,2 @@
+io.github.alexistrejo11.pimienta.config.redis.PimientaRedisAutoConfiguration
 io.github.alexistrejo11.pimienta.config.rate_limit.RateLimitingAutoConfiguration

@@ -1,4 +1,4 @@
--- Outbound notification audit log (email, SMS, LOG channels)
+-- Pimienta Alimentos — outbound notification audit log
 
 CREATE TABLE notifications (
     id                      UUID PRIMARY KEY,
@@ -19,10 +19,10 @@ CREATE TABLE notifications (
     attempt_count           INT          NOT NULL DEFAULT 0,
     last_error              VARCHAR(1000),
     sent_at                 TIMESTAMP,
-    created_at              TIMESTAMP    NOT NULL,
-    updated_at              TIMESTAMP    NOT NULL,
+    created_at              TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at              TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at              TIMESTAMP,
-    version                 BIGINT       NOT NULL DEFAULT 0
+    version                 BIGINT       NOT NULL DEFAULT 1
 );
 
 CREATE INDEX idx_notifications_created_at ON notifications (created_at);
@@ -35,3 +35,11 @@ CREATE INDEX idx_notifications_related_user_id ON notifications (related_user_id
 CREATE INDEX idx_notifications_deleted_at ON notifications (deleted_at);
 
 COMMENT ON TABLE notifications IS 'Audit log of outbound notifications (all channels).';
+
+ALTER TABLE notifications
+    ADD CONSTRAINT ck_notifications_channel
+        CHECK (channel IN ('EMAIL', 'SMS', 'LOG')),
+    ADD CONSTRAINT ck_notifications_type
+        CHECK (type IN ('ACCOUNT_PENDING_APPROVAL', 'UNDEFINED')),
+    ADD CONSTRAINT ck_notifications_status
+        CHECK (status IN ('PENDING', 'SENT', 'FAILED', 'SKIPPED'));

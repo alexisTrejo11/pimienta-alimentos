@@ -80,15 +80,15 @@ public class AuthUseCasesImpl implements AuthUseCases {
 
     User user = User.register(params);
 
-    userRepository.save(user);
-    log.info("register complete email={}", command.email());
+    User saved = userRepository.save(user);
+    log.info("register complete email={} userId={}", command.email(), saved.getId());
 
     domainEventPublisher.publish(new AccountPendingApprovalEvent(
-        user.getId(),
-        user.getEmail(),
-        user.getFirstName(),
-        user.getLastName(),
-        user.getPhone(),
+        saved.getId(),
+        saved.getEmail(),
+        saved.getFirstName(),
+        saved.getLastName(),
+        saved.getPhone(),
         Instant.now()));
 
     return "Registration successful. Your account is pending approval by an administrator.";
@@ -165,8 +165,10 @@ public class AuthUseCasesImpl implements AuthUseCases {
           "Refresh blocked: banned user id=" + validated.userId());
     }
 
-    refreshTokenStore.remove(validated.jti());
-    IssuedTokens tokens = tokenService.issuePair(user);
+    String newAccess = tokenService.issueAccessToken(user);
+    IssuedTokens tokens =
+        new IssuedTokens(
+            newAccess, command.refreshToken(), tokenService.accessTokenExpiresInSeconds());
 
     log.info("refresh success userId={}", user.getId());
     return tokens;
@@ -181,9 +183,11 @@ public class AuthUseCasesImpl implements AuthUseCases {
       log.info("logout noop no refresh token");
       return;
     }
-    String jti = tokenService.extractJtiFromRefreshToken(command.refreshToken());
 
-    refreshTokenStore.remove(jti);
+    String jti = tokenService.extractJtiFromRefreshToken(command.refreshToken());
+    if (jti != null) {
+      refreshTokenStore.remove(jti);
+    }
     log.info("logout complete refresh session revoked");
   }
 

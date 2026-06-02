@@ -88,8 +88,8 @@ Required variables in `.env` (see `.env.example`):
 
 - `POSTGRES_URL` — JDBC URL, e.g. `jdbc:postgresql://your-rds-host:5432/pimienta_alimentos`
 - `POSTGRES_USER`, `POSTGRES_PASSWORD`
-- `REDIS_HOST` — hostname or IP reachable from the container
-- `REDIS_PORT` — optional, default `6379`
+- `REDIS_URL` — Redis connection URL (`redis://…` local/Docker, `rediss://…` Upstash/TLS)
+- `PIMIENTA_REDIS_KEY_PREFIX` — optional key namespace on shared instances (default `pimienta-alimentos`)
 - `PIMIENTA_SECURITY_JWT_SECRET`, AWS variables as needed
 
 ```bash
@@ -100,7 +100,7 @@ cp .env.example .env
 docker compose -f docker/docker-compose.cloud.yml up -d --build
 ```
 
-Ensure the host in `POSTGRES_URL` and `REDIS_HOST` is reachable from inside the container (public RDS endpoint, VPN, or `host.docker.internal` for services on the Docker host).
+Ensure the host in `POSTGRES_URL` and the host in `REDIS_URL` are reachable from inside the container (public RDS/Upstash endpoint, VPN, or `host.docker.internal` for services on the Docker host).
 
 ## How configuration flows
 
@@ -129,7 +129,7 @@ flowchart LR
 
 1. **Compose** substitutes `${VAR}` from `backend/.env` when you run commands from `backend/`.
 2. **`env_file: ../.env`** passes variables into the container process.
-3. **`environment:`** in the compose file sets Spring properties (`SPRING_DATASOURCE_*`, `SPRING_DATA_REDIS_*`). Local compose **overrides** these with fixed in-network hosts; cloud compose maps them from `.env`.
+3. **`environment:`** in the compose file sets Spring properties (`SPRING_DATASOURCE_*`, `REDIS_URL`). Local compose defaults `REDIS_URL` to in-network `redis://redis:6379`; cloud compose uses `REDIS_URL` from `.env`.
 4. The container runs with **`SPRING_PROFILES_ACTIVE=docker`**, loading `application-docker.yaml`, which reads the `SPRING_*` variables above.
 
 The app does **not** read `.env` from disk inside the container; only OS environment variables matter at runtime.
@@ -150,7 +150,7 @@ Docker only reads `.dockerignore` from the **build context root**. Because the c
 | Symptom | Check |
 |---------|--------|
 | API exits on startup (DB) | Local: `docker compose -f docker/docker-compose.local.yml ps` — wait for `postgres` healthy. Cloud: `POSTGRES_URL` reachable from container. |
-| Redis connection errors | Local: service name must stay `redis`. Cloud: `REDIS_HOST` / security groups / TLS if applicable. |
+| Redis connection errors | Check `REDIS_URL` (use `rediss://` for Upstash). Local Docker default: `redis://redis:6379`. Host-side mvn: `redis://localhost:6378`. |
 | Port already in use | Change `API_PORT` in `.env` or stop the process using 8080 / 5431 / 6378. |
 | Flyway / schema errors | RDS and local DB need schema `pimienta`; migrations run on startup via Flyway. |
 

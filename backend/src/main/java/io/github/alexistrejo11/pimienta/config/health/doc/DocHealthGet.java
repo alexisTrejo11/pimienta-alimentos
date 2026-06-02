@@ -1,6 +1,6 @@
-package io.github.alexistrejo11.pimienta.module.account.auth.infrastructure.adapter.inbound.web.doc;
+package io.github.alexistrejo11.pimienta.config.health.doc;
 
-import io.github.alexistrejo11.pimienta.module.account.auth.infrastructure.adapter.inbound.web.dto.TokenResponse;
+import io.github.alexistrejo11.pimienta.config.health.dto.HealthResponse;
 import io.github.alexistrejo11.pimienta.shared.web.openapi.doc.DocPublicEndpoint;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,23 +12,21 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/** {@code POST /api/v1/auth/refresh} */
+/** {@code GET /api/v2/health} */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @DocPublicEndpoint
 @Operation(
-    summary = "Refresh access token",
+    summary = "Liveness check",
     description =
-        """
-        Issues a new access token using the **refresh token** in the body. The refresh token is not \
-        rotated or revoked. Fails when the refresh token is unknown, expired, or revoked. \
-        Rate limit: **AUTH_SESSION**.""")
+        "Returns HTTP 200 when the API process is running. Does not validate downstream "
+            + "dependencies (database, Redis). No Bearer token required.")
 @ApiResponse(
     responseCode = "200",
-    description = "Newly issued tokens.",
+    description = "Service is up.",
     content =
         @Content(
             mediaType = "application/json",
-            schema = @Schema(implementation = TokenResponse.class)))
-public @interface DocAuthRefresh {}
+            schema = @Schema(implementation = HealthResponse.class)))
+public @interface DocHealthGet {}

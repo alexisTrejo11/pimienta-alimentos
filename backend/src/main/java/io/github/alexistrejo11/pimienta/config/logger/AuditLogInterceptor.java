@@ -20,6 +20,7 @@ public class AuditLogInterceptor implements HandlerInterceptor {
       "/actuator/health",
       "/actuator/info",
       "/actuator/metrics",
+      "/api/v2/health",
       "/favicon.ico",
       "/swagger-ui.html",
       "/v3/api-docs",

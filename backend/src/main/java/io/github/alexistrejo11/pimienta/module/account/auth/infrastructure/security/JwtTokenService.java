@@ -40,44 +40,27 @@ public class JwtTokenService implements TokenService {
 
   @Override
   public IssuedTokens issuePair(User user) {
-    SecretKey key = signingKey();
     Instant now = Instant.now();
-    String accessJti = UUID.randomUUID().toString();
     String refreshJti = UUID.randomUUID().toString();
-
-    List<String> roleNames = user.getRoles().stream().map(Enum::name).toList();
-    List<String> permissionNames = collectPermissionNames(user);
-
-    Duration accessTtl = Duration.ofMinutes(properties.getAccessTokenTtlMinutes());
-    Duration refreshTtl = Duration.ofDays(properties.getRefreshTokenTtlDays());
+    Duration accessTtl = accessTokenTtl();
+    Duration refreshTtl = refreshTokenTtl();
 
     refreshTokenStore.remember(refreshJti, user.getId(), refreshTtl);
 
-    String access = Jwts.builder()
-        .id(accessJti)
-        .subject(String.valueOf(user.getId()))
-        .issuedAt(Date.from(now))
-        .expiration(Date.from(now.plus(accessTtl)))
-        .claim("typ", "access")
-        .claim("email", user.getEmail())
-        .claim("firstName", user.getFirstName())
-        .claim("lastName", user.getLastName())
-        .claim("gender", user.getGender() != null ? user.getGender().name() : null)
-        .claim("roles", roleNames)
-        .claim("permissions", permissionNames)
-        .signWith(key)
-        .compact();
-
-    String refresh = Jwts.builder()
-        .id(refreshJti)
-        .subject(String.valueOf(user.getId()))
-        .issuedAt(Date.from(now))
-        .expiration(Date.from(now.plus(refreshTtl)))
-        .claim("typ", "refresh")
-        .signWith(key)
-        .compact();
+    String access = buildAccessToken(user, UUID.randomUUID().toString(), now, accessTtl);
+    String refresh = buildRefreshToken(user, refreshJti, now, refreshTtl);
 
     return new IssuedTokens(access, refresh, accessTtl.getSeconds());
+  }
+
+  @Override
+  public String issueAccessToken(User user) {
+    return buildAccessToken(user, UUID.randomUUID().toString(), Instant.now(), accessTokenTtl());
+  }
+
+  @Override
+  public long accessTokenExpiresInSeconds() {
+    return accessTokenTtl().getSeconds();
   }
 
   @Override
@@ -109,28 +92,7 @@ public class JwtTokenService implements TokenService {
   @Override
   public ParsedAccessToken parseAccessToken(String accessToken) {
     try {
-      Claims claims = parseClaims(accessToken);
-      if (!"access".equals(claims.get("typ"))) {
-        throw invalidAccess("Not an access token.");
-      }
-      String jti = claims.getId();
-      long userId = Long.parseLong(claims.getSubject());
-      String email = claims.get("email", String.class);
-      String firstName = claims.get("firstName", String.class);
-      String lastName = claims.get("lastName", String.class);
-      String gender = claims.get("gender", String.class);
-      @SuppressWarnings("unchecked")
-      List<String> roles = (List<String>) claims.get("roles", List.class);
-      @SuppressWarnings("unchecked")
-      List<String> permissions = (List<String>) claims.get("permissions", List.class);
-      if (roles == null) {
-        roles = List.of();
-      }
-      if (permissions == null) {
-        permissions = List.of();
-      }
-      return new ParsedAccessToken(
-          userId, email, firstName, lastName, gender, roles, permissions, jti);
+      return toParsedAccessToken(parseClaims(accessToken));
     } catch (ExpiredJwtException e) {
       throw invalidAccess("Access token expired.", e);
     } catch (JwtException | IllegalArgumentException e) {
@@ -152,6 +114,70 @@ public class JwtTokenService implements TokenService {
     } catch (JwtException e) {
       return null;
     }
+  }
+
+  private String buildAccessToken(User user, String accessJti, Instant now, Duration accessTtl) {
+    SecretKey key = signingKey();
+    List<String> roleNames = user.getRoles().stream().map(Enum::name).toList();
+    List<String> permissionNames = collectPermissionNames(user);
+
+    return Jwts.builder()
+        .id(accessJti)
+        .subject(String.valueOf(user.getId()))
+        .issuedAt(Date.from(now))
+        .expiration(Date.from(now.plus(accessTtl)))
+        .claim("typ", "access")
+        .claim("email", user.getEmail())
+        .claim("firstName", user.getFirstName())
+        .claim("lastName", user.getLastName())
+        .claim("gender", user.getGender() != null ? user.getGender().name() : null)
+        .claim("roles", roleNames)
+        .claim("permissions", permissionNames)
+        .signWith(key)
+        .compact();
+  }
+
+  private String buildRefreshToken(User user, String refreshJti, Instant now, Duration refreshTtl) {
+    return Jwts.builder()
+        .id(refreshJti)
+        .subject(String.valueOf(user.getId()))
+        .issuedAt(Date.from(now))
+        .expiration(Date.from(now.plus(refreshTtl)))
+        .claim("typ", "refresh")
+        .signWith(signingKey())
+        .compact();
+  }
+
+  private ParsedAccessToken toParsedAccessToken(Claims claims) {
+    if (!"access".equals(claims.get("typ"))) {
+      throw invalidAccess("Not an access token.");
+    }
+    String jti = claims.getId();
+    long userId = Long.parseLong(claims.getSubject());
+    String email = claims.get("email", String.class);
+    String firstName = claims.get("firstName", String.class);
+    String lastName = claims.get("lastName", String.class);
+    String gender = claims.get("gender", String.class);
+    @SuppressWarnings("unchecked")
+    List<String> roles = (List<String>) claims.get("roles", List.class);
+    @SuppressWarnings("unchecked")
+    List<String> permissions = (List<String>) claims.get("permissions", List.class);
+    if (roles == null) {
+      roles = List.of();
+    }
+    if (permissions == null) {
+      permissions = List.of();
+    }
+    return new ParsedAccessToken(
+        userId, email, firstName, lastName, gender, roles, permissions, jti);
+  }
+
+  private Duration accessTokenTtl() {
+    return Duration.ofMinutes(properties.getAccessTokenTtlMinutes());
+  }
+
+  private Duration refreshTokenTtl() {
+    return Duration.ofDays(properties.getRefreshTokenTtlDays());
   }
 
   private Claims parseClaims(String token) {

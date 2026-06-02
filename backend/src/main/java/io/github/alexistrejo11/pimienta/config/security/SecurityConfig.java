@@ -26,11 +26,17 @@ public class SecurityConfig {
         };
 
         private static final String[] ACTUATOR_PUBLIC_PATHS = {
-                        "/actuator/**"
+                        "/actuator/health",
+                        "/actuator/health/**",
+                        "/actuator/info"
         };
 
         private static final String[] AUTH_PUBLIC_PATHS = {
                         "/api/v1/auth/**"
+        };
+
+        private static final String[] HEALTH_PUBLIC_PATHS = {
+                        "/api/v2/health/**"
         };
 
         @Bean
@@ -49,7 +55,9 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(
                                                 auth -> auth.requestMatchers(SWAGGER_PUBLIC_PATHS).permitAll()
                                                                 .requestMatchers(ACTUATOR_PUBLIC_PATHS).permitAll()
+                                                                .requestMatchers(HEALTH_PUBLIC_PATHS).permitAll()
                                                                 .requestMatchers(AUTH_PUBLIC_PATHS).permitAll()
+                                                                .requestMatchers("/actuator/**").hasRole("ADMIN")
                                                                 .requestMatchers("/api/v1/notifications/management/**")
                                                                 .hasRole("ADMIN")
                                                                 .requestMatchers("/api/v1/notifications/logs/**")

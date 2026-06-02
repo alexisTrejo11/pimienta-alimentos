@@ -23,8 +23,8 @@ import java.lang.annotation.Target;
 @Operation(
     summary = "Get file asset by id (admin)",
     description =
-        "Returns the full catalog record for a single file asset. Does not return the file bytes; \
-use the `download-url` endpoint to obtain a pre-signed S3 link. **ROLE_ADMIN** only.")
+        "Returns the full catalog record for a single file asset. Does not return the file bytes; "
+            + "use the download-url endpoint to obtain a pre-signed S3 link. **ROLE_ADMIN** only.")
 @Parameter(name = "id", in = ParameterIn.PATH, description = "File asset UUID.", required = true)
 @ApiResponse(
     responseCode = "200",

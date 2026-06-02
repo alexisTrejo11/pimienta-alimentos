@@ -65,6 +65,12 @@
 			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 
+		<!-- Actuator: health/info probes; metrics and other endpoints secured in SecurityConfig -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
 		<!-- Jackson (ObjectMapper, JSON) — explicit so compile scope resolves com.fasterxml.jackson.databind -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

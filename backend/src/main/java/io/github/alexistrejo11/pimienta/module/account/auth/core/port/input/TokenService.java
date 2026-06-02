@@ -9,6 +9,10 @@ public interface TokenService {
 
   IssuedTokens issuePair(User user);
 
+  String issueAccessToken(User user);
+
+  long accessTokenExpiresInSeconds();
+
   RefreshTokenValidation validateRefreshToken(String refreshToken);
 
   ParsedAccessToken parseAccessToken(String accessToken);

@@ -1,0 +1,14 @@
+# Production: public health + info only; no metrics or other actuator endpoints over HTTP.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+    metrics:
+      enabled: false
+  info:
+    java:
+      enabled: false

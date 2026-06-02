@@ -23,11 +23,12 @@ spring:
         default_schema: pimienta
         format_sql: true
         # Dialect omitted: pick from JDBC URL/driver (PostgreSQL in prod, H2 in tests).
-  # Redis
+  # Redis — set REDIS_URL only (local, Docker, Upstash, etc.)
   data:
     redis:
-      host: localhost
-      port: ${REDIS_PORT:6379}
+      url: ${REDIS_URL:redis://localhost:6379}
+      repositories:
+        enabled: false
 
   servlet:
     multipart:
@@ -36,6 +37,39 @@ spring:
 
 server:
   port: ${API_PORT:8080}
+
+# Actuator — only health, info, and metrics are enabled; everything else stays off.
+management:
+  endpoints:
+    enabled-by-default: false
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      enabled: true
+      show-details: when_authorized
+      probes:
+        enabled: true
+    info:
+      enabled: true
+    metrics:
+      enabled: true
+  info:
+    env:
+      enabled: false
+    java:
+      enabled: true
+    os:
+      enabled: false
+    git:
+      enabled: false
+
+info:
+  app:
+    name: ${spring.application.name}
+    description: Pimienta Alimentos backend API
 
 # OpenAPI / Swagger UI (springdoc)
 springdoc:
@@ -53,6 +87,8 @@ springdoc:
       org.springframework.web: DEBUG
 
 pimienta:
+  redis:
+    key-prefix: ${PIMIENTA_REDIS_KEY_PREFIX:pimienta-alimentos}
   notifications:
     admin-emails: ${PIMIENTA_NOTIFICATIONS_ADMIN_EMAILS:admin@example.com}
   image:

@@ -240,7 +240,7 @@ class AuthIntegrationTest {
   }
 
   @Test
-  void refresh_happyPath_returnsNewPair() throws Exception {
+  void refresh_happyPath_returnsNewAccessTokenAndKeepsRefreshToken() throws Exception {
     String email = "it-ref-" + UUID.randomUUID() + "@mail.com";
     String phone = uniquePhoneE164();
     String password = "StrongP1x!";
@@ -263,7 +263,39 @@ class AuthIntegrationTest {
                 "/api/v1/auth/refresh", AccountTestRequests.refreshJson(refresh)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.accessToken").isString())
-        .andExpect(jsonPath("$.refreshToken").isString());
+        .andExpect(jsonPath("$.refreshToken").value(refresh));
+  }
+
+  @Test
+  void refresh_canReuseSameRefreshToken() throws Exception {
+    String email = "it-ref2-" + UUID.randomUUID() + "@mail.com";
+    String phone = uniquePhoneE164();
+    String password = "StrongP1x!";
+    registerUser(email, phone, password);
+    activateUser(email);
+
+    MvcResult loginRes =
+        mockMvc
+            .perform(
+                AccountTestRequests.postJson(
+                    "/api/v1/auth/login", AccountTestRequests.loginJson(email, password)))
+            .andExpect(status().isOk())
+            .andReturn();
+    String refresh = JsonPath.read(loginRes.getResponse().getContentAsString(), "$.refreshToken");
+
+    mockMvc
+        .perform(
+            AccountTestRequests.postJson(
+                "/api/v1/auth/refresh", AccountTestRequests.refreshJson(refresh)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.refreshToken").value(refresh));
+
+    mockMvc
+        .perform(
+            AccountTestRequests.postJson(
+                "/api/v1/auth/refresh", AccountTestRequests.refreshJson(refresh)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.refreshToken").value(refresh));
   }
 
   @Test
@@ -309,6 +341,37 @@ class AuthIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(AccountTestRequests.logoutJson(refresh)))
         .andExpect(status().isNoContent());
+  }
+
+  @Test
+  void logout_revokesRefreshToken() throws Exception {
+    String email = "it-out-rev-" + UUID.randomUUID() + "@mail.com";
+    String phone = uniquePhoneE164();
+    String password = "StrongP1y!";
+    registerUser(email, phone, password);
+    activateUser(email);
+
+    MvcResult loginRes =
+        mockMvc
+            .perform(
+                AccountTestRequests.postJson(
+                    "/api/v1/auth/login", AccountTestRequests.loginJson(email, password)))
+            .andExpect(status().isOk())
+            .andReturn();
+    String refresh = JsonPath.read(loginRes.getResponse().getContentAsString(), "$.refreshToken");
+
+    mockMvc
+        .perform(
+            post("/api/v1/auth/logout")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(AccountTestRequests.logoutJson(refresh)))
+        .andExpect(status().isNoContent());
+
+    mockMvc
+        .perform(
+            AccountTestRequests.postJson(
+                "/api/v1/auth/refresh", AccountTestRequests.refreshJson(refresh)))
+        .andExpect(status().isUnauthorized());
   }
 
   @Test

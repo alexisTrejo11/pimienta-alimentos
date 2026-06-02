@@ -1,22 +1,21 @@
--- Company file-asset catalog (general-purpose file manager)
--- S3 prefix: pimienta/sources/{category}/{...}
+-- Pimienta Alimentos — S3 file asset catalog
 
 CREATE TABLE file_assets (
     id                  UUID         PRIMARY KEY,
-    category            VARCHAR(32)  NOT NULL,          -- TEMPLATE | COMPANY | EXTRAS | RESOURCE
-    module              VARCHAR(64),                    -- only for RESOURCE category
-    entity_type         VARCHAR(64),                    -- e.g. 'inventory-item', nullable
-    entity_id           BIGINT,                         -- nullable
+    category            VARCHAR(32)  NOT NULL,
+    module              VARCHAR(64),
+    entity_type         VARCHAR(64),
+    entity_id           BIGINT,
     s3_key              VARCHAR(1000) NOT NULL,
     original_name       VARCHAR(500)  NOT NULL,
     content_type        VARCHAR(120)  NOT NULL,
     file_size_bytes     BIGINT,
     description         VARCHAR(1000),
     uploaded_by_user_id BIGINT,
-    created_at          TIMESTAMP    NOT NULL,
-    updated_at          TIMESTAMP    NOT NULL,
+    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at          TIMESTAMP,
-    version             BIGINT       NOT NULL DEFAULT 0
+    version             BIGINT       NOT NULL DEFAULT 1
 );
 
 CREATE INDEX idx_file_assets_category       ON file_assets (category);
@@ -32,3 +31,7 @@ COMMENT ON COLUMN file_assets.module          IS 'Owning module slug for RESOURC
 COMMENT ON COLUMN file_assets.entity_type     IS 'Optional domain entity type tag within the module.';
 COMMENT ON COLUMN file_assets.entity_id       IS 'Optional FK-style entity id (not enforced by DB).';
 COMMENT ON COLUMN file_assets.s3_key          IS 'Full S3 object key used for delete/presign.';
+
+ALTER TABLE file_assets
+    ADD CONSTRAINT ck_file_assets_category
+        CHECK (category IN ('TEMPLATE', 'COMPANY', 'EXTRAS', 'RESOURCE'));

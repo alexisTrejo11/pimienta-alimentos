@@ -56,8 +56,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pimienta_alimentos
       SPRING_DATASOURCE_USERNAME: pimienta_dba
       SPRING_DATASOURCE_PASSWORD: pimienta_dba
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: "6379"
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       SERVER_PORT: "8080"
       PIMIENTA_SECURITY_JWT_SECRET: ${PIMIENTA_SECURITY_JWT_SECRET}
       JAVA_OPTS: ${JAVA_OPTS:-}

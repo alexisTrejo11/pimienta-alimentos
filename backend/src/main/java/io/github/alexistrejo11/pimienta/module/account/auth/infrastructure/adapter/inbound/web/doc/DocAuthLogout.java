@@ -18,7 +18,7 @@ import java.lang.annotation.Target;
     summary = "Sign out",
     description =
         """
-        Revokes the refresh session (best-effort; idempotent). Optional body may carry refresh token \
-        hints for the server-side store. Rate limit: **AUTH_SESSION**.""")
+        Revokes the refresh session (best-effort; idempotent). Optional body may carry the refresh \
+        token to remove from the server store. Rate limit: **AUTH_SESSION**.""")
 @ApiResponse(responseCode = "204", description = "Session revoked; no response body.")
 public @interface DocAuthLogout {}

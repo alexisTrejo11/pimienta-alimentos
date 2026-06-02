@@ -122,7 +122,8 @@ GET /api/v1/employees/export?status=ACTIVE&department=ventas
 |----------|---------|-------------|
 | `SPRING_PROFILES_ACTIVE` | `default` | Spring profile |
 | `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5432/pimienta_alimentos` | DB URL |
-| `SPRING_DATA_REDIS_HOST` | `localhost` | Redis host |
+| `REDIS_URL` | `redis://localhost:6379` | Redis URL (`redis://` or `rediss://` for TLS) |
+| `PIMIENTA_REDIS_KEY_PREFIX` | `pimienta-alimentos` | Global Redis key namespace |
 | `PIMIENTA_SECURITY_JWT_SECRET` | (required) | JWT signing secret |
 | `SERVER_PORT` | `8080` | HTTP port |
 
