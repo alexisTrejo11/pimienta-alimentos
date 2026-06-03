@@ -18,7 +18,7 @@ import type { ParsedApiError } from '../../../core/http/parse-api-error';
  */
 @Component({
   selector: 'app-data-state',
-  standalone: true,
+  
   templateUrl: './data-state.html',
 })
 export class DataStateComponent {

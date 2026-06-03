@@ -8,7 +8,7 @@ import { AsistenciaBusquedaModalComponent } from '../../ui/asistencia-busqueda-m
 
 @Component({
   selector: 'app-workspace-shell',
-  standalone: true,
+  
   imports: [
     RouterOutlet,
     WorkspaceSidebarComponent,

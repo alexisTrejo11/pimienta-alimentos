@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-workspace-footer',
-  standalone: true,
+  
   imports: [RouterLink],
   templateUrl: './workspace-footer.html',
 })

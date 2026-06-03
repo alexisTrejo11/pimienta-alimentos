@@ -1,0 +1,326 @@
+<div class="flex flex-col gap-6 p-8">
+  <app-page-header
+    title="Archivos"
+    subtitle="Documentos y plantillas de la empresa — PDF, Excel y otros formatos"
+  />
+
+  @if (profileLoading()) {
+    <div class="flex items-center gap-3 py-16 text-on-surface-variant" role="status" aria-live="polite">
+      <span class="material-symbols-outlined animate-spin text-2xl" aria-hidden="true">progress_activity</span>
+      <span class="text-sm">Cargando perfil…</span>
+    </div>
+  } @else {
+    <!-- Acciones principales -->
+    <div class="flex flex-wrap items-center gap-3">
+      <button
+        type="button"
+        class="inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-sm font-bold text-[var(--color-on-primary)] shadow transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+        (click)="toggleUpload()"
+        [attr.aria-expanded]="showUpload()"
+      >
+        <span class="material-symbols-outlined text-[20px]" aria-hidden="true">upload_file</span>
+        {{ showUpload() ? 'Cerrar carga' : 'Subir archivo' }}
+      </button>
+    </div>
+
+    <!-- Panel de carga -->
+    @if (showUpload()) {
+      <section
+        class="rounded-xl border border-stone-200 bg-[var(--color-surface-container-lowest)] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:border-stone-800 dark:bg-stone-950"
+        aria-labelledby="archivo-upload-titulo"
+      >
+        <h2 id="archivo-upload-titulo" class="font-headline text-lg font-bold text-on-surface">
+          Subir archivo
+        </h2>
+        <p class="mt-1 text-sm text-on-surface-variant">
+          Tamaño máximo: 50 MB. Formatos admitidos: PDF, Excel, Word, imágenes y otros.
+        </p>
+
+        @if (uploadError(); as ue) {
+          <p class="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200" role="alert">
+            {{ ue }}
+          </p>
+        }
+
+        <div class="mt-6 grid gap-4 md:grid-cols-2">
+          @if (isAdmin()) {
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wide text-on-surface-variant" for="up-cat">
+                Categoría
+              </label>
+              <select
+                id="up-cat"
+                [(ngModel)]="uploadCategory"
+                [ngModelOptions]="{ standalone: true }"
+                class="mt-1 w-full rounded-lg border border-stone-200 bg-stone-100 px-3 py-2 text-sm text-on-surface focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/25 dark:border-stone-700 dark:bg-stone-900"
+              >
+                <option value="COMPANY">Empresa</option>
+                <option value="TEMPLATE">Plantilla</option>
+                <option value="EXTRAS">Extras</option>
+                <option value="RESOURCE">Recurso de módulo</option>
+              </select>
+            </div>
+
+            @if (uploadCategory === 'RESOURCE') {
+              <div>
+                <label class="block text-xs font-semibold uppercase tracking-wide text-on-surface-variant" for="up-mod">
+                  Módulo
+                </label>
+                <select
+                  id="up-mod"
+                  [(ngModel)]="uploadModule"
+                  [ngModelOptions]="{ standalone: true }"
+                  class="mt-1 w-full rounded-lg border border-stone-200 bg-stone-100 px-3 py-2 text-sm text-on-surface focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/25 dark:border-stone-700 dark:bg-stone-900"
+                >
+                  @for (m of moduleOptions; track m.value) {
+                    <option [value]="m.value">{{ m.label }}</option>
+                  }
+                </select>
+              </div>
+            }
+          } @else {
+            <div class="md:col-span-2">
+              <p class="text-sm text-on-surface-variant">
+                Los archivos se asociarán al módulo seleccionado en los filtros:
+                <strong>{{ filterModule }}</strong>
+              </p>
+            </div>
+          }
+
+          <div class="md:col-span-2">
+            <label class="block text-xs font-semibold uppercase tracking-wide text-on-surface-variant" for="up-desc">
+              Descripción (opcional)
+            </label>
+            <input
+              id="up-desc"
+              type="text"
+              [(ngModel)]="uploadDescription"
+              [ngModelOptions]="{ standalone: true }"
+              class="mt-1 w-full rounded-lg border border-stone-200 bg-stone-100 px-3 py-2 text-sm text-on-surface focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/25 dark:border-stone-700 dark:bg-stone-900"
+              placeholder="Nota sobre el archivo…"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="md:col-span-2">
+            <label
+              class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-on-surface shadow-sm hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-950 dark:hover:bg-stone-900"
+            >
+              <span class="material-symbols-outlined text-lg" aria-hidden="true">attach_file</span>
+              Seleccionar archivo
+              <input
+                type="file"
+                class="sr-only"
+                (change)="onFileSelected($event)"
+                [disabled]="uploading()"
+              />
+            </label>
+            @if (selectedFile) {
+              <p class="mt-2 text-sm text-on-surface-variant">
+                {{ selectedFile.name }} ({{ (selectedFile.size / 1024 / 1024).toFixed(2) }} MB)
+              </p>
+            }
+          </div>
+
+          <div class="md:col-span-2 flex flex-wrap gap-3 pt-2">
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-sm font-bold text-[var(--color-on-primary)] shadow transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+              [disabled]="uploading()"
+              (click)="submitUpload()"
+            >
+              @if (uploading()) {
+                Subiendo…
+              } @else {
+                Subir archivo
+              }
+            </button>
+            <button
+              type="button"
+              class="rounded-lg border border-stone-300 px-4 py-2.5 text-sm font-bold text-on-surface hover:bg-stone-100 dark:border-stone-600 dark:hover:bg-stone-900"
+              (click)="toggleUpload()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </section>
+    }
+
+    @if (uploadSuccess(); as msg) {
+      <p class="text-sm text-green-800 dark:text-green-300" role="status">{{ msg }}</p>
+    }
+
+    <!-- Filtros -->
+    <section
+      class="rounded-xl border border-stone-200 bg-[var(--color-surface-container-lowest)] p-4 dark:border-stone-800"
+      aria-label="Filtros de archivos"
+    >
+      <div class="flex flex-wrap items-end gap-4">
+        @if (isAdmin()) {
+          <div class="space-y-1">
+            <label class="ml-1 block text-[11px] font-semibold uppercase tracking-wider text-[var(--color-on-surface-variant)]" for="f-cat">
+              Categoría
+            </label>
+            <select
+              id="f-cat"
+              [(ngModel)]="filterCategory"
+              [ngModelOptions]="{ standalone: true }"
+              class="rounded-lg border border-transparent bg-stone-100 px-3 py-2 text-sm text-on-surface focus:ring-2 focus:ring-[var(--color-primary)]/20 dark:bg-stone-900"
+            >
+              <option value="">Todas</option>
+              <option value="COMPANY">Empresa</option>
+              <option value="TEMPLATE">Plantilla</option>
+              <option value="EXTRAS">Extras</option>
+              <option value="RESOURCE">Recurso de módulo</option>
+            </select>
+          </div>
+        }
+
+        <div class="space-y-1">
+          <label class="ml-1 block text-[11px] font-semibold uppercase tracking-wider text-[var(--color-on-surface-variant)]" for="f-mod">
+            Módulo@if (!isAdmin()) { *}
+          </label>
+          <select
+            id="f-mod"
+            [(ngModel)]="filterModule"
+            [ngModelOptions]="{ standalone: true }"
+            class="rounded-lg border border-transparent bg-stone-100 px-3 py-2 text-sm text-on-surface focus:ring-2 focus:ring-[var(--color-primary)]/20 dark:bg-stone-900"
+          >
+            @for (m of moduleOptions; track m.value) {
+              <option [value]="m.value">{{ m.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="space-y-1">
+          <label class="ml-1 block text-[11px] font-semibold uppercase tracking-wider text-[var(--color-on-surface-variant)]" for="f-name">
+            Nombre contiene
+          </label>
+          <input
+            id="f-name"
+            type="text"
+            [(ngModel)]="filterName"
+            [ngModelOptions]="{ standalone: true }"
+            class="w-40 rounded-lg border border-transparent bg-stone-100 px-3 py-2 text-sm text-on-surface focus:ring-2 focus:ring-[var(--color-primary)]/20 dark:bg-stone-900"
+            placeholder="reporte"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="space-y-1">
+          <label class="ml-1 block text-[11px] font-semibold uppercase tracking-wider text-[var(--color-on-surface-variant)]" for="f-type">
+            Tipo MIME
+          </label>
+          <input
+            id="f-type"
+            type="text"
+            [(ngModel)]="filterContentType"
+            [ngModelOptions]="{ standalone: true }"
+            class="w-32 rounded-lg border border-transparent bg-stone-100 px-3 py-2 text-sm text-on-surface focus:ring-2 focus:ring-[var(--color-primary)]/20 dark:bg-stone-900"
+            placeholder="pdf"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="space-y-1">
+          <label class="ml-1 block text-[11px] font-semibold uppercase tracking-wider text-[var(--color-on-surface-variant)]" for="f-from">
+            Desde
+          </label>
+          <input
+            id="f-from"
+            type="date"
+            [(ngModel)]="filterCreatedFrom"
+            [ngModelOptions]="{ standalone: true }"
+            class="rounded-lg border border-transparent bg-stone-100 px-3 py-2 text-sm text-on-surface focus:ring-2 focus:ring-[var(--color-primary)]/20 dark:bg-stone-900"
+          />
+        </div>
+
+        <div class="space-y-1">
+          <label class="ml-1 block text-[11px] font-semibold uppercase tracking-wider text-[var(--color-on-surface-variant)]" for="f-to">
+            Hasta
+          </label>
+          <input
+            id="f-to"
+            type="date"
+            [(ngModel)]="filterCreatedTo"
+            [ngModelOptions]="{ standalone: true }"
+            class="rounded-lg border border-transparent bg-stone-100 px-3 py-2 text-sm text-on-surface focus:ring-2 focus:ring-[var(--color-primary)]/20 dark:bg-stone-900"
+          />
+        </div>
+
+        <button
+          type="button"
+          class="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-bold text-[var(--color-on-primary)] shadow-sm transition hover:opacity-95 disabled:opacity-60"
+          [disabled]="loading()"
+          (click)="applyFilters()"
+        >
+          Aplicar filtros
+        </button>
+      </div>
+    </section>
+
+    <!-- Listado -->
+    <app-data-state
+      [loading]="loading()"
+      [error]="error()"
+      [empty]="items().length === 0"
+      emptyMessage="No hay archivos que coincidan con los filtros."
+      (retry)="reloadList()"
+    >
+      <div class="overflow-x-auto rounded-xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950">
+        <table class="w-full min-w-[720px] text-sm" aria-label="Lista de archivos">
+          <thead class="border-b border-stone-100 bg-stone-50 dark:border-stone-800 dark:bg-stone-900">
+            <tr>
+              <th class="px-4 py-3 text-left font-semibold text-on-surface-variant">Nombre</th>
+              <th class="px-4 py-3 text-left font-semibold text-on-surface-variant">Categoría</th>
+              <th class="px-4 py-3 text-left font-semibold text-on-surface-variant">Tipo</th>
+              <th class="px-4 py-3 text-left font-semibold text-on-surface-variant">Tamaño</th>
+              <th class="px-4 py-3 text-left font-semibold text-on-surface-variant">Fecha</th>
+              <th class="px-4 py-3 text-right font-semibold text-on-surface-variant">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-stone-100 dark:divide-stone-800">
+            @for (f of items(); track f.id) {
+              <tr
+                app-archivo-row
+                [archivo]="f"
+                [canDelete]="canDelete()"
+                [downloading]="downloadingId() === f.id"
+                (download)="downloadFile($event)"
+                (deleteFile)="deleteFile($event)"
+              ></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (metadata(); as meta) {
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <p class="text-sm text-on-surface-variant">
+            Página {{ meta.pageNumber + 1 }} de {{ meta.totalPages || 1 }}
+            · {{ meta.totalElements }} archivo{{ meta.totalElements === 1 ? '' : 's' }}
+          </p>
+          <div class="flex gap-2">
+            <button
+              type="button"
+              class="rounded-lg border border-stone-200 px-3 py-1.5 text-sm font-semibold text-on-surface transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-stone-700 dark:hover:bg-stone-800"
+              [disabled]="!meta.hasPrevious || loading()"
+              (click)="prevPage()"
+            >
+              Anterior
+            </button>
+            <button
+              type="button"
+              class="rounded-lg border border-stone-200 px-3 py-1.5 text-sm font-semibold text-on-surface transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-stone-700 dark:hover:bg-stone-800"
+              [disabled]="!meta.hasNext || loading()"
+              (click)="nextPage()"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      }
+    </app-data-state>
+  }
+</div>

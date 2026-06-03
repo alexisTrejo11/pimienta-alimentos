@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../config/api.config';
 import type {
   LoginRequest,
+  LogoutRequest,
   RefreshRequest,
   RegisterRequest,
   RegisterResponse,
@@ -13,6 +14,9 @@ import type {
 
 /**
  * Authentication API calls against `/api/v1/auth`.
+ *
+ * All `/api/v1/*` HTTP traffic is logged centrally by `apiLoggingInterceptor`
+ * (method, path, status, duration, safe summaries — no passwords or tokens).
  *
  * ### RxJS notes (quick refresher)
  * - `HttpClient` methods return a **cold** {@link Observable}: the HTTP call does not start until something
@@ -49,10 +53,21 @@ export class AuthService {
   }
 
   /**
-   * Rota el refresh token y devuelve nuevos tokens (`POST /api/v1/auth/refresh`).
-   * El interceptor global también refresca ante 401/403; este método sirve para flujos explícitos.
+   * Emite un nuevo access token reutilizando el refresh token (`POST /api/v1/auth/refresh`).
+   * El refresh token no se rota; solo se invalida en logout o al expirar su JWT.
+   * El interceptor global también refresca ante {@code 401}; este método sirve para flujos explícitos.
    */
   refresh(request: RefreshRequest): Observable<TokenResponse> {
     return this.http.post<TokenResponse>(`${this.authUrl}/refresh`, request);
+  }
+
+  /**
+   * Revoca la sesión en el servidor (`POST /api/v1/auth/logout` → {@code 204}).
+   * Idempotente; el caller debe limpiar {@code sessionStorage} después.
+   */
+  logout(request: LogoutRequest = {}): Observable<void> {
+    const refreshToken = request.refreshToken ?? sessionStorage.getItem('refreshToken');
+    const body: LogoutRequest = refreshToken ? { refreshToken } : {};
+    return this.http.post<void>(`${this.authUrl}/logout`, body);
   }
 }

@@ -38,7 +38,7 @@ export interface LogoutRequest {
   refreshToken?: string | null;
 }
 
-/** Response from login and refresh (tokens). */
+/** Response from login; refresh returns a new access token and echoes the same refresh token. */
 export interface TokenResponse {
   accessToken: string;
   refreshToken: string;

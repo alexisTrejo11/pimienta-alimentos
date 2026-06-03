@@ -53,10 +53,6 @@ export class Login {
       .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
         next: (tokens) => {
-          console.info('[Login] sesión iniciada', {
-            expiresInSeconds: tokens.expiresInSeconds,
-            tokenType: tokens.tokenType,
-          });
           sessionStorage.setItem('accessToken', tokens.accessToken);
           sessionStorage.setItem('refreshToken', tokens.refreshToken);
           const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
@@ -70,9 +66,7 @@ export class Login {
           void this.router.navigateByUrl(safeReturn);
         },
         error: (err: unknown) => {
-          const parsed = parseApiError(err);
-          this.apiError.set(parsed);
-          console.error('[Login] fallo el inicio de sesión', { http: err, parsed });
+          this.apiError.set(parseApiError(err));
         },
       });
   }

@@ -1,8 +1,0 @@
-import { Component } from '@angular/core';
-
-@Component({
-  selector: 'app-tasks-page',
-  standalone: true,
-  templateUrl: './tasks-page.html',
-})
-export class TasksPageComponent {}

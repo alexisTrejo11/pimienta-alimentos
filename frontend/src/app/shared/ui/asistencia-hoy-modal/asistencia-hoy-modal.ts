@@ -21,7 +21,7 @@ const STATUS_LABELS: Record<AttendanceStatus, string> = {
  */
 @Component({
   selector: 'app-asistencia-hoy-modal',
-  standalone: true,
+  
   templateUrl: './asistencia-hoy-modal.html',
 })
 export class AsistenciaHoyModalComponent {

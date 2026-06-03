@@ -5,7 +5,7 @@ import { BRAND_LOGO_URL } from '../../../pages/home/brand';
 
 @Component({
   selector: 'app-workspace-sidebar',
-  standalone: true,
+  
   imports: [RouterLink, RouterLinkActive],
   templateUrl: './workspace-sidebar.html',
 })

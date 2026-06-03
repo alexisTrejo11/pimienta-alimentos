@@ -88,12 +88,9 @@ export class Register {
         next: (body) => {
           this.registerSuccess.set(body);
           this.form.reset();
-          console.info('[Register] cuenta creada', { status: body.status });
         },
         error: (err: unknown) => {
-          const parsed = parseApiError(err);
-          this.apiError.set(parsed);
-          console.error('[Register] fallo el registro', { http: err, parsed });
+          this.apiError.set(parseApiError(err));
         },
       });
   }

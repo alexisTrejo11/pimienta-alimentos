@@ -24,7 +24,8 @@ function isProtectedApiUrl(url: string): boolean {
 
 let refreshInFlight: Observable<TokenResponse> | null = null;
 
-function refreshTokens(http: HttpClient): Observable<TokenResponse> {
+/** POST /auth/refresh — issues a new access token; the refresh token is reused (not rotated). */
+function refreshAccessToken(http: HttpClient): Observable<TokenResponse> {
   if (!refreshInFlight) {
     const refreshToken = sessionStorage.getItem('refreshToken');
     if (!refreshToken) {
@@ -50,13 +51,36 @@ function clearSessionAndRedirect(router: Router, err: HttpErrorResponse): Observ
   return throwError(() => err);
 }
 
+function readApiErrorCode(err: HttpErrorResponse): string | null {
+  const body = err.error;
+  if (body === null || typeof body !== 'object') {
+    return null;
+  }
+  const code = (body as Record<string, unknown>)['errorCode'];
+  return typeof code === 'string' ? code : null;
+}
+
 /**
- * On {@code 401} or {@code 403} from the Pimienta API (excluding {@code /auth/*}):
- * one refresh via {@code POST /auth/refresh}, then retries the original request once.
- * If refresh fails or the retry still fails, clears session and sends the user to login.
+ * Spring Security returns {@code 403} (not {@code 401}) when the JWT is missing, invalid, or expired.
+ * Only skip refresh when the API explicitly denies permission ({@code errorCode: FORBIDDEN}).
+ */
+function shouldAttemptTokenRefresh(err: HttpErrorResponse): boolean {
+  if (err.status === 401) {
+    return true;
+  }
+  if (err.status !== 403) {
+    return false;
+  }
+  return readApiErrorCode(err) !== 'FORBIDDEN';
+}
+
+/**
+ * On {@code 401}, or {@code 403} from an unauthenticated session (missing/expired JWT): one refresh via
+ * {@code POST /auth/refresh}, then retries the original request once with the new access token.
+ * The refresh token is not rotated — it stays valid until logout or JWT expiry.
  *
- * Note: a true RBAC {@code 403} after a valid token will still end at login with this policy;
- * tighten later by inspecting {@code errorCode} if needed.
+ * {@code 403} with {@code errorCode: FORBIDDEN} is RBAC and is not retried. If refresh fails or the
+ * retried request still indicates an auth problem, clears session and sends the user to login.
  */
 export const authSessionInterceptor: HttpInterceptorFn = (req, next) => {
   const platformId = inject(PLATFORM_ID);
@@ -73,8 +97,7 @@ export const authSessionInterceptor: HttpInterceptorFn = (req, next) => {
       if (!(err instanceof HttpErrorResponse)) {
         return throwError(() => err);
       }
-      const status = err.status;
-      if (status !== 401 && status !== 403) {
+      if (!shouldAttemptTokenRefresh(err)) {
         return throwError(() => err);
       }
       if (req.context.get(AUTH_RETRY_AFTER_REFRESH)) {
@@ -85,12 +108,12 @@ export const authSessionInterceptor: HttpInterceptorFn = (req, next) => {
         return clearSessionAndRedirect(router, err);
       }
 
-      return refreshTokens(bareHttp).pipe(
+      return refreshAccessToken(bareHttp).pipe(
         switchMap((tokens) => {
           sessionStorage.setItem('accessToken', tokens.accessToken);
-          sessionStorage.setItem('refreshToken', tokens.refreshToken);
           const retryReq = req.clone({
             context: req.context.set(AUTH_RETRY_AFTER_REFRESH, true),
+            headers: req.headers.delete('Authorization'),
           });
           return next(retryReq);
         }),

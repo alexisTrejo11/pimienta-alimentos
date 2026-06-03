@@ -8,29 +8,30 @@ import { PortalPage } from './pages/home/portal-page/portal-page';
 import { TerminosServicioPage } from './pages/home/terminos-servicio-page/terminos-servicio-page';
 import { ClientsPageComponent } from './pages/clients/clients-page';
 import { DashboardPageComponent } from './pages/dashboard/dashboard-page';
-import { InventoryPageComponent } from './pages/inventory/inventory-page';
-import { TasksPageComponent } from './pages/tasks/tasks-page';
+import { InventoryPageComponent } from './pages/app/inventory/inventory-page';
+import { TasksPageComponent } from './pages/app/tasks/tasks-page';
 import { WorkspaceShellComponent } from './shared/workspace/workspace-shell/workspace-shell';
 import { Login } from './pages/auth/login/login';
 import { Register } from './pages/auth/register/register';
 import { workspaceAuthGuard } from './core/auth/workspace-auth.guard';
 
 // ── Módulos nuevos ──────────────────────────────────────────────────────────
-import { EmpleadosPageComponent } from './pages/empleados/empleados-page';
-import { EmpleadoDetailPageComponent } from './pages/empleados/empleado-detail/empleado-detail-page';
-import { OportunidadesPageComponent } from './pages/crm/oportunidades/oportunidades-page';
-import { OportunidadDetailPageComponent } from './pages/crm/oportunidades/oportunidad-detail/oportunidad-detail-page';
-import { OportunidadFormPageComponent } from './pages/crm/oportunidades/oportunidad-form-page/oportunidad-form-page';
-import { ProyectosPageComponent } from './pages/crm/proyectos/proyectos-page';
-import { ProyectoDetailPageComponent } from './pages/crm/proyectos/proyecto-detail/proyecto-detail-page';
-import { ProyectoFormPageComponent } from './pages/crm/proyectos/proyecto-form-page/proyecto-form-page';
-import { TareasPageComponent } from './pages/tareas/tareas-page';
-import { TareaDetailPageComponent } from './pages/tareas/tarea-detail/tarea-detail-page';
-import { TareaFormPageComponent } from './pages/tareas/tarea-form/tarea-form-page';
-import { SedesPageComponent } from './pages/sedes/sedes-page';
-import { SedeDetailPageComponent } from './pages/sedes/sede-detail/sede-detail-page';
-import { ContratosPageComponent } from './pages/contratos/contratos-page';
-import { NominaPageComponent } from './pages/nomina/nomina-page';
+import { EmpleadosPageComponent } from './pages/app/empleados/empleados-page';
+import { EmpleadoDetailPageComponent } from './pages/app/empleados/empleado-detail/empleado-detail-page';
+import { OportunidadesPageComponent } from './pages/app/crm/oportunidades/oportunidades-page';
+import { OportunidadDetailPageComponent } from './pages/app/crm/oportunidades/oportunidad-detail/oportunidad-detail-page';
+import { OportunidadFormPageComponent } from './pages/app/crm/oportunidades/oportunidad-form-page/oportunidad-form-page';
+import { ProyectosPageComponent } from './pages/app/crm/proyectos/proyectos-page';
+import { ProyectoDetailPageComponent } from './pages/app/crm/proyectos/proyecto-detail/proyecto-detail-page';
+import { ProyectoFormPageComponent } from './pages/app/crm/proyectos/proyecto-form-page/proyecto-form-page';
+import { TareasPageComponent } from './pages/app/tareas/tareas-page';
+import { TareaDetailPageComponent } from './pages/app/tareas/tarea-detail/tarea-detail-page';
+import { TareaFormPageComponent } from './pages/app/tareas/tarea-form/tarea-form-page';
+import { SedesPageComponent } from './pages/app/sedes/sedes-page';
+import { SedeDetailPageComponent } from './pages/app/sedes/sede-detail/sede-detail-page';
+import { ContratosPageComponent } from './pages/app/contratos/contratos-page';
+import { NominaPageComponent } from './pages/app/nomina/nomina-page';
+import { ArchivosPageComponent } from './pages/app/archivos/archivos-page';
 
 export const routes: Routes = [
   {
@@ -81,6 +82,9 @@ export const routes: Routes = [
 
       // ── Contratos ─────────────────────────────────────────────────────────
       { path: 'contratos', component: ContratosPageComponent },
+
+      // ── Archivos ──────────────────────────────────────────────────────────
+      { path: 'archivos', component: ArchivosPageComponent },
 
       // ── Nómina ────────────────────────────────────────────────────────────
       { path: 'nomina', component: NominaPageComponent },

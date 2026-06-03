@@ -15,7 +15,7 @@ export type StatusBadgeKind = 'employee' | 'task' | 'opportunity' | 'project' | 
  */
 @Component({
   selector: 'app-status-badge',
-  standalone: true,
+  
   templateUrl: './status-badge.html',
 })
 export class StatusBadgeComponent {

@@ -27,7 +27,7 @@ const ALL_STATUSES: AttendanceStatus[] = [
  */
 @Component({
   selector: 'app-asistencia-busqueda-modal',
-  standalone: true,
+  
   imports: [FormsModule],
   templateUrl: './asistencia-busqueda-modal.html',
 })

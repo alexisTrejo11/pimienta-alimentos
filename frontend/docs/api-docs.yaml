@@ -18,6 +18,9 @@ tags:
 - name: Inventory — storage locations
   description: "Ubicaciones de almacén (árbol, bloqueo). Requiere Bearer JWT. Errores:\
     \ `STORAGE_LOCATION_NOT_FOUND`, `STORAGE_LOCATION_NOT_EMPTY`."
+- name: Notification logs
+  description: Manager-facing read-only log of today's LOG-channel notifications.
+    Requires JWT with **ROLE_MANAGER** or **ROLE_ADMIN**.
 - name: Account — Profile
   description: "Current-user profile and dashboard. Requires `Authorization: Bearer\
     \ <access_token>`. JWT must map to a valid user; roles are exposed as `ROLE_*`\
@@ -46,6 +49,9 @@ tags:
     \ `Authorization: Bearer <access_token>`. Document **elevated** roles (`ROLE_ADMIN`,\
     \ `ROLE_MANAGER`, `ROLE_SUPPORT`) for operators; fine-grained authorization may\
     \ be enforced in the application layer as the product evolves."
+- name: Notification management
+  description: Administrator APIs for searching stored notifications and viewing delivery
+    statistics. Requires JWT with **ROLE_ADMIN**.
 - name: CRM — Opportunities
   description: "Sales opportunities: search, CRUD, Excel import/export, pipeline transitions\
     \ (discovery → win/lose), and nested tasks. Requires `Authorization: Bearer <access_token>`.\
@@ -71,6 +77,9 @@ tags:
   description: "Catálogo de artículos (SKU, categoría, estado). Requiere `Authorization:\
     \ Bearer <access_token>`. Operadores típicos: **ADMIN**, **MANAGER**. Errores\
     \ de dominio devuelven `ApiErrorResponse` (p. ej. `ITEM_NOT_FOUND`, `ITEM_SKU_ALREADY_EXISTS`)."
+- name: File management
+  description: "Administrator API for uploading, searching, deleting, and downloading\
+    \ company files stored in S3 (pimienta/sources/). Requires JWT with **ROLE_ADMIN**."
 - name: Inventory — transactions
   description: "Movimientos de inventario (compra, venta, transferencia, ajustes,\
     \ flujo de aprobación). Requiere Bearer JWT. Errores: `INVENTORY_TRANSACTION_NOT_FOUND`,\
@@ -84,6 +93,12 @@ tags:
     \ toggles, and Excel import/export. Requires `Authorization: Bearer <access_token>`.\
     \ Typical roles: **MANAGER**, **ADMIN**, **SUPPORT** (as configured). Not-found\
     \ responses may use `TASK_NOT_FOUND` or `TASK_CHECKLIST_ITEM_NOT_FOUND` in `ApiErrorResponse`."
+- name: File resources
+  description: Module-scoped file upload and retrieval (RESOURCE category). Requires
+    JWT with **ROLE_ADMIN** or **ROLE_MANAGER**.
+- name: Health
+  description: "Public liveness checks. No authentication required; intended for load\
+    \ balancers, container orchestrators, and uptime monitors."
 - name: HR — Employee attendance
   description: "Check-in / check-out for employees, queries by id, by headquarter\
     \ for the current day, paginated search, and automatic closure of forgotten open\
@@ -5898,6 +5913,228 @@ paths:
                 $ref: "#/components/schemas/ApiErrorResponse"
       security:
       - bearer-jwt: []
+  /api/v1/files/resources/upload:
+    post:
+      tags:
+      - File resources
+      summary: Upload module resource file
+      description: "Upload a file scoped to a specific module and optional entity\
+        \ (always stored under `pimienta/sources/resources/{module}/{entityId?}/`).\
+        \ `module` is required. Max file size: **50 MB**. **ROLE_ADMIN** or **ROLE_MANAGER**.\
+        \ Rate limit: **SENSITIVE_OPERATIONS**."
+      operationId: upload
+      parameters:
+      - name: module
+        in: query
+        description: "Module slug that owns this resource file (e.g. `inventory`,\
+          \ `crm`, `payroll`)."
+        required: true
+        schema:
+          type: string
+          example: inventory
+      - name: entityType
+        in: query
+        description: Optional domain entity-type tag within the module (e.g. `inventory-item`).
+        required: false
+        schema:
+          type: string
+          example: inventory-item
+      - name: entityId
+        in: query
+        description: Optional entity id; creates a sub-folder in S3 for easy grouping.
+        required: false
+        schema:
+          type: integer
+          format: int64
+          example: 42
+      - name: description
+        in: query
+        description: Human-readable note about the file.
+        required: false
+        schema:
+          type: string
+          example: Stock report for warehouse A
+      - name: uploadedByUserId
+        in: query
+        description: Id of the user performing the upload (audit).
+        required: false
+        schema:
+          type: integer
+          format: int64
+          example: 5
+      requestBody:
+        description: Multipart body — the `file` part carries the raw binary.
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              description: Must include the `file` part. All other params are query
+                params.
+              required:
+              - file
+            encoding:
+              file:
+                contentType: application/octet-stream
+        required: true
+      responses:
+        "201":
+          description: Resource file stored in S3 and catalog entry created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileAssetResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
+  /api/v1/files/management/upload:
+    post:
+      tags:
+      - File management
+      summary: Upload file (admin)
+      description: "Upload any company file to S3 (`pimienta/sources/`). Send `multipart/form-data`\
+        \ with the binary `file` part plus query parameters. `category` is required\
+        \ for all uploads; `module` is additionally required when `category = RESOURCE`.\
+        \ Max file size: **50 MB**. **ROLE_ADMIN** only. Rate limit: **SENSITIVE_OPERATIONS**."
+      operationId: upload_1
+      parameters:
+      - name: category
+        in: query
+        description: "Storage category: `TEMPLATE` | `COMPANY` | `EXTRAS` | `RESOURCE`."
+        required: true
+        schema:
+          type: string
+          enum:
+          - TEMPLATE
+          - COMPANY
+          - EXTRAS
+          - RESOURCE
+          example: TEMPLATE
+      - name: module
+        in: query
+        description: "Module slug — **required when `category = RESOURCE`** (e.g.\
+          \ `inventory`, `crm`)."
+        required: false
+        schema:
+          type: string
+          example: inventory
+      - name: entityType
+        in: query
+        description: Optional entity-type tag within the module (e.g. `inventory-item`).
+        required: false
+        schema:
+          type: string
+          example: inventory-item
+      - name: entityId
+        in: query
+        description: Optional entity id the file is linked to.
+        required: false
+        schema:
+          type: integer
+          format: int64
+          example: 42
+      - name: description
+        in: query
+        description: Human-readable note about the file.
+        required: false
+        schema:
+          type: string
+          example: Q2 invoice template
+      - name: uploadedByUserId
+        in: query
+        description: Id of the user performing the upload (for audit purposes).
+        required: false
+        schema:
+          type: integer
+          format: int64
+          example: 1
+      requestBody:
+        description: Multipart body — the `file` part carries the raw binary.
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              description: Must include the `file` part. All other params are query
+                params.
+              required:
+              - file
+            encoding:
+              file:
+                contentType: application/octet-stream
+        required: true
+      responses:
+        "201":
+          description: File stored in S3 and catalog entry created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileAssetResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
   /api/v1/employees:
     get:
       tags:
@@ -7680,6 +7917,54 @@ paths:
                 $ref: "#/components/schemas/ApiErrorResponse"
       security:
       - bearer-jwt: []
+  /api/v2/health:
+    get:
+      tags:
+      - Health
+      summary: Liveness check
+      description: "Returns HTTP 200 when the API process is running. Does not validate\
+        \ downstream dependencies (database, Redis). No Bearer token required."
+      operationId: health
+      responses:
+        "200":
+          description: Service is up.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
   /api/v1/users/me/dashboard:
     get:
       tags:
@@ -8662,6 +8947,383 @@ paths:
           description: Excel workbook bytes.
           content:
             application/vnd.openxmlformats-officedocument.spreadsheetml.sheet: {}
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
+  /api/v1/notifications/management:
+    get:
+      tags:
+      - Notification management
+      summary: Search notifications (admin)
+      description: "Paginated search over the notification audit log. All filters\
+        \ are optional and combined with AND logic. Date-time parameters use ISO-8601\
+        \ format (`2026-05-28T10:15:00`). **ROLE_ADMIN** only. Rate limit: **READ_HEAVY**."
+      operationId: search
+      parameters:
+      - name: filter
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/NotificationAdminSearchRequest"
+      - name: id
+        in: query
+        description: Filter by exact notification UUID.
+        schema:
+          type: string
+          format: uuid
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+      - name: channel
+        in: query
+        description: Filter by delivery channel.
+        schema:
+          type: string
+          enum:
+          - EMAIL
+          - SMS
+          - LOG
+          example: LOG
+      - name: type
+        in: query
+        description: Filter by notification type.
+        schema:
+          type: string
+          enum:
+          - ACCOUNT_PENDING_APPROVAL
+          - UNDEFINED
+          example: ACCOUNT_PENDING_APPROVAL
+      - name: status
+        in: query
+        description: Filter by delivery status.
+        schema:
+          type: string
+          enum:
+          - PENDING
+          - SENT
+          - FAILED
+          - SKIPPED
+          example: SENT
+      - name: recipientUserId
+        in: query
+        description: Filter by recipient user id.
+        schema:
+          type: integer
+          format: int64
+          example: 1
+      - name: relatedUserId
+        in: query
+        description: Filter by related business user id (e.g. the registrant).
+        schema:
+          type: integer
+          format: int64
+          example: 42
+      - name: correlationId
+        in: query
+        description: Correlation id contains (case-insensitive).
+        schema:
+          type: string
+          example: account-pending
+      - name: recipientEmailContains
+        in: query
+        description: Recipient email contains (case-insensitive).
+        schema:
+          type: string
+          example: admin@
+      - name: recipientPhoneContains
+        in: query
+        description: Recipient phone contains.
+        schema:
+          type: string
+          example: "+57300"
+      - name: subjectContains
+        in: query
+        description: Subject contains (case-insensitive).
+        schema:
+          type: string
+          example: approval
+      - name: bodyContains
+        in: query
+        description: Body contains (case-insensitive).
+        schema:
+          type: string
+          example: registered
+      - name: createdFrom
+        in: query
+        description: "Created at from (inclusive), ISO-8601."
+        schema:
+          type: string
+          format: date-time
+          example: 2026-05-01T00:00:00
+      - name: createdTo
+        in: query
+        description: "Created at to (inclusive), ISO-8601."
+        schema:
+          type: string
+          format: date-time
+          example: 2026-05-28T23:59:59
+      - name: sentFrom
+        in: query
+        description: "Sent at from (inclusive), ISO-8601."
+        schema:
+          type: string
+          format: date-time
+          example: 2026-05-01T00:00:00
+      - name: sentTo
+        in: query
+        description: "Sent at to (inclusive), ISO-8601."
+        schema:
+          type: string
+          format: date-time
+          example: 2026-05-28T23:59:59
+      - name: page
+        in: query
+        description: Zero-based page index.
+        schema:
+          type: integer
+          default: 0
+      - name: size
+        in: query
+        description: Page size (max 100).
+        schema:
+          type: integer
+          default: 20
+      responses:
+        "200":
+          description: Paged notification records.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PagedResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
+  /api/v1/notifications/management/statistics:
+    get:
+      tags:
+      - Notification management
+      summary: Notification statistics (admin)
+      description: "Summary counts by status, channel, and type for a required ISO-8601\
+        \ interval (`from`, `to`). Maximum range 366 days. **ROLE_ADMIN** only. Rate\
+        \ limit: **READ_HEAVY**."
+      operationId: statistics
+      parameters:
+      - name: request
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/NotificationStatisticsRequest"
+      responses:
+        "200":
+          description: Aggregated statistics.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationStatisticsResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
+  /api/v1/notifications/logs:
+    get:
+      tags:
+      - Notification logs
+      summary: Today's notification logs (manager)
+      description: "Returns **LOG-channel** notifications created **today** (server\
+        \ calendar day). The channel and date window are enforced server-side regardless\
+        \ of any filter you pass. Additional optional filters narrow within that window.\
+        \ **ROLE_MANAGER** or **ROLE_ADMIN**. Rate limit: **READ_HEAVY**."
+      operationId: searchTodayLogs
+      parameters:
+      - name: filter
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/NotificationManagerLogSearchRequest"
+      - name: id
+        in: query
+        description: Filter by exact notification UUID.
+        schema:
+          type: string
+          format: uuid
+      - name: type
+        in: query
+        description: Filter by notification type.
+        schema:
+          type: string
+          enum:
+          - ACCOUNT_PENDING_APPROVAL
+          - UNDEFINED
+          example: ACCOUNT_PENDING_APPROVAL
+      - name: status
+        in: query
+        description: Filter by delivery status.
+        schema:
+          type: string
+          enum:
+          - PENDING
+          - SENT
+          - FAILED
+          - SKIPPED
+          example: SENT
+      - name: recipientUserId
+        in: query
+        description: Filter by recipient user id.
+        schema:
+          type: integer
+          format: int64
+          example: 1
+      - name: relatedUserId
+        in: query
+        description: Filter by related business user id.
+        schema:
+          type: integer
+          format: int64
+          example: 42
+      - name: correlationId
+        in: query
+        description: Correlation id contains (case-insensitive).
+        schema:
+          type: string
+          example: account-pending
+      - name: subjectContains
+        in: query
+        description: Subject contains (case-insensitive).
+        schema:
+          type: string
+          example: approval
+      - name: bodyContains
+        in: query
+        description: Body contains (case-insensitive).
+        schema:
+          type: string
+          example: registered
+      - name: sentFrom
+        in: query
+        description: "Sent at from (inclusive), within today, ISO-8601."
+        schema:
+          type: string
+          format: date-time
+          example: 2026-05-28T08:00:00
+      - name: sentTo
+        in: query
+        description: "Sent at to (inclusive), within today, ISO-8601."
+        schema:
+          type: string
+          format: date-time
+          example: 2026-05-28T18:00:00
+      - name: page
+        in: query
+        description: Zero-based page index.
+        schema:
+          type: integer
+          default: 0
+      - name: size
+        in: query
+        description: Page size (max 100).
+        schema:
+          type: integer
+          default: 20
+      responses:
+        "200":
+          description: Paged LOG-channel notification entries for today.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PagedResponse"
         "400":
           description: "Bad request: validation, malformed JSON, or constraint violation.\
             \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
@@ -9886,6 +10548,505 @@ paths:
           description: Excel workbook bytes.
           content:
             application/vnd.openxmlformats-officedocument.spreadsheetml.sheet: {}
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
+  /api/v1/files/resources:
+    get:
+      tags:
+      - File resources
+      summary: Search module resource files
+      description: "Paginated search restricted to the **RESOURCE** category. `module`\
+        \ is required — the server enforces it and returns 400 if absent. Optionally\
+        \ narrow by entity type, entity id, filename, content type, or creation date\
+        \ range. **ROLE_ADMIN** or **ROLE_MANAGER**. Rate limit: **READ_HEAVY**."
+      operationId: search_1
+      parameters:
+      - name: filter
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/FileResourceSearchRequest"
+      - name: module
+        in: query
+        description: "Module slug to query (e.g. `inventory`, `crm`, `payroll`)."
+        required: true
+        schema:
+          type: string
+          example: inventory
+      - name: entityType
+        in: query
+        description: Filter by entity-type tag.
+        schema:
+          type: string
+          example: inventory-item
+      - name: entityId
+        in: query
+        description: Filter by entity id.
+        schema:
+          type: integer
+          format: int64
+          example: 42
+      - name: originalNameContains
+        in: query
+        description: Original filename contains (case-insensitive).
+        schema:
+          type: string
+          example: report
+      - name: contentTypeContains
+        in: query
+        description: MIME type contains (case-insensitive).
+        schema:
+          type: string
+          example: pdf
+      - name: createdFrom
+        in: query
+        description: "Created from (inclusive), ISO-8601."
+        schema:
+          type: string
+          format: date-time
+          example: 2026-05-01T00:00:00
+      - name: createdTo
+        in: query
+        description: "Created to (inclusive), ISO-8601."
+        schema:
+          type: string
+          format: date-time
+          example: 2026-05-31T23:59:59
+      - name: page
+        in: query
+        description: Zero-based page index.
+        schema:
+          type: integer
+          default: 0
+      - name: size
+        in: query
+        description: Page size (max 100).
+        schema:
+          type: integer
+          default: 20
+      responses:
+        "200":
+          description: Paged module resource files.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PagedResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
+  /api/v1/files/resources/{id}/download-url:
+    get:
+      tags:
+      - File resources
+      summary: Generate resource download URL
+      description: Returns a 24-hour pre-signed URL. **ROLE_ADMIN** or **ROLE_MANAGER**.
+      operationId: downloadUrl
+      parameters:
+      - name: id
+        in: path
+        description: File asset UUID.
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: Pre-signed download URL.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileDownloadUrlResponse"
+        "404":
+          description: Asset not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
+  /api/v1/files/management:
+    get:
+      tags:
+      - File management
+      summary: Search file assets (admin)
+      description: "Paginated search across all file categories with optional filters\
+        \ combined with AND logic. Date-time parameters use ISO-8601 format (`2026-05-28T10:15:00`).\
+        \ **ROLE_ADMIN** only. Rate limit: **READ_HEAVY**."
+      operationId: search_2
+      parameters:
+      - name: filter
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/FileAssetSearchRequest"
+      - name: category
+        in: query
+        description: Filter by storage category.
+        schema:
+          type: string
+          enum:
+          - TEMPLATE
+          - COMPANY
+          - EXTRAS
+          - RESOURCE
+          example: TEMPLATE
+      - name: module
+        in: query
+        description: Filter by module slug (RESOURCE category).
+        schema:
+          type: string
+          example: inventory
+      - name: entityType
+        in: query
+        description: Filter by entity-type tag.
+        schema:
+          type: string
+          example: inventory-item
+      - name: entityId
+        in: query
+        description: Filter by entity id.
+        schema:
+          type: integer
+          format: int64
+          example: 42
+      - name: originalNameContains
+        in: query
+        description: Original filename contains (case-insensitive).
+        schema:
+          type: string
+          example: invoice
+      - name: contentTypeContains
+        in: query
+        description: MIME type contains (case-insensitive).
+        schema:
+          type: string
+          example: spreadsheet
+      - name: uploadedByUserId
+        in: query
+        description: Filter by uploader user id.
+        schema:
+          type: integer
+          format: int64
+          example: 1
+      - name: createdFrom
+        in: query
+        description: "Created from (inclusive), ISO-8601."
+        schema:
+          type: string
+          format: date-time
+          example: 2026-05-01T00:00:00
+      - name: createdTo
+        in: query
+        description: "Created to (inclusive), ISO-8601."
+        schema:
+          type: string
+          format: date-time
+          example: 2026-05-31T23:59:59
+      - name: page
+        in: query
+        description: Zero-based page index.
+        schema:
+          type: integer
+          default: 0
+      - name: size
+        in: query
+        description: Page size (max 100).
+        schema:
+          type: integer
+          default: 20
+      responses:
+        "200":
+          description: Paged list of file assets.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PagedResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
+  /api/v1/files/management/{id}:
+    get:
+      tags:
+      - File management
+      summary: Get file asset by id (admin)
+      description: Returns the full catalog record for a single file asset. Does not
+        return the file bytes; use the download-url endpoint to obtain a pre-signed
+        S3 link. **ROLE_ADMIN** only.
+      operationId: getById
+      parameters:
+      - name: id
+        in: path
+        description: File asset UUID.
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: File asset.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileAssetResponse"
+        "404":
+          description: Asset not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
+    delete:
+      tags:
+      - File management
+      summary: Delete file asset (admin)
+      description: "Soft-deletes the catalog entry and removes the object from S3.\
+        \ **ROLE_ADMIN** only. Rate limit: **SENSITIVE_OPERATIONS**."
+      operationId: delete
+      parameters:
+      - name: id
+        in: path
+        description: File asset UUID.
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: Deleted.
+        "404":
+          description: Asset not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: "Bad request: validation, malformed JSON, or constraint violation.\
+            \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: "Unauthorized: missing/invalid Bearer token, bad credentials,\
+            \ or expired access token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Forbidden: authenticated but not allowed for this resource."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
+          description: Too many requests (rate limit). Check `Retry-After` and `X-RateLimit-*`
+            response headers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+      security:
+      - bearer-jwt: []
+  /api/v1/files/management/{id}/download-url:
+    get:
+      tags:
+      - File management
+      summary: Generate download URL (admin)
+      description: Returns a 24-hour pre-signed S3 URL for the given asset. **ROLE_ADMIN**
+        only.
+      operationId: downloadUrl_1
+      parameters:
+      - name: id
+        in: path
+        description: File asset UUID.
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: Pre-signed download URL.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileDownloadUrlResponse"
+        "404":
+          description: Asset not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "400":
           description: "Bad request: validation, malformed JSON, or constraint violation.\
             \ See `errorCode` (e.g. VALIDATION_FAILED, CONSTRAINT_VIOLATION)."
@@ -12850,6 +14011,67 @@ components:
       - salePrice
       - sku
       - unit
+    FileAssetResponse:
+      type: object
+      description: Stored company file asset.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Asset id.
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        category:
+          type: string
+          description: Storage category.
+          enum:
+          - TEMPLATE
+          - COMPANY
+          - EXTRAS
+          - RESOURCE
+          example: TEMPLATE
+        module:
+          type: string
+          description: Owning module (RESOURCE only).
+          example: inventory
+        entityType:
+          type: string
+          description: Entity type tag (RESOURCE only).
+          example: inventory-item
+        entityId:
+          type: integer
+          format: int64
+          description: Entity id (RESOURCE only).
+          example: 42
+        s3Key:
+          type: string
+          description: S3 object key.
+          example: pimienta/sources/templates/invoice_template_1716916800000_3742.xlsx
+        originalName:
+          type: string
+          description: Original filename.
+          example: invoice_template.xlsx
+        contentType:
+          type: string
+          description: MIME type.
+          example: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+        fileSizeBytes:
+          type: integer
+          format: int64
+          description: File size in bytes.
+          example: 204800
+        description:
+          type: string
+          description: Optional description.
+        uploadedByUserId:
+          type: integer
+          format: int64
+          description: User id who uploaded the file.
+          example: 1
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp.
+          example: 2026-05-28T10:15:00
     EmployeeRegisterMultipartBody:
       type: object
       description: "Send as **multipart/form-data**: required part **employee** =\
@@ -13457,6 +14679,18 @@ components:
         assignedSalesmanId:
           type: integer
           format: int64
+    HealthResponse:
+      type: object
+      description: Public liveness probe for load balancers and orchestrators.
+      properties:
+        status:
+          type: string
+          description: Application health status.
+          example: UP
+        service:
+          type: string
+          description: Spring application name.
+          example: pimienta
     UserDashboardResponse:
       type: object
       properties:
@@ -13794,6 +15028,257 @@ components:
           type: number
         overdue:
           type: boolean
+    NotificationAdminSearchRequest:
+      type: object
+      description: Filters and pagination for admin notification search (GET /api/v1/notifications/management).
+      properties:
+        page:
+          type: integer
+          format: int32
+          default: 0
+          description: Índice de página basado en cero.
+          example: 0
+          minimum: 0
+        size:
+          type: integer
+          format: int32
+          default: 20
+          description: Tamaño de página (máximo 100).
+          example: 20
+          maximum: 100
+          minimum: 1
+        id:
+          type: string
+          format: uuid
+          description: Filter by notification id.
+        channel:
+          type: string
+          description: Filter by channel.
+          enum:
+          - EMAIL
+          - SMS
+          - LOG
+          example: EMAIL
+        type:
+          type: string
+          description: Filter by type.
+          enum:
+          - ACCOUNT_PENDING_APPROVAL
+          - UNDEFINED
+          example: ACCOUNT_PENDING_APPROVAL
+        status:
+          type: string
+          description: Filter by status.
+          enum:
+          - PENDING
+          - SENT
+          - FAILED
+          - SKIPPED
+          example: SENT
+        recipientUserId:
+          type: integer
+          format: int64
+          description: Filter by recipient user id.
+          example: 1
+        relatedUserId:
+          type: integer
+          format: int64
+          description: Filter by related user id.
+          example: 42
+        correlationId:
+          type: string
+          description: Correlation id contains (case-insensitive).
+          example: account-pending
+        recipientEmailContains:
+          type: string
+          description: Recipient email contains (case-insensitive).
+          example: admin@
+        recipientPhoneContains:
+          type: string
+          description: Recipient phone contains.
+          example: "300"
+        subjectContains:
+          type: string
+          description: Subject contains (case-insensitive).
+          example: approval
+        bodyContains:
+          type: string
+          description: Body contains (case-insensitive).
+          example: registered
+        createdFrom:
+          type: string
+          format: date-time
+          description: "Created at from (inclusive), ISO-8601."
+          example: 2026-05-01T00:00:00
+        createdTo:
+          type: string
+          format: date-time
+          description: "Created at to (inclusive), ISO-8601."
+          example: 2026-05-28T23:59:59
+        sentFrom:
+          type: string
+          format: date-time
+          description: "Sent at from (inclusive), ISO-8601."
+          example: 2026-05-01T00:00:00
+        sentTo:
+          type: string
+          format: date-time
+          description: "Sent at to (inclusive), ISO-8601."
+          example: 2026-05-28T23:59:59
+    NotificationStatisticsRequest:
+      type: object
+      description: Time interval for notification statistics (GET .../management/statistics).
+      properties:
+        from:
+          type: string
+          format: date-time
+          description: "Interval start (inclusive), ISO-8601 date-time."
+          example: 2026-05-01T00:00:00
+        to:
+          type: string
+          format: date-time
+          description: "Interval end (inclusive), ISO-8601 date-time."
+          example: 2026-05-28T23:59:59
+      required:
+      - from
+      - to
+    NotificationStatisticsResponse:
+      type: object
+      description: Aggregated notification metrics for a time interval.
+      properties:
+        from:
+          type: string
+          format: date-time
+          description: Interval start (inclusive).
+          example: 2026-05-01T00:00:00
+        to:
+          type: string
+          format: date-time
+          description: Interval end (inclusive).
+          example: 2026-05-28T23:59:59
+        total:
+          type: integer
+          format: int64
+          description: Total notifications in the interval.
+          example: 120
+        pending:
+          type: integer
+          format: int64
+          description: Pending count.
+          example: 3
+        sent:
+          type: integer
+          format: int64
+          description: Successfully sent count.
+          example: 110
+        failed:
+          type: integer
+          format: int64
+          description: Failed count.
+          example: 5
+        skipped:
+          type: integer
+          format: int64
+          description: Skipped count.
+          example: 2
+        countByChannel:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+          description: Counts grouped by channel name.
+          example:
+            LOG: 80
+            EMAIL: 30
+        countByType:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+          description: Counts grouped by type name.
+          example:
+            ACCOUNT_PENDING_APPROVAL: 120
+        countByStatus:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+          description: Counts grouped by status name.
+          example:
+            SENT: 110
+            FAILED: 5
+    NotificationManagerLogSearchRequest:
+      type: object
+      description: Filters for manager notification log search (GET /api/v1/notifications/logs).
+        Only LOG channel entries from today are returned.
+      properties:
+        page:
+          type: integer
+          format: int32
+          default: 0
+          description: Índice de página basado en cero.
+          example: 0
+          minimum: 0
+        size:
+          type: integer
+          format: int32
+          default: 20
+          description: Tamaño de página (máximo 100).
+          example: 20
+          maximum: 100
+          minimum: 1
+        id:
+          type: string
+          format: uuid
+          description: Filter by notification id.
+        type:
+          type: string
+          description: Filter by type.
+          enum:
+          - ACCOUNT_PENDING_APPROVAL
+          - UNDEFINED
+          example: ACCOUNT_PENDING_APPROVAL
+        status:
+          type: string
+          description: Filter by status.
+          enum:
+          - PENDING
+          - SENT
+          - FAILED
+          - SKIPPED
+          example: SENT
+        recipientUserId:
+          type: integer
+          format: int64
+          description: Filter by recipient user id.
+          example: 1
+        relatedUserId:
+          type: integer
+          format: int64
+          description: Filter by related user id.
+          example: 42
+        correlationId:
+          type: string
+          description: Correlation id contains (case-insensitive).
+          example: account-pending
+        subjectContains:
+          type: string
+          description: Subject contains (case-insensitive).
+          example: approval
+        bodyContains:
+          type: string
+          description: Body contains (case-insensitive).
+          example: registered
+        sentFrom:
+          type: string
+          format: date-time
+          description: "Sent at from (inclusive), within today, ISO-8601."
+          example: 2026-05-28T08:00:00
+        sentTo:
+          type: string
+          format: date-time
+          description: "Sent at to (inclusive), within today, ISO-8601."
+          example: 2026-05-28T18:00:00
     LocationTreeNodeResponse:
       type: object
       properties:
@@ -13841,6 +15326,10 @@ components:
         totalElements:
           type: integer
           format: int64
+        first:
+          type: boolean
+        last:
+          type: boolean
         size:
           type: integer
           format: int32
@@ -13854,10 +15343,6 @@ components:
           $ref: "#/components/schemas/SortObject"
         pageable:
           $ref: "#/components/schemas/PageableObject"
-        first:
-          type: boolean
-        last:
-          type: boolean
         numberOfElements:
           type: integer
           format: int32
@@ -13877,10 +15362,10 @@ components:
         pageSize:
           type: integer
           format: int32
-        sort:
-          $ref: "#/components/schemas/SortObject"
         unpaged:
           type: boolean
+        sort:
+          $ref: "#/components/schemas/SortObject"
     SortObject:
       type: object
       properties:
@@ -13910,6 +15395,135 @@ components:
           format: int64
           description: Soft-deleted sites.
           example: 2
+    FileResourceSearchRequest:
+      type: object
+      description: Filters for GET /api/v1/files/resources (RESOURCE category only).
+      properties:
+        page:
+          type: integer
+          format: int32
+          default: 0
+          description: Índice de página basado en cero.
+          example: 0
+          minimum: 0
+        size:
+          type: integer
+          format: int32
+          default: 20
+          description: Tamaño de página (máximo 100).
+          example: 20
+          maximum: 100
+          minimum: 1
+        module:
+          type: string
+          description: Module slug to query resources for.
+          example: inventory
+          minLength: 1
+        entityType:
+          type: string
+          description: Filter by entity type.
+          example: inventory-item
+        entityId:
+          type: integer
+          format: int64
+          description: Filter by entity id.
+          example: 42
+        originalNameContains:
+          type: string
+          description: Original filename contains (case-insensitive).
+          example: report
+        contentTypeContains:
+          type: string
+          description: Content type contains.
+          example: pdf
+        createdFrom:
+          type: string
+          format: date-time
+          description: "Created from (inclusive), ISO-8601."
+          example: 2026-05-01T00:00:00
+        createdTo:
+          type: string
+          format: date-time
+          description: "Created to (inclusive), ISO-8601."
+          example: 2026-05-31T23:59:59
+      required:
+      - module
+    FileDownloadUrlResponse:
+      type: object
+      description: Pre-signed 24-hour download URL for a file asset.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Asset id.
+        url:
+          type: string
+          description: Pre-signed S3 download URL (valid 24 h).
+          example: https://bucket.s3.us-east-1.amazonaws.com/pimienta/sources/...
+    FileAssetSearchRequest:
+      type: object
+      description: Filters and pagination for GET /api/v1/files/management.
+      properties:
+        page:
+          type: integer
+          format: int32
+          default: 0
+          description: Índice de página basado en cero.
+          example: 0
+          minimum: 0
+        size:
+          type: integer
+          format: int32
+          default: 20
+          description: Tamaño de página (máximo 100).
+          example: 20
+          maximum: 100
+          minimum: 1
+        category:
+          type: string
+          description: Filter by category.
+          enum:
+          - TEMPLATE
+          - COMPANY
+          - EXTRAS
+          - RESOURCE
+          example: TEMPLATE
+        module:
+          type: string
+          description: Filter by owning module (RESOURCE category).
+          example: inventory
+        entityType:
+          type: string
+          description: Filter by entity type.
+          example: inventory-item
+        entityId:
+          type: integer
+          format: int64
+          description: Filter by entity id.
+          example: 42
+        originalNameContains:
+          type: string
+          description: Original filename contains (case-insensitive).
+          example: invoice
+        contentTypeContains:
+          type: string
+          description: Content type contains.
+          example: spreadsheet
+        uploadedByUserId:
+          type: integer
+          format: int64
+          description: Filter by uploader user id.
+          example: 1
+        createdFrom:
+          type: string
+          format: date-time
+          description: "Created from (inclusive), ISO-8601."
+          example: 2026-05-01T00:00:00
+        createdTo:
+          type: string
+          format: date-time
+          description: "Created to (inclusive), ISO-8601."
+          example: 2026-05-31T23:59:59
     DepartmentHeadcountResponse:
       type: object
       properties:

@@ -95,8 +95,9 @@ export interface EmployeeResponse {
 /** GET /api/v1/employees (list, search, active) */
 export interface EmployeeListItemResponse {
   id: number;
-  firstName: string;
-  lastName: string;
+  fullName: string;
+  /** HTTPS URL (S3 presigned) or empty string when no photo. */
+  photoUrl: string;
   email: string;
   department: string;
   position: string;
