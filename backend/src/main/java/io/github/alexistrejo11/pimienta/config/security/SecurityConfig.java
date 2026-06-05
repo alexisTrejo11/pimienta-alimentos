@@ -46,12 +46,18 @@ public class SecurityConfig {
 
         @Bean
         public SecurityFilterChain securityFilterChain(
-                        HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+                        HttpSecurity http,
+                        JwtAuthenticationFilter jwtAuthenticationFilter,
+                        PimientaAuthenticationEntryPoint authenticationEntryPoint,
+                        PimientaAccessDeniedHandler accessDeniedHandler) throws Exception {
                 http.csrf(AbstractHttpConfigurer::disable)
                                 .cors(Customizer.withDefaults())
                                 .sessionManagement(
                                                 session -> session
                                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .exceptionHandling(
+                                                ex -> ex.authenticationEntryPoint(authenticationEntryPoint)
+                                                                .accessDeniedHandler(accessDeniedHandler))
                                 .authorizeHttpRequests(
                                                 auth -> auth.requestMatchers(SWAGGER_PUBLIC_PATHS).permitAll()
                                                                 .requestMatchers(ACTUATOR_PUBLIC_PATHS).permitAll()

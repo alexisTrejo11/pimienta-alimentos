@@ -12,15 +12,12 @@ spring:
     baseline-on-migrate: true
     locations: classpath:db/migration
     # RDS setup uses schema pimienta (not public); keep Flyway history + DDL there too.
-    schemas: pimienta
-    default-schema: pimienta
   jpa:
     hibernate:
       ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
-        default_schema: pimienta
         format_sql: true
         # Dialect omitted: pick from JDBC URL/driver (PostgreSQL in prod, H2 in tests).
   # Redis — set REDIS_URL only (local, Docker, Upstash, etc.)

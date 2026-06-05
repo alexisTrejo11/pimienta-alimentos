@@ -315,10 +315,6 @@ public class GlobalExceptionHandler {
   }
 
   private static String traceId(HttpServletRequest request) {
-    Object v = request.getAttribute(TraceIdFilter.TRACE_ID_REQUEST_ATTR);
-    if (v instanceof String s && !s.isBlank()) {
-      return s;
-    }
-    return java.util.UUID.randomUUID().toString();
+    return TraceIds.from(request);
   }
 }

@@ -113,6 +113,14 @@ public final class AccountTestRequests {
     return MockMvcRequestBuilders.post(path).header("Authorization", "Bearer " + accessToken);
   }
 
+  public static MockHttpServletRequestBuilder postJsonBearer(
+      String path, String accessToken, String body) {
+    return MockMvcRequestBuilders.post(path)
+        .contentType(MediaType.APPLICATION_JSON)
+        .header("Authorization", "Bearer " + accessToken)
+        .content(body);
+  }
+
   public static MockHttpServletRequestBuilder putBearer(String path, String accessToken) {
     return MockMvcRequestBuilders.put(path).header("Authorization", "Bearer " + accessToken);
   }

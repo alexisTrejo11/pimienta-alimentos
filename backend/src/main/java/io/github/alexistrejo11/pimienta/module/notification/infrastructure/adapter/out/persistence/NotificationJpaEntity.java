@@ -64,7 +64,7 @@ public class NotificationJpaEntity extends BaseJpaEntity {
   private String templateId;
 
   @JdbcTypeCode(SqlTypes.JSON)
-  @Column(name = "template_variables", columnDefinition = "jsonb")
+  @Column(name = "template_variables")
   private String templateVariablesJson;
 
   @Column(name = "correlation_id", length = 200)
