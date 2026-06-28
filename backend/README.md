@@ -1,234 +1,296 @@
-# Pimienta Alimentos - Backend API
+# Pimienta Alimentos Backend
 
-> Enterprise ERP system for Pimienta Alimentos, a real food company in Mexico.
+**Production Spring Boot API for company operations — used daily by Pimienta Alimentos employees and staff.**
 
-## Overview
+[![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.5-brightgreen)](https://spring.io/projects/spring-boot)
 
-Pimienta Alimentos Backend is a robust REST API built with **Spring Boot 4.0.5** and **Java 25** that provides comprehensive management for:
+> **Real-world system:** This is not a demo or tutorial project. The API is **deployed in the cloud** and actively supports HR, inventory, payroll, CRM, contracts, tasks, and file management for the company workforce.
 
-- 👥 **Employee Management** - Full CRUD, statistics, bulk import/export
-- 💰 **Payroll** - Periods, records, payments, adjustments
-- 📦 **Inventory** - Items, locations, stock, transactions
-- 🤝 **CRM** - Projects, opportunities, milestones
-- 🏢 **Headquarters** - Company locations/sedes management
-- ✅ **Tasks** - Task management with checklists
-- 📄 **Contracts** - Employee contract management
-- 🔐 **Authentication** - JWT-based security with refresh tokens
+---
 
-## Tech Stack
+## Table of contents
 
-| Category | Technology |
-|----------|------------|
-| Framework | Spring Boot 4.0.5 |
-| Language | Java 25 |
-| Database | PostgreSQL 16 |
-| Cache/Rate Limiting | Redis 7 |
-| API Documentation | OpenAPI 3 / Swagger UI |
-| Excel Processing | Apache POI 5.4.1 |
-| Build Tool | Maven |
-| Security | Spring Security + JWT (jjwt) |
+- [About](#about)
+- [Features](#features)
+- [Documentation](#documentation)
+- [Tech stack](#tech-stack)
+- [Architecture at a glance](#architecture-at-a-glance)
+- [Prerequisites](#prerequisites)
+- [Quick start](#quick-start)
+- [Configuration](#configuration)
+- [API overview](#api-overview)
+- [Project structure](#project-structure)
+- [Deployment](#deployment)
+- [Testing](#testing)
+- [Maintaining documentation](#maintaining-documentation)
+- [Contributing](#contributing)
+- [Security & compliance](#security--compliance)
+- [License](#license)
 
-## Quick Start
+---
 
-### Prerequisites
+## About
 
-- Java 25+
-- Maven 3.9+
-- Docker & Docker Compose (optional)
+Pimienta Alimentos Backend is the central API for **Pimienta Alimentos**, a food company whose employees and administrative staff rely on it every day. It unifies employee management, attendance, contracts, inventory, payroll, CRM, tasks, headquarters, notifications, and file storage behind a single hexagonal Spring Boot service.
 
-### Running Locally
+The system runs in **production on AWS**: API on **EC2** (Docker), **RDS PostgreSQL 16**, **Upstash Redis** (TLS), and **S3** for assets.
 
-```bash
-# Clone and navigate
-cd pimenta-alimentos/backend
+| | |
+|---|---|
+| **Version** | 1.0.0 |
+| **Status** | Production — in active use by company staff |
+| **Primary API prefix** | `/api/v1` |
+| **Live / health check** | [https://{{PRODUCTION_HOST}}/api/v2/health](https://{{PRODUCTION_HOST}}/api/v2/health) |
+| **OpenAPI (Swagger)** | [https://{{PRODUCTION_HOST}}/swagger-ui](https://{{PRODUCTION_HOST}}/swagger-ui) |
 
-# Run with Maven
-./mvnw spring-boot:run
+Replace `{{PRODUCTION_HOST}}` with your deployed EC2 hostname or load balancer DNS.
 
-# Or with Docker (local Postgres + Redis + API)
-docker compose -f docker/docker-compose.local.yml up -d --build
-```
+---
 
-See [docker/README.md](docker/README.md) for local vs cloud Compose and environment variables.
+## Features
 
-### Access Points
+Short list for the README; full detail lives in generated docs.
 
-| Service | URL |
-|---------|-----|
-| API | http://localhost:8080 |
-| Swagger UI | http://localhost:8080/swagger-ui |
-| OpenAPI JSON | http://localhost:8080/v3/api-docs |
+- JWT authentication with admin-approved registration and Redis-backed refresh tokens
+- Employee HR: profiles, attendance, work schedules, S3 photos, XLSX import/export
+- Inventory workflows: purchases, sales, transfers, approvals, low-stock alerts
+- Payroll, CRM (opportunities & projects), contracts, tasks, and headquarters
+- Redis token-bucket rate limiting and role-based access (ADMIN / MANAGER)
+- OpenAPI 3 + Swagger UI; 14 MockMvc integration test suites
 
-## Architecture
+See [Project Features](docs/project/generated/ProjectFeature.md) for the complete feature breakdown.
 
-The project follows **Hexagonal Architecture** (Ports & Adapters) with clear separation:
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Presentation Layer                   │
-│         REST Controllers, DTOs, Mappers, OpenAPI        │
-├─────────────────────────────────────────────────────────┤
-│                    Application Layer                     │
-│              Use Cases, Commands, Queries               │
-├─────────────────────────────────────────────────────────┤
-│                      Domain Layer                        │
-│            Entities, Value Objects, Enums               │
-├─────────────────────────────────────────────────────────┤
-│                   Infrastructure Layer                   │
-│     JPA Repositories, Excel, Redis, Security           │
-└─────────────────────────────────────────────────────────┘
-```
-
-## Modules
-
-| Module | Path | Description |
-|--------|------|-------------|
-| Account | `/api/v1/auth`, `/api/v1/users` | Authentication & user management |
-| Employees | `/api/v1/employees` | Employee CRUD, statistics, bulk operations |
-| Payroll | `/api/v1/payroll` | Payroll periods, records, payments |
-| Inventory | `/api/v1/inventory/*` | Items, stock, locations, movements |
-| CRM | `/api/v1/projects`, `/api/v1/opportunities` | Projects & sales pipeline |
-| Headquarters | `/api/v1/headquarters` | Company locations |
-| Tasks | `/api/v1/tasks` | Task management |
-| Contracts | `/api/v1/contracts` | Employee contracts |
-
-## Security Features
-
-- **JWT Authentication** - Access tokens (15 min TTL) + Refresh tokens (7 days in Redis)
-- **Rate Limiting** - Redis-backed token bucket with profiles:
-  - `STANDARD` - 100 req/min
-  - `READ_HEAVY` - 200 req/min (GET endpoints)
-  - `SENSITIVE_OPERATIONS` - 10 req/min (POST/PUT/DELETE)
-- **CORS** - Configurable allowed origins per environment
-- **Password Validation** - Custom strength requirements
-
-## Bulk Operations
-
-Import/export data using Excel (.xlsx) files:
-
-```bash
-# Example: Import employees
-POST /api/v1/employees/import
-Content-Type: multipart/form-data
-Body: file=empleados.xlsx
-
-# Example: Export employees
-GET /api/v1/employees/export?status=ACTIVE&department=ventas
-```
-
-## Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SPRING_PROFILES_ACTIVE` | `default` | Spring profile |
-| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5432/pimienta_alimentos` | DB URL |
-| `REDIS_URL` | `redis://localhost:6379` | Redis URL (`redis://` or `rediss://` for TLS) |
-| `PIMIENTA_REDIS_KEY_PREFIX` | `pimienta-alimentos` | Global Redis key namespace |
-| `PIMIENTA_SECURITY_JWT_SECRET` | (required) | JWT signing secret |
-| `SERVER_PORT` | `8080` | HTTP port |
-
-## Deployment (AWS)
-
-### Production Architecture
-
-```
-┌─────────────┐      ┌─────────────┐      ┌─────────────┐
-│   CloudFront│ ───► │  ALB / API  │ ───► │  ECS        │
-│   (CDN)     │      │  Gateway    │      │  Fargate    │
-└─────────────┘      └─────────────┘      └─────────────┘
-                                                  │
-                     ┌─────────────┐      ┌──────┴──────┐
-                     │   Elasti    │      │     RDS     │
-                     │   Cache     │      │  PostgreSQL │
-                     │   Redis     │      │             │
-                     └─────────────┘      └─────────────┘
-```
-
-### Estimated AWS Monthly Cost
-
-| Service | Estimated Cost |
-|---------|---------------|
-| RDS PostgreSQL (db.t3.micro) | $30-50 |
-| ElastiCache Redis (cache.t3.micro) | $15-25 |
-| ECS Fargate | $20-40 |
-| ALB | $20-30 |
-| Route 53 | $0.50 |
-| **Total** | **$85-145** |
+---
 
 ## Documentation
 
-Full documentation available in `docs/`:
+This repository keeps **structured source** in `docs/project/source/` (YAML frontmatter + notes) and **human-readable docs** in `docs/project/generated/`, produced by `docs/project/yaml_to_markdown.py`. The TypeScript contract for portfolio tools is `docs/project/source/schema.ts`.
 
-| Document | Description |
+### Documentation index
+
+| Document | What you will find | Read |
+|----------|-------------------|------|
+| **Overview** | Problem, solution, metrics, links | [ProjectOverview.md](docs/project/generated/ProjectOverview.md) |
+| **Metadata** | Project id, version, tech stack, URLs | [ProjectMetadata.md](docs/project/generated/ProjectMetadata.md) |
+| **API schema** | Endpoints, auth, rate limits, examples | [APISchema.md](docs/project/generated/APISchema.md) |
+| **Architecture** | Layers, patterns, diagram, data flows | [ProjectArchitecture.md](docs/project/generated/ProjectArchitecture.md) |
+| **Infrastructure** | Docker, EC2, RDS, Upstash Redis, S3 | [ProjectInfrastructure.md](docs/project/generated/ProjectInfrastructure.md) |
+| **Features** | Feature cards, snippets, status per area | [ProjectFeature.md](docs/project/generated/ProjectFeature.md) |
+| **Code showcase** | Curated code examples from the codebase | [ProjectCodeShowCase.md](docs/project/generated/ProjectCodeShowCase.md) |
+| **Generated index** | Auto-generated hub linking all of the above | [docs/project/generated/README.md](docs/project/generated/README.md) |
+
+### Source vs generated
+
+| Path | Purpose |
+|------|---------|
+| `docs/project/source/*.md` | Edit YAML frontmatter here (machine-friendly, matches `schema.ts`) |
+| `docs/project/generated/*.md` | Read here on GitHub / in the IDE (do not edit by hand) |
+| `docs/project/yaml_to_markdown.py` | Regenerates `docs/project/generated/` from `docs/project/source/` |
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install pyyaml
+python docs/project/yaml_to_markdown.py
+deactivate
+```
+
+---
+
+## Tech stack
+
+- **Java 25** · **Spring Boot 4.0.5** · Spring Security · Spring Data JPA
+- **PostgreSQL 16** (AWS RDS) · **Flyway** migrations · Hibernate `validate`
+- **Redis 7** (Upstash, `rediss://`) — refresh tokens, rate limiting
+- **JWT** (jjwt) · **springdoc-openapi 3** · **Apache POI** (XLSX)
+- **AWS S3** · **Docker** / Docker Compose · **Maven**
+
+---
+
+## Architecture at a glance
+
+Hexagonal (ports & adapters) monolith: ten bounded contexts under `module/*`, each with `core` (domain, application, ports) and adapters (REST, JPA, S3, Redis). Shared kernel in `shared/` (`BaseDomain`, pagination, rate limits).
+
+```mermaid
+flowchart LR
+  Staff[Company staff / frontend] --> EC2[EC2 Docker API]
+  EC2 --> RDS[(AWS RDS PostgreSQL)]
+  EC2 --> Redis[(Upstash Redis)]
+  EC2 --> S3[AWS S3]
+```
+
+Full diagram, layers, and decisions: [ProjectArchitecture.md](docs/project/generated/ProjectArchitecture.md).
+
+---
+
+## Prerequisites
+
+- **Java 25** and **Maven** (or `./mvnw`)
+- **Docker & Docker Compose** (recommended for local dev)
+- **PostgreSQL** and **Redis** (local via Compose, or cloud RDS + Upstash)
+- Copy `backend/.env.example` → `backend/.env` for secrets and connection strings
+
+---
+
+## Quick start
+
+### Local development (Docker — recommended)
+
+```bash
+cd backend
+cp .env.example .env
+docker compose -f docker/docker-compose.local.yml up --build
+```
+
+- Health: http://localhost:8080/api/v2/health
+- Swagger: http://localhost:8080/swagger-ui
+- Postgres (host): `localhost:5431` · Redis (host): `localhost:6378`
+
+See [docker/README.md](docker/README.md) for hot reload and cloud compose.
+
+### Local development (Maven on host)
+
+```bash
+cd backend
+cp .env.example .env
+./mvnw spring-boot:run
+```
+
+Dotenv loads `.env` automatically via `DotenvEnvironmentPostProcessor`.
+
+### Cloud / production (EC2)
+
+```bash
+cd backend
+cp .env.example .env   # set POSTGRES_URL (RDS), REDIS_URL (Upstash rediss://), JWT, AWS
+docker compose -f docker/docker-compose.cloud.yml up --build -d
+```
+
+Details: [ProjectInfrastructure.md](docs/project/generated/ProjectInfrastructure.md).
+
+---
+
+## Configuration
+
+Copy `.env.example` to `.env`. Minimum variables for production:
+
+| Variable | Description |
 |----------|-------------|
-| [docs/ProjectOverview.md](docs/ProjectOverview.md) | Business context and problem/solution |
-| [docs/ProjectFeatures.md](docs/ProjectFeatures.md) | Feature details and status |
-| [docs/ProjectArchitectureModel.md](docs/ProjectArchitectureModel.md) | Architecture, patterns, diagrams |
-| [docs/InfrastructureModel.md](docs/InfrastructureModel.md) | Deployment, Docker, AWS |
-| [docs/APISchema.md](docs/APISchema.md) | API endpoints and schemas |
-| [docs/ProjectCodeShowCase.md](docs/ProjectCodeShowCase.md) | Code examples |
-| [docs/ProjectMetric.md](docs/ProjectMetric.md) | Key metrics |
-| [docs/MediaGallerySection.md](docs/MediaGallerySection.md) | Screenshots |
+| `POSTGRES_URL` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | AWS RDS PostgreSQL JDBC URL |
+| `REDIS_URL` | Upstash Redis (`rediss://...`) or local `redis://` |
+| `PIMIENTA_REDIS_KEY_PREFIX` | Key namespace on shared Redis |
+| `PIMIENTA_SECURITY_JWT_SECRET` | HS256 secret (256+ bits in production) |
+| `AWS_REGION` / `AWS_S3_BUCKET_NAME` | S3 for employee photos and file assets |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | Or IAM role on EC2 |
+| `API_PORT` | Host port mapped to container 8080 |
 
-## API Examples
+Full list: [.env.example](.env.example).
 
-### Login
+---
 
-```bash
-curl -X POST http://localhost:8080/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"password123"}'
-```
+## API overview
 
-Response:
-```json
-{
-  "accessToken": "eyJhbGciOiJIUzI1NiIs...",
-  "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
-  "expiresIn": 900
-}
-```
+| Area | Base path | Doc |
+|------|-----------|-----|
+| Auth | `/api/v1/auth/` | [APISchema.md](docs/project/generated/APISchema.md) |
+| Users | `/api/v1/users/` | [APISchema.md](docs/project/generated/APISchema.md) |
+| Employees | `/api/v1/employees/` | [APISchema.md](docs/project/generated/APISchema.md) |
+| Contracts | `/api/v1/contracts/` | [APISchema.md](docs/project/generated/APISchema.md) |
+| CRM | `/api/v1/opportunities/`, `/api/v1/projects/` | [APISchema.md](docs/project/generated/APISchema.md) |
+| Tasks | `/api/v1/tasks/` | [APISchema.md](docs/project/generated/APISchema.md) |
+| Headquarters | `/api/v1/headquarters/` | [APISchema.md](docs/project/generated/APISchema.md) |
+| Inventory | `/api/v1/inventory/` | [APISchema.md](docs/project/generated/APISchema.md) |
+| Payroll | `/api/v1/payroll/` | [APISchema.md](docs/project/generated/APISchema.md) |
+| Files | `/api/v1/files/` | [APISchema.md](docs/project/generated/APISchema.md) |
+| Notifications | `/api/v1/notifications/` | [APISchema.md](docs/project/generated/APISchema.md) |
+| Health | `/api/v2/health/` | [APISchema.md](docs/project/generated/APISchema.md) |
 
-### Get Employees
+Authentication: `Authorization: Bearer <access_token>` (JWT). Interactive reference: **Swagger UI** at `/swagger-ui`.
 
-```bash
-curl -X GET http://localhost:8080/api/v1/employees \
-  -H "Authorization: Bearer <access_token>"
-```
+---
 
-## Project Structure
+## Project structure
 
 ```
 backend/
-├── src/main/java/io/github/alexistrejo11/pimienta/
-│   ├── config/           # Configuration classes
-│   │   ├── cors/        # CORS configuration
-│   │   ├── rate_limit/  # Rate limiting
-│   │   ├── security/    # Security & JWT
-│   │   └── web/         # Web config
-│   ├── module/          # Business modules
-│   │   ├── account/     # Auth & users
-│   │   ├── employees/   # Employee management
-│   │   ├── payroll/    # Payroll
-│   │   ├── inventory/  # Inventory
-│   │   ├── crm/        # CRM
-│   │   ├── headquarter/# Headquarters
-│   │   ├── task/       # Tasks
-│   │   └── contract/  # Contracts
-│   └── shared/         # Shared utilities
-├── src/main/resources/
-│   ├── application.yaml
-│   └── pimenta-alimentos/  # Bruno API collections
-├── docs/               # Documentation
-└── docker/            # Dockerfile, Compose (local / cloud), Docker guide
+├── docker/                    # Dockerfile, compose (local + cloud), README
+├── docs/
+│   ├── project/
+│   │   ├── source/            # YAML source docs (edit these)
+│   │   ├── generated/         # Readable Markdown (generated)
+│   │   └── yaml_to_markdown.py
+│   └── test/                  # Integration test follow-up notes
+├── src/
+│   ├── main/java/.../pimienta/
+│   │   ├── config/            # Security, Redis, OpenAPI, rate limit, AWS
+│   │   ├── module/            # account, employees, contract, crm, task, …
+│   │   └── shared/            # BaseDomain, pagination, spreadsheet, web
+│   └── main/resources/        # application*.yaml, db/migration/
+├── pom.xml
+└── mvnw
 ```
+
+---
+
+## Deployment
+
+**Production:** Spring Boot JAR in Docker on **AWS EC2**, connecting to **AWS RDS PostgreSQL** and **Upstash Redis** (TLS). File uploads go to **AWS S3**. Profile `docker` via `SPRING_PROFILES_ACTIVE`.
+
+Details: [ProjectInfrastructure.md](docs/project/generated/ProjectInfrastructure.md).
+
+---
+
+## Testing
+
+```bash
+./mvnw test
+```
+
+Integration tests use H2 in-memory; rate limiting is disabled in the test profile. See `src/test/java/.../integration/`.
+
+---
+
+## Maintaining documentation
+
+1. Edit YAML in `docs/project/source/<Section>.md` (keep fields aligned with `docs/project/source/schema.ts`).
+2. Run `python docs/project/yaml_to_markdown.py`.
+3. Commit both `docs/project/source/` and `docs/project/generated/` if you want docs visible on GitHub without running the script.
+
+Optional notes that are not part of the schema (warnings, TODOs) go in the **Markdown body** below the closing `---` in each source file—they appear under **Additional notes** in generated files.
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/my-change`)
+3. Commit with clear messages
+4. Open a pull request
+
+Internal changes should respect hexagonal module layout and existing OpenAPI `Doc*` annotation patterns.
+
+---
+
+## Security & compliance
+
+This API handles **real company and employee data** in production. Do not commit `.env`, JWT secrets, or AWS credentials. Registration requires administrator approval before staff can access the system.
+
+Report vulnerabilities privately to alexistrejo11@gmail.com.
+
+---
 
 ## License
 
-Apache License 2.0 - See [LICENSE](LICENSE)
+Apache License 2.0 — see [LICENSE](LICENSE) file.
 
-## Contact
+---
 
-- **Developer**: Alexis Trejo
-- **Email**: alexistrejo11@gmail.com
-- **GitHub**: https://github.com/alexistrejo11/pimienta
+## Links
+
+| Resource | URL |
+|----------|-----|
+| Repository | [https://github.com/alexistrejo11/pimienta](https://github.com/alexistrejo11/pimienta) |
+| Documentation hub | [docs/project/generated/README.md](docs/project/generated/README.md) |
+| Docker guide | [docker/README.md](docker/README.md) |
+| Health (production) | [https://{{PRODUCTION_HOST}}/api/v2/health](https://{{PRODUCTION_HOST}}/api/v2/health) |
