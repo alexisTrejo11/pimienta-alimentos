@@ -18,6 +18,7 @@ import { workspaceAuthGuard } from './core/auth/workspace-auth.guard';
 // ── Módulos nuevos ──────────────────────────────────────────────────────────
 import { EmpleadosPageComponent } from './pages/app/empleados/empleados-page';
 import { EmpleadoDetailPageComponent } from './pages/app/empleados/empleado-detail/empleado-detail-page';
+import { EmpleadoFormPageComponent } from './pages/app/empleados/empleado-form-page/empleado-form-page';
 import { OportunidadesPageComponent } from './pages/app/crm/oportunidades/oportunidades-page';
 import { OportunidadDetailPageComponent } from './pages/app/crm/oportunidades/oportunidad-detail/oportunidad-detail-page';
 import { OportunidadFormPageComponent } from './pages/app/crm/oportunidades/oportunidad-form-page/oportunidad-form-page';
@@ -56,8 +57,10 @@ export const routes: Routes = [
       { path: 'tasks', component: TasksPageComponent },
 
       // ── Empleados ────────────────────────────────────────────────────────
-      { path: 'empleados', component: EmpleadosPageComponent },
+      { path: 'empleados/nuevo', component: EmpleadoFormPageComponent },
+      { path: 'empleados/:id/editar', component: EmpleadoFormPageComponent },
       { path: 'empleados/:id', component: EmpleadoDetailPageComponent },
+      { path: 'empleados', component: EmpleadosPageComponent },
 
       // ── CRM: Oportunidades (rutas estáticas y edición antes de `:id` detalle) ─
       { path: 'crm/oportunidades/nueva', component: OportunidadFormPageComponent },

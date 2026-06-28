@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { EmployeeService } from '../../../core/employees/employee.service';
@@ -19,7 +20,7 @@ import { EmpleadoRowComponent } from './components/empleado-row/empleado-row';
 @Component({
   selector: 'app-empleados-page',
   
-  imports: [PageHeaderComponent, DataStateComponent, EmpleadoRowComponent],
+  imports: [PageHeaderComponent, DataStateComponent, EmpleadoRowComponent, RouterLink],
   templateUrl: './empleados-page.html',
 })
 export class EmpleadosPageComponent implements OnInit {
@@ -30,6 +31,8 @@ export class EmpleadosPageComponent implements OnInit {
   readonly error = signal<ParsedApiError | null>(null);
   readonly empleados = signal<EmployeeListItemResponse[]>([]);
   readonly stats = signal<EmployeeStatisticsResponse | null>(null);
+  readonly exporting = signal(false);
+  readonly exportError = signal<ParsedApiError | null>(null);
 
   ngOnInit(): void {
     this.cargar();
@@ -52,6 +55,25 @@ export class EmpleadosPageComponent implements OnInit {
       .subscribe({
         next: (page) => this.empleados.set(page.items),
         error: (err: unknown) => this.error.set(parseApiError(err)),
+      });
+  }
+
+  exportExcel(): void {
+    this.exportError.set(null);
+    this.exporting.set(true);
+    this.service
+      .export({ page: 0, size: 100 })
+      .pipe(finalize(() => this.exporting.set(false)))
+      .subscribe({
+        next: (blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'empleados_reporte.xlsx';
+          a.click();
+          URL.revokeObjectURL(url);
+        },
+        error: (err: unknown) => this.exportError.set(parseApiError(err)),
       });
   }
 }

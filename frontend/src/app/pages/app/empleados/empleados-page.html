@@ -1,10 +1,39 @@
 <div class="flex flex-col gap-6 p-8">
 
-  <!-- Encabezado de la sección -->
-  <app-page-header
-    title="Empleados"
-    subtitle="Directorio de colaboradores de la empresa"
-  />
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <!-- Encabezado de la sección -->
+    <app-page-header
+      title="Empleados"
+      subtitle="Directorio de colaboradores de la empresa"
+    />
+    <div class="flex flex-wrap items-center gap-3">
+      <button
+        type="button"
+        class="inline-flex items-center justify-center rounded-lg border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-on-surface shadow-sm transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-stone-700 dark:bg-stone-950 dark:hover:bg-stone-900"
+        [disabled]="exporting()"
+        (click)="exportExcel()"
+      >
+        <span class="material-symbols-outlined mr-1 text-lg" aria-hidden="true">download</span>
+        {{ exporting() ? 'Exportando…' : 'Exportar Excel' }}
+      </button>
+      <a
+        routerLink="/app/empleados/nuevo"
+        class="inline-flex shrink-0 items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-on-primary shadow-md transition hover:opacity-95"
+      >
+        <span class="material-symbols-outlined mr-1 text-lg" aria-hidden="true">person_add</span>
+        Nuevo empleado
+      </a>
+    </div>
+  </div>
+
+  @if (exportError(); as err) {
+    <div
+      role="alert"
+      class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-100"
+    >
+      {{ err.message }}
+    </div>
+  }
 
   <!-- Barra de estadísticas: solo visible cuando se cargaron correctamente -->
   @if (stats(); as s) {

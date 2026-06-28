@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { EmployeeService } from '../../../../core/employees/employee.service';
@@ -28,6 +28,7 @@ import { EmpleadoAsistenciaCardComponent } from '../components/empleado-asistenc
     EmpleadoNominaCardComponent,
     EmpleadoHorarioCardComponent,
     EmpleadoAsistenciaCardComponent,
+    RouterLink,
   ],
   templateUrl: './empleado-detail-page.html',
 })

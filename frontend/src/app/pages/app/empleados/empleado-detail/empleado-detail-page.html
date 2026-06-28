@@ -1,12 +1,23 @@
 <div class="flex flex-col gap-6 p-8">
 
-  <!-- Encabezado con flecha de regreso a la lista -->
-  <app-page-header
-    [title]="empleado() ? (empleado()!.firstName + ' ' + empleado()!.lastName) : 'Detalle de empleado'"
-    subtitle="Información completa del colaborador"
-    backLink="/app/empleados"
-    backLabel="Empleados"
-  />
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <!-- Encabezado con flecha de regreso a la lista -->
+    <app-page-header
+      [title]="empleado() ? (empleado()!.firstName + ' ' + empleado()!.lastName) : 'Detalle de empleado'"
+      subtitle="Información completa del colaborador"
+      backLink="/app/empleados"
+      backLabel="Empleados"
+    />
+    @if (empleado(); as e) {
+      <a
+        [routerLink]="['/app/empleados', e.id, 'editar']"
+        class="inline-flex shrink-0 items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-on-primary shadow-md transition hover:opacity-95"
+      >
+        <span class="material-symbols-outlined mr-1 text-lg" aria-hidden="true">edit</span>
+        Editar empleado
+      </a>
+    }
+  </div>
 
   <!-- Gestión de estados: cargando / error / contenido -->
   <app-data-state

@@ -6,6 +6,7 @@ import { API_BASE_URL } from '../config/api.config';
 import type {
   EmployeeListItemResponse,
   EmployeeResponse,
+  EmployeeSearchParams,
   EmployeeStatisticsResponse,
   EmployeeSummaryResponse,
   RegisterEmployeeRequest,
@@ -51,6 +52,17 @@ export class EmployeeService {
   /** Resumen por departamento: headcount desglosado. */
   summary(): Observable<EmployeeSummaryResponse> {
     return this.http.get<EmployeeSummaryResponse>(`${this.base}/summary`);
+  }
+
+  /** Descarga Excel (GET /api/v1/employees/export). */
+  export(search: EmployeeSearchParams = {}): Observable<Blob> {
+    let params = new HttpParams()
+      .set('page', String(search.page ?? 0))
+      .set('size', String(search.size ?? 100));
+    if (search.status) params = params.set('status', search.status);
+    if (search.department) params = params.set('department', search.department);
+    if (search.q) params = params.set('q', search.q);
+    return this.http.get(`${this.base}/export`, { params, responseType: 'blob' });
   }
 
   // ── Registro y actualización (multipart/form-data) ────────────────────────

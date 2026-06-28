@@ -7,6 +7,15 @@ import type {
   WorkShift,
 } from './employee.enums';
 
+/** Query params for GET /api/v1/employees and /export. */
+export interface EmployeeSearchParams {
+  status?: EmployeeStatus;
+  department?: string;
+  q?: string;
+  page?: number;
+  size?: number;
+}
+
 /** POST /api/v1/employees — registro en onboarding (multipart/form-data, part "employee"). */
 export interface RegisterEmployeeRequest {
   firstName: string;
