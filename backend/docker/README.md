@@ -19,6 +19,8 @@ Container images and Compose stacks for the Spring Boot API. All Docker assets l
 
 Run every command from the **`backend/`** directory (project root), not from `docker/`.
 
+> **Important:** always pass `--env-file .env`. Because the Compose files live in `docker/`, Compose treats `docker/` as the project directory and looks for the interpolation `.env` there — not in `backend/`. Without `--env-file .env`, every `${VAR}` in the `environment:` block resolves to a blank string (you'll see `WARN ... variable is not set` and the API starts with an empty DB/Redis URL).
+
 ## Local stack (Postgres + Redis + API)
 
 Use this for full local development inside Docker. Database and cache **hostnames are fixed in the compose file** (`postgres`, `redis`) so the API always talks to the sibling containers on the default Compose network.
@@ -37,7 +39,7 @@ cd backend
 # First time: create .env (JWT, AWS, optional API_PORT)
 cp .env.example .env
 
-docker compose -f docker/docker-compose.local.yml up --build
+docker compose --env-file .env -f docker/docker-compose.local.yml up --build
 ```
 
 ### Hot reload (local API)
@@ -51,33 +53,33 @@ On save under `src/main/java`, `src/main/resources`, or `pom.xml`, the entrypoin
 
 ```bash
 # Foreground (recommended while developing — see compile/restart logs)
-docker compose -f docker/docker-compose.local.yml up api
+docker compose --env-file .env -f docker/docker-compose.local.yml up api
 
 # Or detached
-docker compose -f docker/docker-compose.local.yml up -d api
-docker compose -f docker/docker-compose.local.yml logs -f api
+docker compose --env-file .env -f docker/docker-compose.local.yml up -d api
+docker compose --env-file .env -f docker/docker-compose.local.yml logs -f api
 ```
 
 Rebuild the dev image only when `Dockerfile.dev`, `dev-entrypoint.sh`, or `pom.xml` dependencies change:
 
 ```bash
-docker compose -f docker/docker-compose.local.yml up -d --build api
+docker compose --env-file .env -f docker/docker-compose.local.yml up -d --build api
 ```
 
 Useful commands:
 
 ```bash
 # Logs
-docker compose -f docker/docker-compose.local.yml logs -f api
+docker compose --env-file .env -f docker/docker-compose.local.yml logs -f api
 
 # Manual compile inside the running container (optional)
-docker compose -f docker/docker-compose.local.yml exec api mvn -q compile -DskipTests
+docker compose --env-file .env -f docker/docker-compose.local.yml exec api mvn -q compile -DskipTests
 
 # Stop and remove containers (keeps volumes)
-docker compose -f docker/docker-compose.local.yml down
+docker compose --env-file .env -f docker/docker-compose.local.yml down
 
 # Stop and remove volumes (wipes local DB/Redis data)
-docker compose -f docker/docker-compose.local.yml down -v
+docker compose --env-file .env -f docker/docker-compose.local.yml down -v
 ```
 
 ## Cloud / staging stack (API only)
@@ -97,7 +99,7 @@ cd backend
 cp .env.example .env
 # Edit .env with RDS/ElastiCache endpoints and secrets
 
-docker compose -f docker/docker-compose.cloud.yml up -d --build
+docker compose --env-file .env -f docker/docker-compose.cloud.yml up -d --build
 ```
 
 Ensure the host in `POSTGRES_URL` and the host in `REDIS_URL` are reachable from inside the container (public RDS/Upstash endpoint, VPN, or `host.docker.internal` for services on the Docker host).
@@ -127,8 +129,8 @@ flowchart LR
   ENV --> API2
 ```
 
-1. **Compose** substitutes `${VAR}` from `backend/.env` when you run commands from `backend/`.
-2. **`env_file: ../.env`** passes variables into the container process.
+1. **Compose** substitutes `${VAR}` from the file given by **`--env-file .env`**. (Without that flag Compose looks in the project directory — here `docker/`, the Compose file's folder — and finds nothing, so substitutions become blank strings.)
+2. **`env_file: ../.env`** passes variables into the container process. This is independent of `${VAR}` interpolation: it injects vars into the container but is *not* used to resolve `${VAR}` in the Compose file itself, which is why `--env-file .env` is still required.
 3. **`environment:`** in the compose file sets Spring properties (`SPRING_DATASOURCE_*`, `REDIS_URL`). Local compose defaults `REDIS_URL` to in-network `redis://redis:6379`; cloud compose uses `REDIS_URL` from `.env`.
 4. The container runs with **`SPRING_PROFILES_ACTIVE=docker`**, loading `application-docker.yaml`, which reads the `SPRING_*` variables above.
 

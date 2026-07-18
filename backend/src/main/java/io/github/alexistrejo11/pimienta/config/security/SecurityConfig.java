@@ -36,7 +36,8 @@ public class SecurityConfig {
         };
 
         private static final String[] HEALTH_PUBLIC_PATHS = {
-                        "/api/v2/health/**"
+                        "/api/v2/health/**",
+                        "/health"
         };
 
         @Bean

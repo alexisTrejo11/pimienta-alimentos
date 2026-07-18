@@ -7,6 +7,7 @@ services:
       POSTGRES_DB: pimienta_alimentos
       POSTGRES_USER: pimienta_dba
       POSTGRES_PASSWORD: pimienta_dba
+    restart: unless-stopped
     ports:
       - "5431:5432"
     volumes:
@@ -20,6 +21,7 @@ services:
   redis:
     image: redis:7-alpine
     command: ["redis-server", "--appendonly", "yes"]
+    restart: unless-stopped
     ports:
       - "6378:6379"
     volumes:
@@ -35,6 +37,7 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.dev
     working_dir: /workspace
+    restart: unless-stopped
     volumes:
       # Bind mount: edit on host, compile + devtools restart in container
       - ..:/workspace
@@ -47,7 +50,7 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "${API_PORT:-8080}:8080"
+      - "${API_PORT:-8080}:${API_PORT:-8080}"
     env_file:
       - path: ../.env
         required: false
