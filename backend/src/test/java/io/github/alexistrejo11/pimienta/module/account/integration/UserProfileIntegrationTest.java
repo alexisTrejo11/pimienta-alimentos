@@ -35,16 +35,16 @@ class UserProfileIntegrationTest {
   private UserJpaRepository userJpaRepository;
 
   @Test
-  void getMe_withoutToken_returns403() throws Exception {
-    mockMvc.perform(get("/api/v1/users/me")).andExpect(status().isForbidden());
+  void getMe_withoutToken_returns401() throws Exception {
+    mockMvc.perform(get("/api/v1/users/me")).andExpect(status().isUnauthorized());
   }
 
   @Test
-  void getMe_withInvalidBearer_returns403() throws Exception {
+  void getMe_withInvalidBearer_returns401() throws Exception {
     mockMvc
         .perform(
             AccountTestRequests.getBearer("/api/v1/users/me", "definitely.not.a.jwt"))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test

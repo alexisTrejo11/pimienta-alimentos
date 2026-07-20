@@ -43,11 +43,11 @@ class NotificationIntegrationTest {
   @Autowired private NotificationJpaRepository notificationJpaRepository;
 
   @Test
-  void managementEndpoints_withoutToken_return403() throws Exception {
-    mockMvc.perform(get("/api/v1/notifications/management")).andExpect(status().isForbidden());
+  void managementEndpoints_withoutToken_return401() throws Exception {
+    mockMvc.perform(get("/api/v1/notifications/management")).andExpect(status().isUnauthorized());
     mockMvc
         .perform(get("/api/v1/notifications/management/statistics"))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test
@@ -122,8 +122,8 @@ class NotificationIntegrationTest {
   }
 
   @Test
-  void logsEndpoints_withoutToken_return403() throws Exception {
-    mockMvc.perform(get("/api/v1/notifications/logs")).andExpect(status().isForbidden());
+  void logsEndpoints_withoutToken_return401() throws Exception {
+    mockMvc.perform(get("/api/v1/notifications/logs")).andExpect(status().isUnauthorized());
   }
 
   @Test

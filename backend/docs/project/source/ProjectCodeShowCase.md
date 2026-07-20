@@ -131,7 +131,7 @@ codeExamples:
       - "ec2"
     files:
       - name: "Dockerfile"
-        path: "docker/Dockerfile"
+        path: "Dockerfile"
         language: "dockerfile"
         highlighted: true
         explanation: "Image built from backend/ context; SPRING_PROFILES_ACTIVE=docker in production."

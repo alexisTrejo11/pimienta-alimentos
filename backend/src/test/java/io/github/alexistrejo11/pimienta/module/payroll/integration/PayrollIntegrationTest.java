@@ -38,13 +38,13 @@ class PayrollIntegrationTest {
   @Autowired private UserJpaRepository userJpaRepository;
 
   @Test
-  void summary_withoutToken_returns403() throws Exception {
+  void summary_withoutToken_returns401() throws Exception {
     mockMvc.perform(get("/api/v1/payroll/summary"))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test
-  void registerPeriod_withoutToken_returns403() throws Exception {
+  void registerPeriod_withoutToken_returns401() throws Exception {
     mockMvc
         .perform(
             AccountTestRequests.postJson(
@@ -52,7 +52,7 @@ class PayrollIntegrationTest {
                 """
                 {"frequency":"WEEKLY","startDate":"2026-04-01","endDate":"2026-04-07"}
                 """))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test

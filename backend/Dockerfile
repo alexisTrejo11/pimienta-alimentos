@@ -1,5 +1,4 @@
-# Multi-stage build: requires network during `docker build` for Maven dependencies.
-# Build context is the backend project root (see docker-compose *.yml).
+# Multi-stage: Maven build → JRE 25. Build context: backend/
 FROM maven:3.9-eclipse-temurin-25-alpine AS build
 WORKDIR /workspace
 
@@ -15,7 +14,6 @@ RUN addgroup -S spring -g 1001 \
 
 COPY --from=build /workspace/target/*.jar /app/app.jar
 
-# Logback writes under LOG_PATH (default logs/). Non-root user must own this path.
 RUN mkdir -p /app/logs && chown -R spring:spring /app
 
 USER spring:spring

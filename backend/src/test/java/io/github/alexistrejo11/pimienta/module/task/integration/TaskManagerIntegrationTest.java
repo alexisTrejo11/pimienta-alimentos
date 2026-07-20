@@ -40,17 +40,17 @@ class TaskManagerIntegrationTest {
   @Autowired private UserJpaRepository userJpaRepository;
 
   @Test
-  void search_withoutToken_returns403() throws Exception {
-    mockMvc.perform(get("/api/v1/tasks")).andExpect(status().isForbidden());
+  void search_withoutToken_returns401() throws Exception {
+    mockMvc.perform(get("/api/v1/tasks")).andExpect(status().isUnauthorized());
   }
 
   @Test
-  void create_withoutToken_returns403() throws Exception {
+  void create_withoutToken_returns401() throws Exception {
     mockMvc
         .perform(
             AccountTestRequests.postJson(
                 "/api/v1/tasks", minimalCreateJson("IT task")))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test

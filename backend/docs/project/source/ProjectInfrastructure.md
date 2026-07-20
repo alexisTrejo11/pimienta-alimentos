@@ -97,9 +97,7 @@ dockerFiles:
       name: pimienta-backend
       services:
         api:
-          build:
-            context: ..
-            dockerfile: docker/Dockerfile
+          build: .
           ports:
             - "${API_PORT:-8080}:8080"
           environment:
@@ -119,6 +117,6 @@ dockerFiles:
 
 **Warning:** Never commit real `POSTGRES_URL`, `REDIS_URL`, or JWT secrets. Use `backend/.env` (from `.env.example`) on the EC2 host.
 
-**Highlight:** Local development uses `docker/docker-compose.local.yml` (Postgres 16 + Redis 7 + dev API with hot reload). Cloud uses `docker/docker-compose.cloud.yml` (API container only, external managed services).
+**Highlight:** `backend/docker-compose.yml` — default is API only; `--profile local` adds Postgres 16 + Redis 7. Single `Dockerfile`. Shared external network `pimienta-net`.
 
 **Note:** Upstash requires `rediss://` (TLS). Set `PIMIENTA_REDIS_KEY_PREFIX=pimienta-alimentos` when sharing a Redis instance.

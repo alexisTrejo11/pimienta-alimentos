@@ -1,6 +1,5 @@
-# Profile: docker — use with SPRING_PROFILES_ACTIVE=docker (see docker/README.md).
-# Local stack: SPRING_DATASOURCE_* / SPRING_DATA_REDIS_* set in docker-compose.local.yml.
-# Cloud stack: same vars from .env via docker-compose.cloud.yml (POSTGRES_URL, REDIS_HOST).
+# Profile: docker — use with SPRING_PROFILES_ACTIVE=docker.
+# Datasource / Redis come from compose environment (POSTGRES_URL, REDIS_URL in backend/.env).
 spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL}

@@ -38,17 +38,17 @@ class CrmIntegrationTest {
   @Autowired private UserJpaRepository userJpaRepository;
 
   @Test
-  void opportunities_search_withoutToken_returns403() throws Exception {
-    mockMvc.perform(get("/api/v1/opportunities")).andExpect(status().isForbidden());
+  void opportunities_search_withoutToken_returns401() throws Exception {
+    mockMvc.perform(get("/api/v1/opportunities")).andExpect(status().isUnauthorized());
   }
 
   @Test
-  void opportunities_create_withoutToken_returns403() throws Exception {
+  void opportunities_create_withoutToken_returns401() throws Exception {
     mockMvc
         .perform(
             AccountTestRequests.postJson(
                 "/api/v1/opportunities", minimalCreateOpportunityJson("x", "co")))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test
@@ -294,16 +294,16 @@ class CrmIntegrationTest {
   }
 
   @Test
-  void projects_search_withoutToken_returns403() throws Exception {
-    mockMvc.perform(get("/api/v1/projects")).andExpect(status().isForbidden());
+  void projects_search_withoutToken_returns401() throws Exception {
+    mockMvc.perform(get("/api/v1/projects")).andExpect(status().isUnauthorized());
   }
 
   @Test
-  void projects_create_withoutToken_returns403() throws Exception {
+  void projects_create_withoutToken_returns401() throws Exception {
     mockMvc
         .perform(
             AccountTestRequests.postJson("/api/v1/projects", minimalCreateProjectJson("X", "N")))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test

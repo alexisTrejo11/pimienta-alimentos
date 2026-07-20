@@ -41,17 +41,17 @@ class EmployeeManagerIntegrationTest {
   private UserJpaRepository userJpaRepository;
 
   @Test
-  void statistics_withoutToken_returns403() throws Exception {
-    mockMvc.perform(get("/api/v1/employees/statistics")).andExpect(status().isForbidden());
+  void statistics_withoutToken_returns401() throws Exception {
+    mockMvc.perform(get("/api/v1/employees/statistics")).andExpect(status().isUnauthorized());
   }
 
   @Test
-  void register_withoutToken_returns403() throws Exception {
+  void register_withoutToken_returns401() throws Exception {
     mockMvc
         .perform(
             AccountTestRequests.postJson(
                 "/api/v1/employees", minimalRegisterJson("x@y.com", "EMP-X")))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test

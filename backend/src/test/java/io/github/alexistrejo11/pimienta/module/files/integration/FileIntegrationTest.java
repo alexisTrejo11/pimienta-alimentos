@@ -60,14 +60,14 @@ class FileIntegrationTest {
   }
 
   @Test
-  void managementEndpoints_withoutToken_return403() throws Exception {
-    mockMvc.perform(get("/api/v1/files/management")).andExpect(status().isForbidden());
+  void managementEndpoints_withoutToken_return401() throws Exception {
+    mockMvc.perform(get("/api/v1/files/management")).andExpect(status().isUnauthorized());
     mockMvc
         .perform(
             multipart("/api/v1/files/management/upload")
                 .file(tinyFile("empty.txt"))
                 .param("category", "TEMPLATE"))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test
@@ -166,14 +166,14 @@ class FileIntegrationTest {
   }
 
   @Test
-  void resourcesEndpoints_withoutToken_return403() throws Exception {
-    mockMvc.perform(get("/api/v1/files/resources")).andExpect(status().isForbidden());
+  void resourcesEndpoints_withoutToken_return401() throws Exception {
+    mockMvc.perform(get("/api/v1/files/resources")).andExpect(status().isUnauthorized());
     mockMvc
         .perform(
             multipart("/api/v1/files/resources/upload")
                 .file(tinyFile("r.txt"))
                 .param("module", "employees"))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test

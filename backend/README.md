@@ -140,14 +140,15 @@ Full diagram, layers, and decisions: [ProjectArchitecture.md](docs/project/gener
 ```bash
 cd backend
 cp .env.example .env
-docker compose -f docker/docker-compose.local.yml up --build
+docker network create pimienta-net   # once
+docker compose --profile local up --build
 ```
 
 - Health: http://localhost:8080/api/v2/health
 - Swagger: http://localhost:8080/swagger-ui
 - Postgres (host): `localhost:5431` · Redis (host): `localhost:6378`
 
-See [docker/README.md](docker/README.md) for hot reload and cloud compose.
+For API-only (external DB/Redis): `docker compose up -d --build`.
 
 ### Local development (Maven on host)
 
@@ -164,7 +165,8 @@ Dotenv loads `.env` automatically via `DotenvEnvironmentPostProcessor`.
 ```bash
 cd backend
 cp .env.example .env   # set POSTGRES_URL (RDS), REDIS_URL (Upstash rediss://), JWT, AWS
-docker compose -f docker/docker-compose.cloud.yml up --build -d
+docker network create pimienta-net   # once
+docker compose up -d --build
 ```
 
 Details: [ProjectInfrastructure.md](docs/project/generated/ProjectInfrastructure.md).
@@ -292,5 +294,4 @@ Apache License 2.0 — see [LICENSE](LICENSE) file.
 |----------|-----|
 | Repository | [https://github.com/alexistrejo11/pimienta](https://github.com/alexistrejo11/pimienta) |
 | Documentation hub | [docs/project/generated/README.md](docs/project/generated/README.md) |
-| Docker guide | [docker/README.md](docker/README.md) |
 | Health (production) | [https://{{PRODUCTION_HOST}}/api/v2/health](https://{{PRODUCTION_HOST}}/api/v2/health) |

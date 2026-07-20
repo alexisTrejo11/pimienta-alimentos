@@ -38,18 +38,18 @@ class AttendanceIntegrationTest {
   private UserJpaRepository userJpaRepository;
 
   @Test
-  void startWorkday_withoutToken_returns403() throws Exception {
+  void startWorkday_withoutToken_returns401() throws Exception {
     mockMvc
         .perform(
             post("/api/v1/employees/1/attendance/start-workday")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"headquarterId\":1}"))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test
-  void getAttendance_byId_withoutToken_returns403() throws Exception {
-    mockMvc.perform(get("/api/v1/employees/attendances/1")).andExpect(status().isForbidden());
+  void getAttendance_byId_withoutToken_returns401() throws Exception {
+    mockMvc.perform(get("/api/v1/employees/attendances/1")).andExpect(status().isUnauthorized());
   }
 
   @Test
@@ -130,30 +130,30 @@ class AttendanceIntegrationTest {
   }
 
   @Test
-  void listAttendancesForToday_withoutToken_returns403() throws Exception {
-    mockMvc.perform(get("/api/v1/employees/attendances/for-today?page=0&size=10")).andExpect(status().isForbidden());
+  void listAttendancesForToday_withoutToken_returns401() throws Exception {
+    mockMvc.perform(get("/api/v1/employees/attendances/for-today?page=0&size=10")).andExpect(status().isUnauthorized());
   }
 
   @Test
-  void searchAttendances_withoutToken_returns403() throws Exception {
+  void searchAttendances_withoutToken_returns401() throws Exception {
     mockMvc
         .perform(get("/api/v1/employees/attendances/search?page=0&size=10"))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test
-  void listAttendancesByEmployee_withoutToken_returns403() throws Exception {
-    mockMvc.perform(get("/api/v1/employees/1/attendances?page=0&size=10")).andExpect(status().isForbidden());
+  void listAttendancesByEmployee_withoutToken_returns401() throws Exception {
+    mockMvc.perform(get("/api/v1/employees/1/attendances?page=0&size=10")).andExpect(status().isUnauthorized());
   }
 
   @Test
-  void endWorkday_withoutToken_returns403() throws Exception {
+  void endWorkday_withoutToken_returns401() throws Exception {
     mockMvc
         .perform(
             post("/api/v1/employees/1/attendance/end-workday")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test

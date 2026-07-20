@@ -134,7 +134,7 @@ Maven build on JDK 25, runtime on JRE 25 Alpine with non-root spring user — de
 
 ### Dockerfile
 
-**Path:** `docker/Dockerfile`
+**Path:** `Dockerfile`
 
 Image built from backend/ context; SPRING_PROFILES_ACTIVE=docker in production.
 

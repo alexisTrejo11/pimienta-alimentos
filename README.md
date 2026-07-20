@@ -42,9 +42,11 @@ cd backend
 # With Maven
 ./mvnw spring-boot:run
 
-# Or with Docker (see backend/docker/README.md)
-docker compose -f docker/docker-compose.local.yml up -d --build
+# Or with Docker
+docker network create pimienta-net   # once
+docker compose --profile local up -d --build
 ```
+
 
 The API runs at **http://localhost:8080**
 
@@ -58,9 +60,13 @@ npm install
 
 # Run development server
 npm start
+
+# Or with Docker (SSR; see frontend/.env.example)
+# docker network create pimienta-net   # once
+# docker compose up -d --build
 ```
 
-The frontend runs at **http://localhost:4200**
+The frontend runs at **http://localhost:4200** (`npm start`) or **http://localhost:4000** (Docker SSR).
 
 ## Architecture
 

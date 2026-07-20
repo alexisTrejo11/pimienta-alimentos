@@ -40,17 +40,17 @@ class HeadquarterIntegrationTest {
   private UserJpaRepository userJpaRepository;
 
   @Test
-  void statistics_withoutToken_returns403() throws Exception {
-    mockMvc.perform(get("/api/v1/headquarters/statistics")).andExpect(status().isForbidden());
+  void statistics_withoutToken_returns401() throws Exception {
+    mockMvc.perform(get("/api/v1/headquarters/statistics")).andExpect(status().isUnauthorized());
   }
 
   @Test
-  void create_withoutToken_returns403() throws Exception {
+  void create_withoutToken_returns401() throws Exception {
     mockMvc
         .perform(
             AccountTestRequests.postJson(
                 "/api/v1/headquarters", createBody("HQ-X", "addr", "desc")))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test

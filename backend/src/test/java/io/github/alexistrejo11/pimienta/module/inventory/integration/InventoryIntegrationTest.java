@@ -34,15 +34,15 @@ class InventoryIntegrationTest {
   @Autowired private UserJpaRepository userJpaRepository;
 
   @Test
-  void items_search_withoutToken_returns403() throws Exception {
-    mockMvc.perform(get("/api/v1/inventory/items")).andExpect(status().isForbidden());
+  void items_search_withoutToken_returns401() throws Exception {
+    mockMvc.perform(get("/api/v1/inventory/items")).andExpect(status().isUnauthorized());
   }
 
   @Test
-  void items_create_withoutToken_returns403() throws Exception {
+  void items_create_withoutToken_returns401() throws Exception {
     mockMvc
         .perform(AccountTestRequests.postJson("/api/v1/inventory/items", minimalItemCreateJson("X", "N")))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test

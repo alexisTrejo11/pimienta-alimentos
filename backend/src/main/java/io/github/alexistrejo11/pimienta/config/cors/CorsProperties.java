@@ -2,6 +2,7 @@ package io.github.alexistrejo11.pimienta.config.cors;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -14,13 +15,7 @@ public class CorsProperties {
   /** Ant-style path pattern applied to {@link org.springframework.web.cors.UrlBasedCorsConfigurationSource}. */
   private String pathPattern = "/**";
 
-  private List<String> allowedOrigins =
-      new ArrayList<>(
-          List.of(
-              "http://localhost:4200",
-              "http://localhost:3000",
-              "http://127.0.0.1:4200",
-              "http://127.0.0.1:3000"));
+  private List<String> allowedOrigins = new ArrayList<>();
 
   private List<String> allowedMethods =
       new ArrayList<>(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));

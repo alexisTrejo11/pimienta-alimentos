@@ -2,7 +2,6 @@
 .vscode
 */logs
 */target
-*/.mvn
 */.idea
 */.vscode
 */.gitignore

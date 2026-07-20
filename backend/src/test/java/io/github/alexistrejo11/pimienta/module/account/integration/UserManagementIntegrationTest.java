@@ -36,12 +36,12 @@ class UserManagementIntegrationTest {
   @Autowired private UserJpaRepository userJpaRepository;
 
   @Test
-  void managementEndpoints_withoutToken_return403() throws Exception {
-    mockMvc.perform(get("/api/v1/users/management/statistics")).andExpect(status().isForbidden());
-    mockMvc.perform(get("/api/v1/users/management")).andExpect(status().isForbidden());
+  void managementEndpoints_withoutToken_return401() throws Exception {
+    mockMvc.perform(get("/api/v1/users/management/statistics")).andExpect(status().isUnauthorized());
+    mockMvc.perform(get("/api/v1/users/management")).andExpect(status().isUnauthorized());
     mockMvc
         .perform(post("/api/v1/users/management/1/approve"))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test

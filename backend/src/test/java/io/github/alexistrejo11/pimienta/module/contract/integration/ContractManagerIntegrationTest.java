@@ -39,13 +39,13 @@ class ContractManagerIntegrationTest {
   private UserJpaRepository userJpaRepository;
 
   @Test
-  void listContracts_withoutToken_returns403() throws Exception {
-    mockMvc.perform(get("/api/v1/contracts")).andExpect(status().isForbidden());
+  void listContracts_withoutToken_returns401() throws Exception {
+    mockMvc.perform(get("/api/v1/contracts")).andExpect(status().isUnauthorized());
   }
 
   @Test
-  void getContract_withoutToken_returns403() throws Exception {
-    mockMvc.perform(get("/api/v1/contracts/1")).andExpect(status().isForbidden());
+  void getContract_withoutToken_returns401() throws Exception {
+    mockMvc.perform(get("/api/v1/contracts/1")).andExpect(status().isUnauthorized());
   }
 
   @Test

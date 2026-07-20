@@ -35,20 +35,20 @@ class EmployeeWorkScheduleIntegrationTest {
   @Autowired private UserJpaRepository userJpaRepository;
 
   @Test
-  void workSchedule_get_withoutBearer_returns403() throws Exception {
+  void workSchedule_get_withoutBearer_returns401() throws Exception {
     mockMvc
         .perform(get("/api/v1/employees/1/work-schedule"))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test
-  void workSchedule_put_withoutBearer_returns403() throws Exception {
+  void workSchedule_put_withoutBearer_returns401() throws Exception {
     mockMvc
         .perform(
             put("/api/v1/employees/1/work-schedule")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(scheduleBody("MONDAY", "09:00:00", "18:00:00")))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test
